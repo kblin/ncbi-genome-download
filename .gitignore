@@ -1,0 +1,3 @@
+*.swp
+*.pyc
+ncbi_genome_download.egg-info/*

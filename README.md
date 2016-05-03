@@ -1,6 +1,6 @@
 # NCBI Genome Downloading Scripts
 
-Some script to download bacterial and fungal genomes from NCBI FTP after they
+Some script to download bacterial and fungal genomes from NCBI after they
 restructured their FTP a while ago.
 
 Idea shamelessly stolen from [Mick Watson's Kraken downloader
