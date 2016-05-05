@@ -2,6 +2,9 @@ from __future__ import print_function
 import requests
 
 NCBI_URI = 'http://ftp.ncbi.nih.gov/genomes'
+supported_domains = ['archaea', 'bacteria', 'fungi', 'invertebrate', 'plant',
+                     'protozoa', 'unknown', 'vertebrate_mammalian',
+                     'vertebrate_other', 'viral']
 
 
 def download(args):
