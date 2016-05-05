@@ -20,15 +20,16 @@ def req():
 def test_download_one(monkeypatch, mocker):
     _download_mock = mocker.MagicMock()
     monkeypatch.setattr(core, '_download', _download_mock)
-    fake_args = Namespace(section='refseq', domain='bacteria', uri=core.NCBI_URI)
+    fake_args = Namespace(section='refseq', domain='bacteria', uri=core.NCBI_URI,
+                          output='/tmp/fake')
     core.download(fake_args)
-    _download_mock.assert_called_with('refseq', 'bacteria', core.NCBI_URI)
+    _download_mock.assert_called_with('refseq', 'bacteria', core.NCBI_URI, '/tmp/fake')
 
 
 def test_download_all(monkeypatch, mocker):
     _download_mock = mocker.MagicMock()
     monkeypatch.setattr(core, '_download', _download_mock)
-    fake_args = Namespace(section='refseq', domain='all', uri=core.NCBI_URI)
+    fake_args = Namespace(section='refseq', domain='all', uri=core.NCBI_URI, output='/tmp/fake')
     core.download(fake_args)
     assert _download_mock.call_count == len(core.supported_domains)
 
@@ -39,7 +40,11 @@ def test__download(monkeypatch, mocker, req):
             text=summary_contents)
     mocker.spy(core, 'get_summary')
     mocker.spy(core, 'parse_summary')
-    core._download('refseq', 'bacteria', uri=core.NCBI_URI)
+    mocker.patch('ncbi_genome_download.core.download_entry')
+    core._download('refseq', 'bacteria', core.NCBI_URI, '/tmp/fake')
+    assert core.get_summary.call_count == 1
+    assert core.parse_summary.call_count == 1
+    assert core.download_entry.call_count == 4
 
 
 def test_get_summary(req):

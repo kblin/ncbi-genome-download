@@ -13,12 +13,12 @@ def download(args):
     '''Download data from NCBI'''
     if args.domain == 'all':
         for domain in supported_domains:
-            _download(args.section, domain, args.uri)
+            _download(args.section, domain, args.uri, args.output)
     else:
-        _download(args.section, args.domain, args.uri)
+        _download(args.section, args.domain, args.uri, args.output)
 
 
-def _download(section, domain, uri):
+def _download(section, domain, uri, output):
     '''Download a specified domain form a section'''
     summary = get_summary(section, domain, uri)
     entries = parse_summary(summary)
