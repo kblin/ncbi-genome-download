@@ -12,6 +12,33 @@ scripts are ~~written in Perl~~ specific to actually building a Kraken database
 
 So this is a set of scripts that focuses on the actual genome downloading.
 
+## Installation
+
+Clone this repository from GitHub, then run (in a python virtual environment)
+```
+pip install .
+```
+
+Eventually, I'll look into making this tool available via pipy.
+
+## Usage
+
+To download all bacterial RefSeq genomes from NCBI, run the following:
+
+```
+ncbi-genome-download bacteria
+```
+
+To download all fungal GenBank genomes from NCBI, run:
+```
+ncbi-genome-download --section genbank fungi
+```
+
+To get an overview of all options, run
+```
+ncbi-genome-download --help
+```
+
 ## License
 All code is available under the Apache License version 2, see the
 [`LICENSE`](LICENSE) file for details.
