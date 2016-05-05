@@ -8,7 +8,7 @@ import ncbi_genome_download
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('domain',
-                        choices=['all'] + ncbi_genome_download.available_domains,
+                        choices=['all'] + ncbi_genome_download.supported_domains,
                         help='The NCBI "domain" to download')
     parser.add_argument('-o', '--output-folder',
                         dest='output', default=os.getcwd(),
