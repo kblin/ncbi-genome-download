@@ -38,7 +38,7 @@ def main():
     else:
         log_level = logging.WARNING
 
-    logging.basicConfig(format='%(levelname)s: %(message)', level=log_level)
+    logging.basicConfig(format='%(levelname)s: %(message)s', level=log_level)
 
     ncbi_genome_download.download(args)
 
