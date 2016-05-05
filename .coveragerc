@@ -1,0 +1,2 @@
+[run]
+omit=ncbi_genome_download/__main__.py
