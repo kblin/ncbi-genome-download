@@ -97,7 +97,7 @@ def test_create_dir_isfile(tmpdir):
 
 def test_grab_checksums_file(req):
     req.get('http://ftp.ncbi.nih.gov/genomes/all/FAKE0.1/md5checksums.txt', text='test')
-    entry = {'ftp_url': 'ftp://ftp.ncbi.nih.gov/genomes/all/FAKE0.1' }
+    entry = {'ftp_path': 'ftp://ftp.ncbi.nih.gov/genomes/all/FAKE0.1' }
     ret = core.grab_checksums_file(entry)
     assert ret == 'test'
 
@@ -165,7 +165,7 @@ def test_md5sum():
 
 
 def test_download_gbk_file(req, tmpdir):
-    entry = {'ftp_url': 'ftp://fake/path'}
+    entry = {'ftp_path': 'ftp://fake/path'}
     fake_file = tmpdir.join('fake_genomic.gbff.gz')
     fake_file.write('foo')
     assert fake_file.check()
@@ -179,7 +179,7 @@ def test_download_gbk_file(req, tmpdir):
 
 
 def test_download_gbk_file_mismatch(req, tmpdir):
-    entry = {'ftp_url': 'ftp://fake/path'}
+    entry = {'ftp_path': 'ftp://fake/path'}
     fake_file = tmpdir.join('fake_genomic.gbff.gz')
     fake_file.write('foo')
     assert fake_file.check()

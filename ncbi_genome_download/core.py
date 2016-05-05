@@ -82,7 +82,7 @@ def create_dir(entry, section, domain, output):
 
 def grab_checksums_file(entry):
     '''Grab the checksum file for a given entry'''
-    http_url = convert_ftp_url(entry['ftp_url'])
+    http_url = convert_ftp_url(entry['ftp_path'])
     full_url = '{}/md5checksums.txt'.format(http_url)
     r = requests.get(full_url)
     return r.text
@@ -145,7 +145,7 @@ def md5sum(filename):
 def download_gbk_file(entry, directory, checksums):
     '''Download and verirfy a given gbk file'''
     filename, expected_checksum = get_name_and_checksum(checksums, '_genomic.gbff.gz')
-    base_url = convert_ftp_url(entry['ftp_url'])
+    base_url = convert_ftp_url(entry['ftp_path'])
     full_url = '{}/{}'.format(base_url, filename)
     local_file = os.path.join(directory, filename)
 
