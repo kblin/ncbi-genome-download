@@ -35,9 +35,12 @@ def get_summary(section, domain, uri):
 
 def parse_summary(summary):
     '''Parse the summary file from TSV format to a csv DictReader'''
+    # skip the leading 2 comment characters in the header to get nicer names
     comment = summary.read(2)
     if comment != '# ':
+        # Huh, unexpected header, just go back to whereever we were before
         idx = summary.tell()
         summary.seek(max(0, idx - 2))
+
     reader = csv.DictReader(summary, dialect='excel-tab')
     return reader
