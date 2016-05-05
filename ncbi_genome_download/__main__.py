@@ -1,5 +1,6 @@
-import os
 import argparse
+import logging
+import os
 
 import ncbi_genome_download
 
@@ -23,6 +24,15 @@ def main():
                         help='print version information')
 
     args = parser.parse_args()
+
+    if args.debug:
+        log_level = logging.DEBUG
+    elif args.verbose:
+        log_level = logging.INFO
+    else:
+        log_level = logging.WARNING
+
+    logging.basicConfig(format='%(levelname)s: %(message)', level=log_level)
 
     ncbi_genome_download.download(args)
 
