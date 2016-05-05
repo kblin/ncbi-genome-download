@@ -1,5 +1,7 @@
-from __future__ import print_function
+import csv
+import logging
 import requests
+from StringIO import StringIO
 
 NCBI_URI = 'http://ftp.ncbi.nih.gov/genomes'
 supported_domains = ['archaea', 'bacteria', 'fungi', 'invertebrate', 'plant',
@@ -8,16 +10,34 @@ supported_domains = ['archaea', 'bacteria', 'fungi', 'invertebrate', 'plant',
 
 
 def download(args):
-    '''Download a specified NCBI domain'''
-
+    '''Download data from NCBI'''
     if args.domain == 'all':
-        print('Downloading all NCBI domains')
+        for domain in supported_domains:
+            _download(args.section, domain, args.uri)
     else:
-        print('Downloading NCBI domain {!r}'.format(args.domain))
+        _download(args.section, args.domain, args.uri)
 
 
-def get_summary(section, domain, uri=NCBI_URI):
+def _download(section, domain, uri):
+    '''Download a specified domain form a section'''
+    summary = get_summary(section, domain, uri)
+    entries = parse_summary(summary)
+
+
+def get_summary(section, domain, uri):
+    '''Get the assembly_summary.txt file from NCBI and return a StringIO object for it'''
+    logging.debug('Downloading summary for %r/%r uri: %r', section, domain, uri)
     url = '{uri}/{section}/{domain}/assembly_summary.txt'.format(
         section=section, domain=domain, uri=uri)
     r = requests.get(url)
-    return r.text
+    return StringIO(r.text)
+
+
+def parse_summary(summary):
+    '''Parse the summary file from TSV format to a csv DictReader'''
+    comment = summary.read(2)
+    if comment != '# ':
+        idx = summary.tell()
+        summary.seek(max(0, idx - 2))
+    reader = csv.DictReader(summary, dialect='excel-tab')
+    return reader
