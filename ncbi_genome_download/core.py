@@ -158,7 +158,7 @@ def download_gbk_file(entry, directory, checksums):
     actual_checksum = md5sum(local_file)
     if actual_checksum != expected_checksum:
         logging.error('Checksum mismatch for %r. Expected %r, got %r',
-                local_file, expected_checksum, actual_checksum)
+                      local_file, expected_checksum, actual_checksum)
         return False
 
     return True
