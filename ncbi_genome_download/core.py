@@ -35,7 +35,7 @@ def get_summary(section, domain, uri):
     url = '{uri}/{section}/{domain}/assembly_summary.txt'.format(
         section=section, domain=domain, uri=uri)
     r = requests.get(url)
-    return StringIO(r.text)
+    return StringIO(r.content)
 
 
 def parse_summary(summary):
