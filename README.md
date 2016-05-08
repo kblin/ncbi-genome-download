@@ -14,12 +14,15 @@ So this is a set of scripts that focuses on the actual genome downloading.
 
 ## Installation
 
-Clone this repository from GitHub, then run (in a python virtual environment)
+```
+pip install ncbi-genome-download
+```
+
+
+Alternatively, clone this repository from GitHub, then run (in a python virtual environment)
 ```
 pip install .
 ```
-
-Eventually, I'll look into making this tool available via pipy.
 
 ## Usage
 

@@ -56,14 +56,14 @@ def test_get_summary(req):
 def test_parse_summary():
     with open(_get_file('partial_summary.txt'), 'r') as fh:
         reader = core.parse_summary(fh)
-        first = reader.next()
-        assert first.has_key('ftp_path')
-        assert first.has_key('assembly_accession')
+        first = next(reader)
+        assert 'ftp_path' in first
+        assert 'assembly_accession' in first
 
         fh.seek(2)
         reader = core.parse_summary(fh)
-        first = reader.next()
-        assert first.has_key('assembly_accession')
+        first = next(reader)
+        assert 'assembly_accession' in first
 
 
 def test_download_entry():
