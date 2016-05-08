@@ -5,7 +5,10 @@ import logging
 class SummaryReader(object):
     def __init__(self, infile):
         self._file = infile
-        line = self._file.readline().rstrip('\n')
+        line = ''
+        while 'assembly_accession' not in line:
+            line = self._file.readline().rstrip('\n')
+
         if line.startswith('# '):
             line = line[2:]
 

@@ -1,0 +1,5 @@
+#   See ftp://ftp.ncbi.nlm.nih.gov/genomes/README_assembly_summary.txt for a description of the columns in this file.
+# assembly_accession	bioproject	biosample	wgs_master	refseq_category	taxid	species_taxid	organism_name	infraspecific_name	isolate	version_status	assembly_level	release_type	genome_rep	seq_rel_date	asm_name	submitter	gbrs_paired_asm	paired_asm_comp	ftp_path	excluded_from_refseq
+GCF_000839185.1	PRJNA14174			na	10243	10243	Cowpox virus	strain=Brighton Red		latest	Complete Genome	Major	Full	2003/05/16	ViralProj14174		na	na	ftp://ftp.ncbi.nlm.nih.gov/genomes/all/GCF_000839185.1_ViralProj14174	
+GCF_000857045.1	PRJNA15142			na	619591	10244	Monkeypox virus Zaire-96-I-16	strain=Zaire-96-I-16		latest	Complete Genome	Major	Full	2001/12/12	ViralProj15142		na	na	ftp://ftp.ncbi.nlm.nih.gov/genomes/all/GCF_000857045.1_ViralProj15142	
+GCF_000860085.1	PRJNA15241			na	10245	10245	Vaccinia virus	strain=WR (Western Reserve)		latest	Complete Genome	Major	Full	2003/04/10	ViralProj15241		na	na	ftp://ftp.ncbi.nlm.nih.gov/genomes/all/GCF_000860085.1_ViralProj15241	
