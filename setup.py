@@ -10,13 +10,13 @@ def read(fname):
     return open(os.path.join(os.path.dirname(__file__), fname)).read()
 
 
-with open('requirements.txt', 'r') as fh:
-    install_requires = [l.strip() for l in fh.readlines()]
+def read_requires(fname):
+    with open(fname, 'r') as fh:
+        requires = [l.strip() for l in fh.readlines()]
 
-tests_require_txt = os.path.join('tests', 'requirements.txt')
-with open(tests_require_txt, 'r') as fh:
-    tests_require = [l.strip() for l in fh.readlines()]
+    return requires
 
+tests_require_path = os.path.join('tests', 'requirements.txt')
 
 class PyTest(TestCommand):
     def finalize_options(self):
@@ -37,8 +37,8 @@ setup(
     author_email='kblin@biosustain.dtu.dk',
     description='Download genome files from the NCBI FTP server.',
     long_description=read('README.md'),
-    install_requires=install_requires,
-    tests_require=tests_require,
+    install_requires=read_requires('requirements.txt'),
+    tests_require=read_requires(tests_require_path),
     cmdclass={'test': PyTest},
     entry_points={
         'console_scripts': [
@@ -57,6 +57,6 @@ setup(
         'Operating System :: OS Independent',
     ],
     extras_require={
-        'testing': tests_require,
+        'testing': read_requires(tests_require_path),
     },
 )
