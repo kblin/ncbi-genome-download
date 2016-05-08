@@ -1,5 +1,7 @@
 # NCBI Genome Downloading Scripts
 
+[![Build Status](http://github.drone.secondarymetabolites.org/api/badges/kblin/ncbi-genome-download/status.svg)](http://github.drone.secondarymetabolites.org/kblin/ncbi-genome-download)
+
 Some script to download bacterial and fungal genomes from NCBI after they
 restructured their FTP a while ago.
 
