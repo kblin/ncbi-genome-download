@@ -4,7 +4,9 @@ import hashlib
 import logging
 import os
 import requests
-from StringIO import StringIO
+from io import StringIO
+
+from ncbi_genome_download.summary import SummaryReader
 
 NCBI_URI = 'http://ftp.ncbi.nih.gov/genomes'
 supported_domains = ['archaea', 'bacteria', 'fungi', 'invertebrate', 'plant',
@@ -23,8 +25,8 @@ def download(args):
 
 def _download(section, domain, uri, output):
     '''Download a specified domain form a section'''
-    summary = get_summary(section, domain, uri)
-    entries = parse_summary(summary)
+    summary_file = get_summary(section, domain, uri)
+    entries = parse_summary(summary_file)
     for entry in entries:
         download_entry(entry, section, domain, uri, output)
 
@@ -35,20 +37,12 @@ def get_summary(section, domain, uri):
     url = '{uri}/{section}/{domain}/assembly_summary.txt'.format(
         section=section, domain=domain, uri=uri)
     r = requests.get(url)
-    return StringIO(r.content)
+    return StringIO(r.text)
 
 
-def parse_summary(summary):
+def parse_summary(summary_file):
     '''Parse the summary file from TSV format to a csv DictReader'''
-    # skip the leading 2 comment characters in the header to get nicer names
-    comment = summary.read(2)
-    if comment != '# ':
-        # Huh, unexpected header, just go back to whereever we were before
-        idx = summary.tell()
-        summary.seek(max(0, idx - 2))
-
-    reader = csv.DictReader(summary, dialect='excel-tab')
-    return reader
+    return SummaryReader(summary_file)
 
 
 def download_entry(entry, section, domain, uri, output):
