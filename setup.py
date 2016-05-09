@@ -3,8 +3,6 @@ import sys
 from setuptools import setup
 from setuptools.command.test import test as TestCommand
 
-import ncbi_genome_download
-
 
 def read(fname):
     return open(os.path.join(os.path.dirname(__file__), fname)).read()
@@ -15,6 +13,13 @@ def read_requires(fname):
         requires = [l.strip() for l in fh.readlines()]
 
     return requires
+
+
+def read_version():
+    for line in open(os.path.join('ncbi_genome_download', '__init__.py'), 'r'):
+        if line.startswith('__version__'):
+            return line.split('=')[-1].strip().strip("'")
+
 
 tests_require_path = os.path.join('tests', 'requirements.txt')
 
@@ -32,7 +37,7 @@ class PyTest(TestCommand):
 
 setup(
     name='ncbi-genome-download',
-    version=ncbi_genome_download.__version__,
+    version=read_version(),
     author='Kai Blin',
     author_email='kblin@biosustain.dtu.dk',
     description='Download genome files from the NCBI FTP server.',
