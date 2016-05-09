@@ -77,7 +77,7 @@ def prepare_download_entry(req, tmpdir):
         return '{}\t./{}\n'.format(core.md5sum(filename), path.basename(filename))
 
     checksum_file_content = ''
-    for key, val in core.format_name_map.iteritems():
+    for key, val in core.format_name_map.items():
         seqfile = tmpdir.join('fake{}'.format(val))
         seqfile.write(key)
         checksum_file_content += create_checksum_line(str(seqfile))
