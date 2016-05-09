@@ -4,3 +4,4 @@ ncbi_genome_download.egg-info/*
 .coverage
 htmlcov/*
 .cache/*
+dist/*
