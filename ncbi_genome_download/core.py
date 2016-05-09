@@ -14,6 +14,11 @@ supported_domains = ['archaea', 'bacteria', 'fungi', 'invertebrate', 'plant',
                      'vertebrate_other', 'viral']
 
 
+format_name_map = {
+    'genbank': '_genomic.gbff.gz',
+}
+
+
 def download(args):
     '''Download data from NCBI'''
     if args.domain == 'all':
@@ -56,8 +61,8 @@ def download_entry(entry, section, domain, uri, output):
         fh.write(checksums)
 
     parsed_checksums = parse_checksums(checksums)
-    if has_gbk_file_changed(full_output_dir, parsed_checksums):
-        download_gbk_file(entry, full_output_dir, parsed_checksums)
+    if has_file_changed(full_output_dir, parsed_checksums):
+        download_file(entry, full_output_dir, parsed_checksums)
 
 
 def create_dir(entry, section, domain, output):
@@ -104,9 +109,10 @@ def parse_checksums(checksums_string):
     return checksums_list
 
 
-def has_gbk_file_changed(directory, checksums):
-    '''Check if the checksum of a given gbk file has changed'''
-    filename, expected_checksum = get_name_and_checksum(checksums, '_genomic.gbff.gz')
+def has_file_changed(directory, checksums, filetype='genbank'):
+    '''Check if the checksum of a given file has changed'''
+    pattern = format_name_map[filetype]
+    filename, expected_checksum = get_name_and_checksum(checksums, pattern)
     full_filename = os.path.join(directory, filename)
     # if file doesn't exist, it has changed
     if not os.path.isfile(full_filename):
@@ -136,9 +142,10 @@ def md5sum(filename):
     return hash_md5.hexdigest()
 
 
-def download_gbk_file(entry, directory, checksums):
-    '''Download and verirfy a given gbk file'''
-    filename, expected_checksum = get_name_and_checksum(checksums, '_genomic.gbff.gz')
+def download_file(entry, directory, checksums, filetype='genbank'):
+    '''Download and verirfy a given file'''
+    pattern = format_name_map[filetype]
+    filename, expected_checksum = get_name_and_checksum(checksums, pattern)
     base_url = convert_ftp_url(entry['ftp_path'])
     full_url = '{}/{}'.format(base_url, filename)
     local_file = os.path.join(directory, filename)

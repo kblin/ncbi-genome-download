@@ -124,15 +124,15 @@ d8ce7c80d457e012f9d368a4673dea65  ./GCF_000009605.1_ASM960v1_protein.faa.gz
     assert ret == expected
 
 
-def test_has_gbk_file_changed_no_file(tmpdir):
+def test_has_file_changed_no_file(tmpdir):
     checksums = [
         {'checksum': 'fake', 'file': 'skipped'},
         {'checksum': 'fake', 'file': 'fake_genomic.gbff.gz'},
     ]
-    assert core.has_gbk_file_changed(str(tmpdir), checksums)
+    assert core.has_file_changed(str(tmpdir), checksums)
 
 
-def test_has_gbk_file_changed(tmpdir):
+def test_has_file_changed(tmpdir):
     checksums = [
         {'checksum': 'fake', 'file': 'skipped'},
         {'checksum': 'fake', 'file': 'fake_genomic.gbff.gz'},
@@ -140,10 +140,10 @@ def test_has_gbk_file_changed(tmpdir):
     fake_file = tmpdir.join(checksums[-1]['file'])
     fake_file.write('foo')
     assert fake_file.check()
-    assert core.has_gbk_file_changed(str(tmpdir), checksums)
+    assert core.has_file_changed(str(tmpdir), checksums)
 
 
-def test_has_gbk_file_changed_unchanged(tmpdir):
+def test_has_file_changed_unchanged(tmpdir):
     fake_file = tmpdir.join('fake_genomic.gbff.gz')
     fake_file.write('foo')
     assert fake_file.check()
@@ -154,7 +154,7 @@ def test_has_gbk_file_changed_unchanged(tmpdir):
         {'checksum': checksum, 'file': fake_file.basename},
     ]
 
-    assert core.has_gbk_file_changed(str(tmpdir), checksums) == False
+    assert core.has_file_changed(str(tmpdir), checksums) == False
 
 
 def test_md5sum():
@@ -164,7 +164,7 @@ def test_md5sum():
     assert ret == expected
 
 
-def test_download_gbk_file(req, tmpdir):
+def test_download_file_genbank(req, tmpdir):
     entry = {'ftp_path': 'ftp://fake/path'}
     fake_file = tmpdir.join('fake_genomic.gbff.gz')
     fake_file.write('foo')
@@ -175,10 +175,10 @@ def test_download_gbk_file(req, tmpdir):
     req.get('http://fake/path/fake_genomic.gbff.gz', text=fake_file.read())
 
 
-    assert core.download_gbk_file(entry, str(dl_dir), checksums)
+    assert core.download_file(entry, str(dl_dir), checksums)
 
 
-def test_download_gbk_file_mismatch(req, tmpdir):
+def test_download_file_genbank_mismatch(req, tmpdir):
     entry = {'ftp_path': 'ftp://fake/path'}
     fake_file = tmpdir.join('fake_genomic.gbff.gz')
     fake_file.write('foo')
@@ -188,4 +188,4 @@ def test_download_gbk_file_mismatch(req, tmpdir):
     req.get('http://fake/path/fake_genomic.gbff.gz', text=fake_file.read())
 
 
-    assert core.download_gbk_file(entry, str(dl_dir), checksums) == False
+    assert core.download_file(entry, str(dl_dir), checksums) == False
