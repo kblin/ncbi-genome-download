@@ -13,6 +13,10 @@ def main():
     parser.add_argument('-s', '--section',
                         dest='section', default='refseq', choices=['refseq', 'genbank'],
                         help='NCBI section to download')
+    parser.add_argument('-F', '--format',
+                        dest='file_format', default='genbank',
+                        choices=['all'] + ncbi_genome_download.format_name_map.keys(),
+                        help='Which format to download (default: genbank)')
     parser.add_argument('-o', '--output-folder',
                         dest='output', default=os.getcwd(),
                         help='Create output hierarchy in specified folder (default: current directory)')

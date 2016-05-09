@@ -16,6 +16,7 @@ supported_domains = ['archaea', 'bacteria', 'fungi', 'invertebrate', 'plant',
 
 format_name_map = {
     'genbank': '_genomic.gbff.gz',
+    'fasta': '_genomic.fna.gz',
 }
 
 
@@ -23,17 +24,17 @@ def download(args):
     '''Download data from NCBI'''
     if args.domain == 'all':
         for domain in supported_domains:
-            _download(args.section, domain, args.uri, args.output)
+            _download(args.section, domain, args.uri, args.output, args.file_format)
     else:
-        _download(args.section, args.domain, args.uri, args.output)
+        _download(args.section, args.domain, args.uri, args.output, args.file_format)
 
 
-def _download(section, domain, uri, output):
+def _download(section, domain, uri, output, file_format):
     '''Download a specified domain form a section'''
     summary_file = get_summary(section, domain, uri)
     entries = parse_summary(summary_file)
     for entry in entries:
-        download_entry(entry, section, domain, uri, output)
+        download_entry(entry, section, domain, uri, output, file_format)
 
 
 def get_summary(section, domain, uri):
@@ -50,7 +51,7 @@ def parse_summary(summary_file):
     return SummaryReader(summary_file)
 
 
-def download_entry(entry, section, domain, uri, output):
+def download_entry(entry, section, domain, uri, output, file_format):
     '''Download an entry from the summary file'''
     logging.info('Downloading record %r', entry['assembly_accession'])
     full_output_dir = create_dir(entry, section, domain, output)
@@ -61,8 +62,15 @@ def download_entry(entry, section, domain, uri, output):
         fh.write(checksums)
 
     parsed_checksums = parse_checksums(checksums)
-    if has_file_changed(full_output_dir, parsed_checksums):
-        download_file(entry, full_output_dir, parsed_checksums)
+
+    if file_format == 'all':
+        formats = format_name_map.keys()
+    else:
+        formats = [file_format]
+
+    for f in formats:
+        if has_file_changed(full_output_dir, parsed_checksums, f):
+            download_file(entry, full_output_dir, parsed_checksums, f)
 
 
 def create_dir(entry, section, domain, output):

@@ -21,15 +21,16 @@ def test_download_one(monkeypatch, mocker):
     _download_mock = mocker.MagicMock()
     monkeypatch.setattr(core, '_download', _download_mock)
     fake_args = Namespace(section='refseq', domain='bacteria', uri=core.NCBI_URI,
-                          output='/tmp/fake')
+                          output='/tmp/fake', file_format='genbank')
     core.download(fake_args)
-    _download_mock.assert_called_with('refseq', 'bacteria', core.NCBI_URI, '/tmp/fake')
+    _download_mock.assert_called_with('refseq', 'bacteria', core.NCBI_URI, '/tmp/fake', 'genbank')
 
 
 def test_download_all(monkeypatch, mocker):
     _download_mock = mocker.MagicMock()
     monkeypatch.setattr(core, '_download', _download_mock)
-    fake_args = Namespace(section='refseq', domain='all', uri=core.NCBI_URI, output='/tmp/fake')
+    fake_args = Namespace(section='refseq', domain='all', uri=core.NCBI_URI,
+                          output='/tmp/fake', file_format='genbank')
     core.download(fake_args)
     assert _download_mock.call_count == len(core.supported_domains)
 
@@ -41,7 +42,7 @@ def test__download(monkeypatch, mocker, req):
     mocker.spy(core, 'get_summary')
     mocker.spy(core, 'parse_summary')
     mocker.patch('ncbi_genome_download.core.download_entry')
-    core._download('refseq', 'bacteria', core.NCBI_URI, '/tmp/fake')
+    core._download('refseq', 'bacteria', core.NCBI_URI, '/tmp/fake', 'genbank')
     assert core.get_summary.call_count == 1
     assert core.parse_summary.call_count == 1
     assert core.download_entry.call_count == 4
@@ -66,8 +67,41 @@ def test_parse_summary():
         assert 'assembly_accession' in first
 
 
-def test_download_entry():
-    pass
+def prepare_download_entry(req, tmpdir):
+    # Set up test env
+    entry  = {
+        'assembly_accession': 'FAKE0.1',
+        'ftp_path': 'http://fake/genomes/FAKE0.1'
+    }
+    def create_checksum_line(filename):
+        return '{}\t./{}\n'.format(core.md5sum(filename), path.basename(filename))
+
+    checksum_file_content = ''
+    for key, val in core.format_name_map.iteritems():
+        seqfile = tmpdir.join('fake{}'.format(val))
+        seqfile.write(key)
+        checksum_file_content += create_checksum_line(str(seqfile))
+        req.get('http://fake/genomes/FAKE0.1/{}'.format(path.basename(str(seqfile))),
+                text=seqfile.read())
+
+    req.get('http://fake/genomes/FAKE0.1/md5checksums.txt', text=checksum_file_content)
+
+    outdir = tmpdir.mkdir('output')
+
+    return entry, outdir
+
+
+def test_download_entry_genbank(req, tmpdir):
+    entry, outdir = prepare_download_entry(req, tmpdir)
+    core.download_entry(entry, 'refseq', 'bacteria', 'http://fake/genomes', str(outdir), 'genbank')
+    assert outdir.join('refseq', 'bacteria', 'FAKE0.1', 'fake_genomic.gbff.gz').check()
+
+
+def test_download_entry_all(req, tmpdir):
+    entry, outdir = prepare_download_entry(req, tmpdir)
+    core.download_entry(entry, 'refseq', 'bacteria', 'http://fake/genomes', str(outdir), 'all')
+    for ending in core.format_name_map.values():
+        assert outdir.join('refseq', 'bacteria', 'FAKE0.1', 'fake{}'.format(ending)).check()
 
 
 def test_create_dir(tmpdir):
@@ -174,7 +208,6 @@ def test_download_file_genbank(req, tmpdir):
     dl_dir = tmpdir.mkdir('download')
     req.get('http://fake/path/fake_genomic.gbff.gz', text=fake_file.read())
 
-
     assert core.download_file(entry, str(dl_dir), checksums)
 
 
@@ -187,5 +220,17 @@ def test_download_file_genbank_mismatch(req, tmpdir):
     dl_dir = tmpdir.mkdir('download')
     req.get('http://fake/path/fake_genomic.gbff.gz', text=fake_file.read())
 
-
     assert core.download_file(entry, str(dl_dir), checksums) == False
+
+
+def test_download_file_fasta(req, tmpdir):
+    entry = {'ftp_path': 'ftp://fake/path'}
+    fake_file = tmpdir.join('fake_genomic.fna.gz')
+    fake_file.write('foo')
+    assert fake_file.check()
+    checksum = core.md5sum(str(fake_file))
+    checksums = [{'checksum': checksum, 'file': fake_file.basename}]
+    dl_dir = tmpdir.mkdir('download')
+    req.get('http://fake/path/fake_genomic.fna.gz', text=fake_file.read())
+
+    assert core.download_file(entry, str(dl_dir), checksums, 'fasta')
