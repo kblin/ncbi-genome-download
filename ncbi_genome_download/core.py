@@ -74,8 +74,11 @@ def download_entry(entry, section, domain, uri, output, file_format):
         formats = [file_format]
 
     for f in formats:
-        if has_file_changed(full_output_dir, parsed_checksums, f):
-            download_file(entry, full_output_dir, parsed_checksums, f)
+        try:
+            if has_file_changed(full_output_dir, parsed_checksums, f):
+                download_file(entry, full_output_dir, parsed_checksums, f)
+        except ValueError as e:
+            logging.error(e)
 
 
 def create_dir(entry, section, domain, output):
@@ -144,6 +147,7 @@ def get_name_and_checksum(checksums, end):
         filename = entry['file']
         expected_checksum = entry['checksum']
         return filename, expected_checksum
+    raise ValueError('No entry for file ending in {!r}'.format(end))
 
 
 def md5sum(filename):

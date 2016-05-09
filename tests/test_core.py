@@ -67,7 +67,7 @@ def test_parse_summary():
         assert 'assembly_accession' in first
 
 
-def prepare_download_entry(req, tmpdir):
+def prepare_download_entry(req, tmpdir, format_map=core.format_name_map):
     # Set up test env
     entry  = {
         'assembly_accession': 'FAKE0.1',
@@ -77,7 +77,7 @@ def prepare_download_entry(req, tmpdir):
         return '{}\t./{}\n'.format(core.md5sum(filename), path.basename(filename))
 
     checksum_file_content = ''
-    for key, val in core.format_name_map.items():
+    for key, val in format_map.items():
         seqfile = tmpdir.join('fake{}'.format(val))
         seqfile.write(key)
         checksum_file_content += create_checksum_line(str(seqfile))
@@ -102,6 +102,14 @@ def test_download_entry_all(req, tmpdir):
     core.download_entry(entry, 'refseq', 'bacteria', 'http://fake/genomes', str(outdir), 'all')
     for ending in core.format_name_map.values():
         assert outdir.join('refseq', 'bacteria', 'FAKE0.1', 'fake{}'.format(ending)).check()
+
+
+def test_download_entry_missing(req, tmpdir):
+    name_map_copy = dict(core.format_name_map.items())
+    del name_map_copy['genbank']
+    entry, outdir = prepare_download_entry(req, tmpdir, name_map_copy)
+    core.download_entry(entry, 'refseq', 'bacteria', 'http://fake/genomes', str(outdir), 'genbank')
+    assert outdir.join('refseq', 'bacteria', 'FAKE0.1', 'fake_genomic.gbff.gz').check() == False
 
 
 def test_create_dir(tmpdir):
