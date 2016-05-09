@@ -17,6 +17,11 @@ supported_domains = ['archaea', 'bacteria', 'fungi', 'invertebrate', 'plant',
 format_name_map = {
     'genbank': '_genomic.gbff.gz',
     'fasta': '_genomic.fna.gz',
+    'features': '_feature_table.txt.gz',
+    'gff': '_genomic.gff.gz',
+    'protein-fasta': '_protein.faa.gz',
+    'genpept': '_protein.gbpff.gz',
+    'wgs': '_wgsmaster.gbff.gz',
 }
 
 
