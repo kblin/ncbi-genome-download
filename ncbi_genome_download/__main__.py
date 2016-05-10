@@ -15,7 +15,7 @@ def main():
                         help='NCBI section to download')
     parser.add_argument('-F', '--format',
                         dest='file_format', default='genbank',
-                        choices=['all'] + ncbi_genome_download.format_name_map.keys(),
+                        choices=['all'] + list(ncbi_genome_download.format_name_map.keys()),
                         help='Which format to download (default: genbank)')
     parser.add_argument('-o', '--output-folder',
                         dest='output', default=os.getcwd(),
