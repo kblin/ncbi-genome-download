@@ -23,21 +23,32 @@ format_name_map = {
     'wgs': '_wgsmaster.gbff.gz',
 }
 
+assembly_level_map = {
+    'complete': 'Complete Genome',
+    'scaffold': 'Scaffold',
+    'contig': 'Contig'
+}
+
 
 def download(args):
     '''Download data from NCBI'''
     if args.domain == 'all':
         for domain in supported_domains:
-            _download(args.section, domain, args.uri, args.output, args.file_format)
+            _download(args.section, domain, args.uri, args.output, args.file_format,
+                      args.assembly_level)
     else:
-        _download(args.section, args.domain, args.uri, args.output, args.file_format)
+        _download(args.section, args.domain, args.uri, args.output, args.file_format,
+                  args.assembly_level)
 
 
-def _download(section, domain, uri, output, file_format):
+def _download(section, domain, uri, output, file_format, assembly_level):
     '''Download a specified domain form a section'''
     summary_file = get_summary(section, domain, uri)
     entries = parse_summary(summary_file)
     for entry in entries:
+        if assembly_level != 'all' and entry['assembly_level'] != assembly_level_map[assembly_level]:
+            logging.debug('Skipping entry with assembly level %r', entry['assembly_level'])
+            continue
         download_entry(entry, section, domain, uri, output, file_format)
 
 

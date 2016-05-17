@@ -21,16 +21,17 @@ def test_download_one(monkeypatch, mocker):
     _download_mock = mocker.MagicMock()
     monkeypatch.setattr(core, '_download', _download_mock)
     fake_args = Namespace(section='refseq', domain='bacteria', uri=core.NCBI_URI,
-                          output='/tmp/fake', file_format='genbank')
+                          output='/tmp/fake', file_format='genbank', assembly_level='all')
     core.download(fake_args)
-    _download_mock.assert_called_with('refseq', 'bacteria', core.NCBI_URI, '/tmp/fake', 'genbank')
+    _download_mock.assert_called_with('refseq', 'bacteria', core.NCBI_URI, '/tmp/fake',
+                                      'genbank', 'all')
 
 
 def test_download_all(monkeypatch, mocker):
     _download_mock = mocker.MagicMock()
     monkeypatch.setattr(core, '_download', _download_mock)
     fake_args = Namespace(section='refseq', domain='all', uri=core.NCBI_URI,
-                          output='/tmp/fake', file_format='genbank')
+                          output='/tmp/fake', file_format='genbank', assembly_level='all')
     core.download(fake_args)
     assert _download_mock.call_count == len(core.supported_domains)
 
@@ -42,10 +43,55 @@ def test__download(monkeypatch, mocker, req):
     mocker.spy(core, 'get_summary')
     mocker.spy(core, 'parse_summary')
     mocker.patch('ncbi_genome_download.core.download_entry')
-    core._download('refseq', 'bacteria', core.NCBI_URI, '/tmp/fake', 'genbank')
+    core._download('refseq', 'bacteria', core.NCBI_URI, '/tmp/fake', 'genbank', 'all')
     assert core.get_summary.call_count == 1
     assert core.parse_summary.call_count == 1
     assert core.download_entry.call_count == 4
+
+
+def test__download_complete(monkeypatch, mocker, req):
+    summary_contents = open(_get_file('assembly_status.txt'), 'r').read()
+    req.get('http://ftp.ncbi.nih.gov/genomes/refseq/bacteria/assembly_summary.txt',
+            text=summary_contents)
+    mocker.spy(core, 'get_summary')
+    mocker.spy(core, 'parse_summary')
+    mocker.patch('ncbi_genome_download.core.download_entry')
+    core._download('refseq', 'bacteria', core.NCBI_URI, '/tmp/fake', 'genbank', 'complete')
+    assert core.get_summary.call_count == 1
+    assert core.parse_summary.call_count == 1
+    assert core.download_entry.call_count == 1
+    # Many nested tuples in call_args_list, no kidding.
+    assert core.download_entry.call_args_list[0][0][0]['assembly_level'] == 'Complete Genome'
+
+
+def test__download_scaffold(monkeypatch, mocker, req):
+    summary_contents = open(_get_file('assembly_status.txt'), 'r').read()
+    req.get('http://ftp.ncbi.nih.gov/genomes/refseq/bacteria/assembly_summary.txt',
+            text=summary_contents)
+    mocker.spy(core, 'get_summary')
+    mocker.spy(core, 'parse_summary')
+    mocker.patch('ncbi_genome_download.core.download_entry')
+    core._download('refseq', 'bacteria', core.NCBI_URI, '/tmp/fake', 'genbank', 'scaffold')
+    assert core.get_summary.call_count == 1
+    assert core.parse_summary.call_count == 1
+    assert core.download_entry.call_count == 1
+    # Many nested tuples in call_args_list, no kidding.
+    assert core.download_entry.call_args_list[0][0][0]['assembly_level'] == 'Scaffold'
+
+
+def test__download_contig(monkeypatch, mocker, req):
+    summary_contents = open(_get_file('assembly_status.txt'), 'r').read()
+    req.get('http://ftp.ncbi.nih.gov/genomes/refseq/bacteria/assembly_summary.txt',
+            text=summary_contents)
+    mocker.spy(core, 'get_summary')
+    mocker.spy(core, 'parse_summary')
+    mocker.patch('ncbi_genome_download.core.download_entry')
+    core._download('refseq', 'bacteria', core.NCBI_URI, '/tmp/fake', 'genbank', 'contig')
+    assert core.get_summary.call_count == 1
+    assert core.parse_summary.call_count == 1
+    assert core.download_entry.call_count == 1
+    # Many nested tuples in call_args_list, no kidding.
+    assert core.download_entry.call_args_list[0][0][0]['assembly_level'] == 'Contig'
 
 
 def test_get_summary(req):

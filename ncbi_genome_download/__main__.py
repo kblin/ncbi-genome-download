@@ -17,6 +17,10 @@ def main():
                         dest='file_format', default='genbank',
                         choices=['all'] + list(ncbi_genome_download.format_name_map.keys()),
                         help='Which format to download (default: genbank)')
+    parser.add_argument('-l', '--assembly-level',
+                        dest='assembly_level', default='all',
+                        choices=['all'] + list(ncbi_genome_download.assembly_level_map.keys()),
+                        help='Assembly level of genomes to download (default: all)')
     parser.add_argument('-o', '--output-folder',
                         dest='output', default=os.getcwd(),
                         help='Create output hierarchy in specified folder (default: current directory)')

@@ -44,6 +44,12 @@ To download all viral RefSeq genomes in FASTA format, run:
 ncbi-genome-download --format fasta viral
 ```
 
+To download only completed bacterial RefSeq genomes in GenBank format, run:
+```
+ncbi-genome-download --assembly-level complete bacteria
+```
+
+
 To get an overview of all options, run
 ```
 ncbi-genome-download --help
