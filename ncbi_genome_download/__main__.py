@@ -21,6 +21,9 @@ def main():
                         dest='assembly_level', default='all',
                         choices=['all'] + list(ncbi_genome_download.assembly_level_map.keys()),
                         help='Assembly level of genomes to download (default: all)')
+    parser.add_argument('-g', '--genus',
+                        dest='genus', default='',
+                        help='Only download sequences of the provided genus. (default: unset, download all)')
     parser.add_argument('-o', '--output-folder',
                         dest='output', default=os.getcwd(),
                         help='Create output hierarchy in specified folder (default: current directory)')

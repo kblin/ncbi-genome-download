@@ -32,20 +32,25 @@ assembly_level_map = {
 
 def download(args):
     '''Download data from NCBI'''
+
     if args.domain == 'all':
         for domain in supported_domains:
             _download(args.section, domain, args.uri, args.output, args.file_format,
-                      args.assembly_level)
+                      args.assembly_level, args.genus)
     else:
         _download(args.section, args.domain, args.uri, args.output, args.file_format,
-                  args.assembly_level)
+                  args.assembly_level, args.genus)
 
 
-def _download(section, domain, uri, output, file_format, assembly_level):
+def _download(section, domain, uri, output, file_format, assembly_level, genus=''):
     '''Download a specified domain form a section'''
     summary_file = get_summary(section, domain, uri)
     entries = parse_summary(summary_file)
     for entry in entries:
+        if not entry['organism_name'].startswith(genus):
+            logging.debug('Organism name %r does not start with %r as requested, skipping',
+                          entry['organism_name'], genus)
+            continue
         if assembly_level != 'all' and entry['assembly_level'] != assembly_level_map[assembly_level]:
             logging.debug('Skipping entry with assembly level %r', entry['assembly_level'])
             continue

@@ -49,6 +49,12 @@ To download only completed bacterial RefSeq genomes in GenBank format, run:
 ncbi-genome-download --assembly-level complete bacteria
 ```
 
+To download bacterial RefSeq genomes of the genus _Streptomyces_, run:
+```
+ncbi-genome-download --genus Streptomyces bacteria
+```
+**Note**: This is a simple string match on the organism name provided by NCBI only.
+
 
 To get an overview of all options, run
 ```
