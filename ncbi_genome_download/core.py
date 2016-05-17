@@ -47,7 +47,7 @@ def _download(section, domain, uri, output, file_format, assembly_level, genus='
     summary_file = get_summary(section, domain, uri)
     entries = parse_summary(summary_file)
     for entry in entries:
-        if not entry['organism_name'].startswith(genus):
+        if not entry['organism_name'].startswith(genus.capitalize()):
             logging.debug('Organism name %r does not start with %r as requested, skipping',
                           entry['organism_name'], genus)
             continue
