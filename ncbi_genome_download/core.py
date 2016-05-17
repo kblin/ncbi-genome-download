@@ -1,4 +1,3 @@
-import csv
 import errno
 import hashlib
 import logging
