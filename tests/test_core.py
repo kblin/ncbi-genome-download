@@ -69,10 +69,11 @@ def test_parse_summary():
 
 def prepare_download_entry(req, tmpdir, format_map=core.format_name_map):
     # Set up test env
-    entry  = {
+    entry = {
         'assembly_accession': 'FAKE0.1',
         'ftp_path': 'http://fake/genomes/FAKE0.1'
     }
+
     def create_checksum_line(filename):
         return '{}\t./{}\n'.format(core.md5sum(filename), path.basename(filename))
 
