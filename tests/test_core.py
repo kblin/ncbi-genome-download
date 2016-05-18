@@ -66,6 +66,21 @@ def test__download_complete(monkeypatch, mocker, req):
     assert core.download_entry.call_args_list[0][0][0]['assembly_level'] == 'Complete Genome'
 
 
+def test__download_chromosome(monkeypatch, mocker, req):
+    summary_contents = open(_get_file('assembly_status.txt'), 'r').read()
+    req.get('http://ftp.ncbi.nih.gov/genomes/refseq/bacteria/assembly_summary.txt',
+            text=summary_contents)
+    mocker.spy(core, 'get_summary')
+    mocker.spy(core, 'parse_summary')
+    mocker.patch('ncbi_genome_download.core.download_entry')
+    core._download('refseq', 'bacteria', core.NCBI_URI, '/tmp/fake', 'genbank', 'chromosome')
+    assert core.get_summary.call_count == 1
+    assert core.parse_summary.call_count == 1
+    assert core.download_entry.call_count == 1
+    # Many nested tuples in call_args_list, no kidding.
+    assert core.download_entry.call_args_list[0][0][0]['assembly_level'] == 'Chromosome'
+
+
 def test__download_scaffold(monkeypatch, mocker, req):
     summary_contents = open(_get_file('assembly_status.txt'), 'r').read()
     req.get('http://ftp.ncbi.nih.gov/genomes/refseq/bacteria/assembly_summary.txt',

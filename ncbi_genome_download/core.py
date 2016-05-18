@@ -25,6 +25,7 @@ format_name_map = {
 
 assembly_level_map = {
     'complete': 'Complete Genome',
+    'chromosome': 'Chromosome',
     'scaffold': 'Scaffold',
     'contig': 'Contig'
 }
