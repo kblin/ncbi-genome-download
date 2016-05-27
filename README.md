@@ -29,10 +29,15 @@ pip install .
 ## Usage
 
 To download all bacterial RefSeq genomes in GenBank format from NCBI, run the following:
-
 ```
 ncbi-genome-download bacteria
 ```
+
+If you're on a reasonably fast connection, you might want to try running multiple downloads in parallel:
+```
+ncbi-genome-download bacteria --parallel 4
+```
+
 
 To download all fungal GenBank genomes from NCBI in GenBank format, run:
 ```

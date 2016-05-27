@@ -30,6 +30,9 @@ def main():
     parser.add_argument('-u', '--uri',
                         dest='uri', default=ncbi_genome_download.NCBI_URI,
                         help='NCBI base URI to use')
+    parser.add_argument('-p', '--parallel',
+                        dest='parallel', default=1, type=int, metavar="N",
+                        help='Run N processes in parallel (default: 1)')
     parser.add_argument('-v', '--verbose',
                         action='store_true', default=False,
                         help='increase output verbosity')

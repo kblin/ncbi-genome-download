@@ -22,10 +22,10 @@ def test_download_one(monkeypatch, mocker):
     monkeypatch.setattr(core, '_download', _download_mock)
     fake_args = Namespace(section='refseq', domain='bacteria', uri=core.NCBI_URI,
                           output='/tmp/fake', file_format='genbank', assembly_level='all',
-                          genus='')
+                          genus='', parallel=1)
     core.download(fake_args)
     _download_mock.assert_called_with('refseq', 'bacteria', core.NCBI_URI, '/tmp/fake',
-                                      'genbank', 'all', '')
+                                      'genbank', 'all', '', 1)
 
 
 def test_download_all(monkeypatch, mocker):
@@ -33,7 +33,7 @@ def test_download_all(monkeypatch, mocker):
     monkeypatch.setattr(core, '_download', _download_mock)
     fake_args = Namespace(section='refseq', domain='all', uri=core.NCBI_URI,
                           output='/tmp/fake', file_format='genbank', assembly_level='all',
-                          genus='')
+                          genus='', parallel=1)
     core.download(fake_args)
     assert _download_mock.call_count == len(core.supported_domains)
 
@@ -167,47 +167,51 @@ def prepare_download_entry(req, tmpdir, format_map=core.format_name_map):
         'ftp_path': 'http://fake/genomes/FAKE0.1'
     }
 
-    def create_checksum_line(filename):
-        return '{}\t./{}\n'.format(core.md5sum(filename), path.basename(filename))
+    outdir = tmpdir.mkdir('output')
+    download_jobs = []
 
     checksum_file_content = ''
     for key, val in format_map.items():
         seqfile = tmpdir.join('fake{}'.format(val))
         seqfile.write(key)
-        checksum_file_content += create_checksum_line(str(seqfile))
-        req.get('http://fake/genomes/FAKE0.1/{}'.format(path.basename(str(seqfile))),
-                text=seqfile.read())
+
+        checksum = core.md5sum(str(seqfile))
+        filename = path.basename(str(seqfile))
+        full_url = 'http://fake/genomes/FAKE0.1/{}'.format(filename)
+        local_file = str(outdir.join('refseq', 'bacteria', 'FAKE0.1', filename))
+
+        download_jobs.append(core.DownloadJob(full_url, local_file, checksum))
+        checksum_file_content += '{}\t./{}\n'.format(checksum, filename)
+        req.get(full_url, text=seqfile.read())
 
     req.get('http://fake/genomes/FAKE0.1/md5checksums.txt', text=checksum_file_content)
 
-    outdir = tmpdir.mkdir('output')
-
-    return entry, outdir
+    return entry, outdir, download_jobs
 
 
 def test_download_entry_genbank(req, tmpdir):
-    entry, outdir = prepare_download_entry(req, tmpdir)
-    core.download_entry(entry, 'refseq', 'bacteria', 'http://fake/genomes', str(outdir), 'genbank')
-    assert outdir.join('refseq', 'bacteria', 'FAKE0.1', 'fake_genomic.gbff.gz').check()
+    entry, outdir, joblist = prepare_download_entry(req, tmpdir)
+    jobs = core.download_entry(entry, 'refseq', 'bacteria', 'http://fake/genomes', str(outdir), 'genbank')
+    expected = [j for j in joblist if j.local_file.endswith('_genomic.gbff.gz')]
+    assert jobs == expected
 
 
 def test_download_entry_all(req, tmpdir):
-    entry, outdir = prepare_download_entry(req, tmpdir)
-    core.download_entry(entry, 'refseq', 'bacteria', 'http://fake/genomes', str(outdir), 'all')
-    for ending in core.format_name_map.values():
-        assert outdir.join('refseq', 'bacteria', 'FAKE0.1', 'fake{}'.format(ending)).check()
+    entry, outdir, expected = prepare_download_entry(req, tmpdir)
+    jobs = core.download_entry(entry, 'refseq', 'bacteria', 'http://fake/genomes', str(outdir), 'all')
+    assert jobs == expected
 
 
 def test_download_entry_missing(req, tmpdir):
     name_map_copy = dict(core.format_name_map.items())
     del name_map_copy['genbank']
-    entry, outdir = prepare_download_entry(req, tmpdir, name_map_copy)
-    core.download_entry(entry, 'refseq', 'bacteria', 'http://fake/genomes', str(outdir), 'genbank')
-    assert outdir.join('refseq', 'bacteria', 'FAKE0.1', 'fake_genomic.gbff.gz').check() == False
+    entry, outdir, _ = prepare_download_entry(req, tmpdir, name_map_copy)
+    jobs = core.download_entry(entry, 'refseq', 'bacteria', 'http://fake/genomes', str(outdir), 'genbank')
+    assert jobs == []
 
 
 def test_create_dir(tmpdir):
-    entry = {'assembly_accession': 'FAKE0.1' }
+    entry = {'assembly_accession': 'FAKE0.1'}
     output = tmpdir.mkdir('output')
     ret = core.create_dir(entry, 'refseq', 'bacteria', str(output))
 
@@ -217,14 +221,14 @@ def test_create_dir(tmpdir):
 
 
 def test_create_dir_exists(tmpdir):
-    entry = {'assembly_accession': 'FAKE0.1' }
+    entry = {'assembly_accession': 'FAKE0.1'}
     output = tmpdir.mkdir('output')
     output.mkdir('refseq').mkdir('bacteria').mkdir('FAKE0.1')
     core.create_dir(entry, 'refseq', 'bacteria', str(output))
 
 
 def test_create_dir_isfile(tmpdir):
-    entry = {'assembly_accession': 'FAKE0.1' }
+    entry = {'assembly_accession': 'FAKE0.1'}
     output = tmpdir.mkdir('output')
     output.join('refseq', 'bacteria', 'FAKE0.1').write('foo', ensure=True)
     with pytest.raises(OSError):
@@ -233,7 +237,7 @@ def test_create_dir_isfile(tmpdir):
 
 def test_grab_checksums_file(req):
     req.get('http://ftp.ncbi.nih.gov/genomes/all/FAKE0.1/md5checksums.txt', text='test')
-    entry = {'ftp_path': 'ftp://ftp.ncbi.nih.gov/genomes/all/FAKE0.1' }
+    entry = {'ftp_path': 'ftp://ftp.ncbi.nih.gov/genomes/all/FAKE0.1'}
     ret = core.grab_checksums_file(entry)
     assert ret == 'test'
 
@@ -290,7 +294,7 @@ def test_has_file_changed_unchanged(tmpdir):
         {'checksum': checksum, 'file': fake_file.basename},
     ]
 
-    assert core.has_file_changed(str(tmpdir), checksums) == False
+    assert core.has_file_changed(str(tmpdir), checksums) is False
 
 
 def test_md5sum():
@@ -310,7 +314,7 @@ def test_download_file_genbank(req, tmpdir):
     dl_dir = tmpdir.mkdir('download')
     req.get('http://fake/path/fake_genomic.gbff.gz', text=fake_file.read())
 
-    assert core.download_file(entry, str(dl_dir), checksums)
+    assert core.worker(core.download_file(entry, str(dl_dir), checksums))
 
 
 def test_download_file_genbank_mismatch(req, tmpdir):
@@ -322,7 +326,7 @@ def test_download_file_genbank_mismatch(req, tmpdir):
     dl_dir = tmpdir.mkdir('download')
     req.get('http://fake/path/fake_genomic.gbff.gz', text=fake_file.read())
 
-    assert core.download_file(entry, str(dl_dir), checksums) == False
+    assert core.worker(core.download_file(entry, str(dl_dir), checksums)) is False
 
 
 def test_download_file_fasta(req, tmpdir):
@@ -335,4 +339,4 @@ def test_download_file_fasta(req, tmpdir):
     dl_dir = tmpdir.mkdir('download')
     req.get('http://fake/path/fake_genomic.fna.gz', text=fake_file.read())
 
-    assert core.download_file(entry, str(dl_dir), checksums, 'fasta')
+    assert core.worker(core.download_file(entry, str(dl_dir), checksums, 'fasta'))

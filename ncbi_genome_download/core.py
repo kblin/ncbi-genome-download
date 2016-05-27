@@ -5,6 +5,8 @@ import os
 import requests
 from io import StringIO
 
+from collections import namedtuple
+from multiprocessing import Pool
 from ncbi_genome_download.summary import SummaryReader
 
 NCBI_URI = 'http://ftp.ncbi.nih.gov/genomes'
@@ -31,22 +33,26 @@ assembly_level_map = {
 }
 
 
+DownloadJob = namedtuple('DownloadJob', ['full_url', 'local_file', 'expected_checksum'])
+
+
 def download(args):
     '''Download data from NCBI'''
 
     if args.domain == 'all':
         for domain in supported_domains:
             _download(args.section, domain, args.uri, args.output, args.file_format,
-                      args.assembly_level, args.genus)
+                      args.assembly_level, args.genus, args.parallel)
     else:
         _download(args.section, args.domain, args.uri, args.output, args.file_format,
-                  args.assembly_level, args.genus)
+                  args.assembly_level, args.genus, args.parallel)
 
 
-def _download(section, domain, uri, output, file_format, assembly_level, genus=''):
+def _download(section, domain, uri, output, file_format, assembly_level, genus='', parallel=1):
     '''Download a specified domain form a section'''
     summary_file = get_summary(section, domain, uri)
     entries = parse_summary(summary_file)
+    download_jobs = []
     for entry in entries:
         if not entry['organism_name'].startswith(genus.capitalize()):
             logging.debug('Organism name %r does not start with %r as requested, skipping',
@@ -55,7 +61,16 @@ def _download(section, domain, uri, output, file_format, assembly_level, genus='
         if assembly_level != 'all' and entry['assembly_level'] != assembly_level_map[assembly_level]:
             logging.debug('Skipping entry with assembly level %r', entry['assembly_level'])
             continue
-        download_entry(entry, section, domain, uri, output, file_format)
+        download_jobs.extend(download_entry(entry, section, domain, uri, output, file_format))
+
+    pool = Pool(processes=parallel)
+    pool.map(worker, download_jobs)
+
+
+def worker(job):
+    '''Run a single download job'''
+    r = requests.get(job.full_url, stream=True)
+    return save_and_check(r, job.local_file, job.expected_checksum)
 
 
 def get_summary(section, domain, uri):
@@ -89,12 +104,15 @@ def download_entry(entry, section, domain, uri, output, file_format):
     else:
         formats = [file_format]
 
+    download_jobs = []
     for f in formats:
         try:
             if has_file_changed(full_output_dir, parsed_checksums, f):
-                download_file(entry, full_output_dir, parsed_checksums, f)
+                download_jobs.append(download_file(entry, full_output_dir, parsed_checksums, f))
         except ValueError as e:
             logging.error(e)
+
+    return download_jobs
 
 
 def create_dir(entry, section, domain, output):
@@ -183,10 +201,14 @@ def download_file(entry, directory, checksums, filetype='genbank'):
     full_url = '{}/{}'.format(base_url, filename)
     local_file = os.path.join(directory, filename)
 
-    r = requests.get(full_url, stream=True)
+    return DownloadJob(full_url, local_file, expected_checksum)
+
+
+def save_and_check(response, local_file, expected_checksum):
+    '''Save the content of an http response and verify the checksum matches'''
 
     with open(local_file, 'wb') as fh:
-        for chunk in r.iter_content(4096):
+        for chunk in response.iter_content(4096):
             fh.write(chunk)
 
     actual_checksum = md5sum(local_file)
