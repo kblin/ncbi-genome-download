@@ -21,7 +21,7 @@ format_name_map = {
     'features': '_feature_table.txt.gz',
     'gff': '_genomic.gff.gz',
     'protein-fasta': '_protein.faa.gz',
-    'genpept': '_protein.gbpff.gz',
+    'genpept': '_protein.gpff.gz',
     'wgs': '_wgsmaster.gbff.gz',
 }
 
