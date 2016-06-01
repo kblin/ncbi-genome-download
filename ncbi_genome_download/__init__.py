@@ -6,7 +6,7 @@ from ncbi_genome_download.core import (
     FORMAT_NAME_MAP,
     ASSEMBLY_LEVEL_MAP,
 )
-__version__ = '0.1.7'
+__version__ = '0.1.8'
 __all__ = [
     'download',
     'NCBI_URI',
