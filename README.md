@@ -1,6 +1,7 @@
 # NCBI Genome Downloading Scripts
 
 [![Build Status](http://github.drone.secondarymetabolites.org/api/badges/kblin/ncbi-genome-download/status.svg)](http://github.drone.secondarymetabolites.org/kblin/ncbi-genome-download)
+[![Code Health](https://landscape.io/github/kblin/ncbi-genome-download/master/landscape.svg?style=flat)](https://landscape.io/github/kblin/ncbi-genome-download/master)
 
 Some script to download bacterial and fungal genomes from NCBI after they
 restructured their FTP a while ago.
