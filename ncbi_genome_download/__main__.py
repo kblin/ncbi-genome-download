@@ -1,3 +1,4 @@
+'''Command line handling for ncbi-genome-download'''
 import argparse
 import logging
 import os
@@ -6,6 +7,7 @@ import ncbi_genome_download
 
 
 def main():
+    '''Build and parse command line'''
     parser = argparse.ArgumentParser()
     parser.add_argument('domain',
                         choices=['all'] + ncbi_genome_download.supported_domains,
