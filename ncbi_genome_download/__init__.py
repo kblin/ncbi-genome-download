@@ -2,15 +2,15 @@
 from ncbi_genome_download.core import (
     download,
     NCBI_URI,
-    supported_domains,
-    format_name_map,
-    assembly_level_map,
+    SUPPORTED_DOMAINS,
+    FORMAT_NAME_MAP,
+    ASSEMBLY_LEVEL_MAP,
 )
 __version__ = '0.1.7'
 __all__ = [
     'download',
     'NCBI_URI',
-    'supported_domains',
-    'format_name_map',
-    'assembly_level_map'
+    'SUPPORTED_DOMAINS',
+    'FORMAT_NAME_MAP',
+    'ASSEMBLY_LEVEL_MAP'
 ]

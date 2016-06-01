@@ -10,18 +10,18 @@ def main():
     '''Build and parse command line'''
     parser = argparse.ArgumentParser()
     parser.add_argument('domain',
-                        choices=['all'] + ncbi_genome_download.supported_domains,
+                        choices=['all'] + ncbi_genome_download.SUPPORTED_DOMAINS,
                         help='The NCBI "domain" to download')
     parser.add_argument('-s', '--section',
                         dest='section', default='refseq', choices=['refseq', 'genbank'],
                         help='NCBI section to download')
     parser.add_argument('-F', '--format',
                         dest='file_format', default='genbank',
-                        choices=['all'] + list(ncbi_genome_download.format_name_map.keys()),
+                        choices=['all'] + list(ncbi_genome_download.FORMAT_NAME_MAP.keys()),
                         help='Which format to download (default: genbank)')
     parser.add_argument('-l', '--assembly-level',
                         dest='assembly_level', default='all',
-                        choices=['all'] + list(ncbi_genome_download.assembly_level_map.keys()),
+                        choices=['all'] + list(ncbi_genome_download.ASSEMBLY_LEVEL_MAP.keys()),
                         help='Assembly level of genomes to download (default: all)')
     parser.add_argument('-g', '--genus',
                         dest='genus', default='',

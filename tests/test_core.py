@@ -35,7 +35,7 @@ def test_download_all(monkeypatch, mocker):
                           output='/tmp/fake', file_format='genbank', assembly_level='all',
                           genus='', parallel=1)
     core.download(fake_args)
-    assert _download_mock.call_count == len(core.supported_domains)
+    assert _download_mock.call_count == len(core.SUPPORTED_DOMAINS)
 
 
 def test__download(monkeypatch, mocker, req):
@@ -160,7 +160,7 @@ def test_parse_summary():
         assert 'assembly_accession' in first
 
 
-def prepare_download_entry(req, tmpdir, format_map=core.format_name_map):
+def prepare_download_entry(req, tmpdir, format_map=core.FORMAT_NAME_MAP):
     # Set up test env
     entry = {
         'assembly_accession': 'FAKE0.1',
@@ -203,7 +203,7 @@ def test_download_entry_all(req, tmpdir):
 
 
 def test_download_entry_missing(req, tmpdir):
-    name_map_copy = dict(core.format_name_map.items())
+    name_map_copy = dict(core.FORMAT_NAME_MAP.items())
     del name_map_copy['genbank']
     entry, outdir, _ = prepare_download_entry(req, tmpdir, name_map_copy)
     jobs = core.download_entry(entry, 'refseq', 'bacteria', 'http://fake/genomes', str(outdir), 'genbank')
