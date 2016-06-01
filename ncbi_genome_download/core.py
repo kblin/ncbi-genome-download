@@ -64,7 +64,7 @@ def _download(section, domain, uri, output, file_format, assembly_level, genus='
         if assembly_level != 'all' and entry['assembly_level'] != ASSEMBLY_LEVEL_MAP[assembly_level]:
             logging.debug('Skipping entry with assembly level %r', entry['assembly_level'])
             continue
-        download_jobs.extend(download_entry(entry, section, domain, uri, output, file_format))
+        download_jobs.extend(download_entry(entry, section, domain, output, file_format))
 
     pool = Pool(processes=parallel)
     pool.map(worker, download_jobs)
@@ -91,8 +91,7 @@ def parse_summary(summary_file):
     return SummaryReader(summary_file)
 
 
-# pylint: disable=too-many-arguments
-def download_entry(entry, section, domain, uri, output, file_format):
+def download_entry(entry, section, domain, output, file_format):
     '''Download an entry from the summary file'''
     logging.info('Downloading record %r', entry['assembly_accession'])
     full_output_dir = create_dir(entry, section, domain, output)
@@ -118,7 +117,6 @@ def download_entry(entry, section, domain, uri, output, file_format):
             logging.error(err)
 
     return download_jobs
-# pylint: enable=too-many-arguments
 
 
 def create_dir(entry, section, domain, output):

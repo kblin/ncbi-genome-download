@@ -191,14 +191,14 @@ def prepare_download_entry(req, tmpdir, format_map=core.FORMAT_NAME_MAP):
 
 def test_download_entry_genbank(req, tmpdir):
     entry, outdir, joblist = prepare_download_entry(req, tmpdir)
-    jobs = core.download_entry(entry, 'refseq', 'bacteria', 'http://fake/genomes', str(outdir), 'genbank')
+    jobs = core.download_entry(entry, 'refseq', 'bacteria', str(outdir), 'genbank')
     expected = [j for j in joblist if j.local_file.endswith('_genomic.gbff.gz')]
     assert jobs == expected
 
 
 def test_download_entry_all(req, tmpdir):
     entry, outdir, expected = prepare_download_entry(req, tmpdir)
-    jobs = core.download_entry(entry, 'refseq', 'bacteria', 'http://fake/genomes', str(outdir), 'all')
+    jobs = core.download_entry(entry, 'refseq', 'bacteria', str(outdir), 'all')
     assert jobs == expected
 
 
@@ -206,7 +206,7 @@ def test_download_entry_missing(req, tmpdir):
     name_map_copy = dict(core.FORMAT_NAME_MAP.items())
     del name_map_copy['genbank']
     entry, outdir, _ = prepare_download_entry(req, tmpdir, name_map_copy)
-    jobs = core.download_entry(entry, 'refseq', 'bacteria', 'http://fake/genomes', str(outdir), 'genbank')
+    jobs = core.download_entry(entry, 'refseq', 'bacteria', str(outdir), 'genbank')
     assert jobs == []
 
 
