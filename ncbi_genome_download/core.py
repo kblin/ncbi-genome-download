@@ -178,6 +178,11 @@ def get_name_and_checksum(checksums, end):
         if not entry['file'].endswith(end):
             # wrong file
             continue
+        # workaround for ..cds_from_genomic.fna.gz and ..rna_from_genomic.fna.gz also
+        # ending in _genomic.fna.gz, causing bogus matches for the plain fasta
+        if '_from_' not in end and '_from_' in entry['file']:
+            # still the wrong file
+            continue
         filename = entry['file']
         expected_checksum = entry['checksum']
         return filename, expected_checksum

@@ -331,11 +331,17 @@ def test_download_file_genbank_mismatch(req, tmpdir):
 
 def test_download_file_fasta(req, tmpdir):
     entry = {'ftp_path': 'ftp://fake/path'}
+    bogus_file = tmpdir.join('fake_cds_from_genomic.fna.gz')
+    bogus_file.write("we don't want this one")
+    bogus_checksum = core.md5sum(str(bogus_file))
     fake_file = tmpdir.join('fake_genomic.fna.gz')
     fake_file.write('foo')
     assert fake_file.check()
     checksum = core.md5sum(str(fake_file))
-    checksums = [{'checksum': checksum, 'file': fake_file.basename}]
+    checksums = [
+        {'checksum': bogus_checksum, 'file': bogus_file.basename},
+        {'checksum': checksum, 'file': fake_file.basename},
+    ]
     dl_dir = tmpdir.mkdir('download')
     req.get('http://fake/path/fake_genomic.fna.gz', text=fake_file.read())
 
