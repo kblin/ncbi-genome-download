@@ -1,5 +1,4 @@
 '''Parse NCBI RefSeq/GenBank summary files'''
-import logging
 
 
 class SummaryReader(object):
