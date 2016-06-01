@@ -24,6 +24,7 @@ format_name_map = {
     'genpept': '_protein.gpff.gz',
     'wgs': '_wgsmaster.gbff.gz',
     'cds-fasta': '_cds_from_genomic.fna.gz',
+    'rna-fasta': '_rna_from_genomic.fna.gz',
 }
 
 assembly_level_map = {

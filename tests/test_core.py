@@ -361,3 +361,18 @@ def test_download_file_cds_fasta(req, tmpdir):
     req.get('http://fake/path/fake_cds_from_genomic.fna.gz', text=fake_file.read())
 
     assert core.worker(core.download_file(entry, str(dl_dir), checksums, 'cds-fasta'))
+
+
+def test_download_file_rna_fasta(req, tmpdir):
+    entry = {'ftp_path': 'ftp://fake/path'}
+    fake_file = tmpdir.join('fake_rna_from_genomic.fna.gz')
+    fake_file.write('foo')
+    assert fake_file.check()
+    checksum = core.md5sum(str(fake_file))
+    checksums = [
+        {'checksum': checksum, 'file': fake_file.basename},
+    ]
+    dl_dir = tmpdir.mkdir('download')
+    req.get('http://fake/path/fake_rna_from_genomic.fna.gz', text=fake_file.read())
+
+    assert core.worker(core.download_file(entry, str(dl_dir), checksums, 'rna-fasta'))
