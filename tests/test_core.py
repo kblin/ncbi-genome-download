@@ -22,10 +22,10 @@ def test_download_one(monkeypatch, mocker):
     monkeypatch.setattr(core, '_download', _download_mock)
     fake_args = Namespace(section='refseq', domain='bacteria', uri=core.NCBI_URI,
                           output='/tmp/fake', file_format='genbank', assembly_level='all',
-                          genus='', parallel=1)
+                          genus='', species_taxid=None, taxid=None, parallel=1)
     core.download(fake_args)
     _download_mock.assert_called_with('refseq', 'bacteria', core.NCBI_URI, '/tmp/fake',
-                                      'genbank', 'all', '', 1)
+                                      'genbank', 'all', '', None, None, 1)
 
 
 def test_download_all(monkeypatch, mocker):
@@ -33,7 +33,7 @@ def test_download_all(monkeypatch, mocker):
     monkeypatch.setattr(core, '_download', _download_mock)
     fake_args = Namespace(section='refseq', domain='all', uri=core.NCBI_URI,
                           output='/tmp/fake', file_format='genbank', assembly_level='all',
-                          genus='', parallel=1)
+                          genus='', species_taxid=None, taxid=None, parallel=1)
     core.download(fake_args)
     assert _download_mock.call_count == len(core.SUPPORTED_DOMAINS)
 
