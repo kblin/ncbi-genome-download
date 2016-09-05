@@ -26,6 +26,9 @@ def main():
     parser.add_argument('-g', '--genus',
                         dest='genus', default='',
                         help='Only download sequences of the provided genus. (default: unset, download all)')
+    parser.add_argument('-t', '--taxid',
+                        dest='taxid',
+                        help='Only download sequences of the provided NCBI taxonomy ID. (default: unset, download all)')
     parser.add_argument('-o', '--output-folder',
                         dest='output', default=os.getcwd(),
                         help='Create output hierarchy in specified folder (default: current directory)')
