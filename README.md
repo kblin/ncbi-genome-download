@@ -69,6 +69,17 @@ ncbi-genome-download --genus Streptomyces bacteria
 ```
 **Note**: This is a simple string match on the organism name provided by NCBI only.
 
+To download bacterial RefSeq genomes based on their NCBI species taxonomy ID, run:
+```
+ncbi-genome-download --species-taxid 562 bacteria
+```
+**Note**: The above command will download all RefSeq genomes belonging to _Escherichia coli_.
+
+To download a specific bacterial RefSeq genomes based on its NCBI taxonomy ID, run:
+```
+ncbi-genome-download --taxid 511145 bacteria
+```
+**Note**: The above command will download the RefSeq genome belonging to _Escherichia coli str. K-12 substr. MG1655_.
 
 To get an overview of all options, run
 ```
