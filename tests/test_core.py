@@ -141,6 +141,36 @@ def test__download_genus_lowercase(monkeypatch, mocker, req):
     assert core.download_entry.call_args_list[0][0][0]['organism_name'] == 'Azorhizobium caulinodans ORS 571'
 
 
+def test__download_taxid(monkeypatch, mocker, req):
+    summary_contents = open(_get_file('partial_summary.txt'), 'r').read()
+    req.get('http://ftp.ncbi.nih.gov/genomes/refseq/bacteria/assembly_summary.txt',
+            text=summary_contents)
+    mocker.spy(core, 'get_summary')
+    mocker.spy(core, 'parse_summary')
+    mocker.patch('ncbi_genome_download.core.download_entry')
+    core._download('refseq', 'bacteria', core.NCBI_URI, '/tmp/fake', 'genbank', 'all', '', None, '438753')
+    assert core.get_summary.call_count == 1
+    assert core.parse_summary.call_count == 1
+    assert core.download_entry.call_count == 1
+    # Many nested tuples in call_args_list, no kidding.
+    assert core.download_entry.call_args_list[0][0][0]['organism_name'] == 'Azorhizobium caulinodans ORS 571'
+
+
+def test__download_species_taxid(monkeypatch, mocker, req):
+    summary_contents = open(_get_file('partial_summary.txt'), 'r').read()
+    req.get('http://ftp.ncbi.nih.gov/genomes/refseq/bacteria/assembly_summary.txt',
+            text=summary_contents)
+    mocker.spy(core, 'get_summary')
+    mocker.spy(core, 'parse_summary')
+    mocker.patch('ncbi_genome_download.core.download_entry')
+    core._download('refseq', 'bacteria', core.NCBI_URI, '/tmp/fake', 'genbank', 'all', '', '7')
+    assert core.get_summary.call_count == 1
+    assert core.parse_summary.call_count == 1
+    assert core.download_entry.call_count == 1
+    # Many nested tuples in call_args_list, no kidding.
+    assert core.download_entry.call_args_list[0][0][0]['organism_name'] == 'Azorhizobium caulinodans ORS 571'
+
+
 def test_get_summary(req):
     req.get('http://ftp.ncbi.nih.gov/genomes/refseq/bacteria/assembly_summary.txt', text='test')
     ret = core.get_summary('refseq', 'bacteria', core.NCBI_URI)
