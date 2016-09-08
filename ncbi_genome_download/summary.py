@@ -18,10 +18,6 @@ class SummaryReader(object):
     def __iter__(self):
         return self
 
-    def next(self):
-        '''Return the next entry'''
-        return self.__next__()
-
     def __next__(self):
         entry = {}
         line = self._file.readline().rstrip('\n')
@@ -31,4 +27,6 @@ class SummaryReader(object):
         for i, val in enumerate(parts):
             entry[self._fields[i]] = val
         return entry
+
+    next = __next__
 # pylint: enable=too-few-public-methods
