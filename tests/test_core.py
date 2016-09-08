@@ -50,7 +50,7 @@ def test_download_connection_err(monkeypatch, mocker):
 
 def test__download(monkeypatch, mocker, req):
     summary_contents = open(_get_file('partial_summary.txt'), 'r').read()
-    req.get('http://ftp.ncbi.nih.gov/genomes/refseq/bacteria/assembly_summary.txt',
+    req.get('https://ftp.ncbi.nih.gov/genomes/refseq/bacteria/assembly_summary.txt',
             text=summary_contents)
     mocker.spy(core, 'get_summary')
     mocker.spy(core, 'parse_summary')
@@ -63,7 +63,7 @@ def test__download(monkeypatch, mocker, req):
 
 def test__download_complete(monkeypatch, mocker, req):
     summary_contents = open(_get_file('assembly_status.txt'), 'r').read()
-    req.get('http://ftp.ncbi.nih.gov/genomes/refseq/bacteria/assembly_summary.txt',
+    req.get('https://ftp.ncbi.nih.gov/genomes/refseq/bacteria/assembly_summary.txt',
             text=summary_contents)
     mocker.spy(core, 'get_summary')
     mocker.spy(core, 'parse_summary')
@@ -78,7 +78,7 @@ def test__download_complete(monkeypatch, mocker, req):
 
 def test__download_chromosome(monkeypatch, mocker, req):
     summary_contents = open(_get_file('assembly_status.txt'), 'r').read()
-    req.get('http://ftp.ncbi.nih.gov/genomes/refseq/bacteria/assembly_summary.txt',
+    req.get('https://ftp.ncbi.nih.gov/genomes/refseq/bacteria/assembly_summary.txt',
             text=summary_contents)
     mocker.spy(core, 'get_summary')
     mocker.spy(core, 'parse_summary')
@@ -93,7 +93,7 @@ def test__download_chromosome(monkeypatch, mocker, req):
 
 def test__download_scaffold(monkeypatch, mocker, req):
     summary_contents = open(_get_file('assembly_status.txt'), 'r').read()
-    req.get('http://ftp.ncbi.nih.gov/genomes/refseq/bacteria/assembly_summary.txt',
+    req.get('https://ftp.ncbi.nih.gov/genomes/refseq/bacteria/assembly_summary.txt',
             text=summary_contents)
     mocker.spy(core, 'get_summary')
     mocker.spy(core, 'parse_summary')
@@ -108,7 +108,7 @@ def test__download_scaffold(monkeypatch, mocker, req):
 
 def test__download_contig(monkeypatch, mocker, req):
     summary_contents = open(_get_file('assembly_status.txt'), 'r').read()
-    req.get('http://ftp.ncbi.nih.gov/genomes/refseq/bacteria/assembly_summary.txt',
+    req.get('https://ftp.ncbi.nih.gov/genomes/refseq/bacteria/assembly_summary.txt',
             text=summary_contents)
     mocker.spy(core, 'get_summary')
     mocker.spy(core, 'parse_summary')
@@ -123,7 +123,7 @@ def test__download_contig(monkeypatch, mocker, req):
 
 def test__download_genus(monkeypatch, mocker, req):
     summary_contents = open(_get_file('partial_summary.txt'), 'r').read()
-    req.get('http://ftp.ncbi.nih.gov/genomes/refseq/bacteria/assembly_summary.txt',
+    req.get('https://ftp.ncbi.nih.gov/genomes/refseq/bacteria/assembly_summary.txt',
             text=summary_contents)
     mocker.spy(core, 'get_summary')
     mocker.spy(core, 'parse_summary')
@@ -138,7 +138,7 @@ def test__download_genus(monkeypatch, mocker, req):
 
 def test__download_genus_lowercase(monkeypatch, mocker, req):
     summary_contents = open(_get_file('partial_summary.txt'), 'r').read()
-    req.get('http://ftp.ncbi.nih.gov/genomes/refseq/bacteria/assembly_summary.txt',
+    req.get('https://ftp.ncbi.nih.gov/genomes/refseq/bacteria/assembly_summary.txt',
             text=summary_contents)
     mocker.spy(core, 'get_summary')
     mocker.spy(core, 'parse_summary')
@@ -153,7 +153,7 @@ def test__download_genus_lowercase(monkeypatch, mocker, req):
 
 def test__download_taxid(monkeypatch, mocker, req):
     summary_contents = open(_get_file('partial_summary.txt'), 'r').read()
-    req.get('http://ftp.ncbi.nih.gov/genomes/refseq/bacteria/assembly_summary.txt',
+    req.get('https://ftp.ncbi.nih.gov/genomes/refseq/bacteria/assembly_summary.txt',
             text=summary_contents)
     mocker.spy(core, 'get_summary')
     mocker.spy(core, 'parse_summary')
@@ -168,7 +168,7 @@ def test__download_taxid(monkeypatch, mocker, req):
 
 def test__download_species_taxid(monkeypatch, mocker, req):
     summary_contents = open(_get_file('partial_summary.txt'), 'r').read()
-    req.get('http://ftp.ncbi.nih.gov/genomes/refseq/bacteria/assembly_summary.txt',
+    req.get('https://ftp.ncbi.nih.gov/genomes/refseq/bacteria/assembly_summary.txt',
             text=summary_contents)
     mocker.spy(core, 'get_summary')
     mocker.spy(core, 'parse_summary')
@@ -182,7 +182,7 @@ def test__download_species_taxid(monkeypatch, mocker, req):
 
 
 def test_get_summary(req):
-    req.get('http://ftp.ncbi.nih.gov/genomes/refseq/bacteria/assembly_summary.txt', text='test')
+    req.get('https://ftp.ncbi.nih.gov/genomes/refseq/bacteria/assembly_summary.txt', text='test')
     ret = core.get_summary('refseq', 'bacteria', core.NCBI_URI)
     assert ret.read() == 'test'
 
@@ -204,7 +204,7 @@ def prepare_download_entry(req, tmpdir, format_map=core.FORMAT_NAME_MAP):
     # Set up test env
     entry = {
         'assembly_accession': 'FAKE0.1',
-        'ftp_path': 'http://fake/genomes/FAKE0.1'
+        'ftp_path': 'https://fake/genomes/FAKE0.1'
     }
 
     outdir = tmpdir.mkdir('output')
@@ -217,14 +217,14 @@ def prepare_download_entry(req, tmpdir, format_map=core.FORMAT_NAME_MAP):
 
         checksum = core.md5sum(str(seqfile))
         filename = path.basename(str(seqfile))
-        full_url = 'http://fake/genomes/FAKE0.1/{}'.format(filename)
+        full_url = 'https://fake/genomes/FAKE0.1/{}'.format(filename)
         local_file = str(outdir.join('refseq', 'bacteria', 'FAKE0.1', filename))
 
         download_jobs.append(core.DownloadJob(full_url, local_file, checksum))
         checksum_file_content += '{}\t./{}\n'.format(checksum, filename)
         req.get(full_url, text=seqfile.read())
 
-    req.get('http://fake/genomes/FAKE0.1/md5checksums.txt', text=checksum_file_content)
+    req.get('https://fake/genomes/FAKE0.1/md5checksums.txt', text=checksum_file_content)
 
     return entry, outdir, download_jobs
 
@@ -276,7 +276,7 @@ def test_create_dir_isfile(tmpdir):
 
 
 def test_grab_checksums_file(req):
-    req.get('http://ftp.ncbi.nih.gov/genomes/all/FAKE0.1/md5checksums.txt', text='test')
+    req.get('https://ftp.ncbi.nih.gov/genomes/all/FAKE0.1/md5checksums.txt', text='test')
     entry = {'ftp_path': 'ftp://ftp.ncbi.nih.gov/genomes/all/FAKE0.1'}
     ret = core.grab_checksums_file(entry)
     assert ret == 'test'
@@ -352,7 +352,7 @@ def test_download_file_genbank(req, tmpdir):
     checksum = core.md5sum(str(fake_file))
     checksums = [{'checksum': checksum, 'file': fake_file.basename}]
     dl_dir = tmpdir.mkdir('download')
-    req.get('http://fake/path/fake_genomic.gbff.gz', text=fake_file.read())
+    req.get('https://fake/path/fake_genomic.gbff.gz', text=fake_file.read())
 
     assert core.worker(core.download_file(entry, str(dl_dir), checksums))
 
@@ -364,7 +364,7 @@ def test_download_file_genbank_mismatch(req, tmpdir):
     assert fake_file.check()
     checksums = [{'checksum': 'fake', 'file': fake_file.basename}]
     dl_dir = tmpdir.mkdir('download')
-    req.get('http://fake/path/fake_genomic.gbff.gz', text=fake_file.read())
+    req.get('https://fake/path/fake_genomic.gbff.gz', text=fake_file.read())
 
     assert core.worker(core.download_file(entry, str(dl_dir), checksums)) is False
 
@@ -383,7 +383,7 @@ def test_download_file_fasta(req, tmpdir):
         {'checksum': checksum, 'file': fake_file.basename},
     ]
     dl_dir = tmpdir.mkdir('download')
-    req.get('http://fake/path/fake_genomic.fna.gz', text=fake_file.read())
+    req.get('https://fake/path/fake_genomic.fna.gz', text=fake_file.read())
 
     assert core.worker(core.download_file(entry, str(dl_dir), checksums, 'fasta'))
 
@@ -398,7 +398,7 @@ def test_download_file_cds_fasta(req, tmpdir):
         {'checksum': checksum, 'file': fake_file.basename},
     ]
     dl_dir = tmpdir.mkdir('download')
-    req.get('http://fake/path/fake_cds_from_genomic.fna.gz', text=fake_file.read())
+    req.get('https://fake/path/fake_cds_from_genomic.fna.gz', text=fake_file.read())
 
     assert core.worker(core.download_file(entry, str(dl_dir), checksums, 'cds-fasta'))
 
@@ -413,6 +413,6 @@ def test_download_file_rna_fasta(req, tmpdir):
         {'checksum': checksum, 'file': fake_file.basename},
     ]
     dl_dir = tmpdir.mkdir('download')
-    req.get('http://fake/path/fake_rna_from_genomic.fna.gz', text=fake_file.read())
+    req.get('https://fake/path/fake_rna_from_genomic.fna.gz', text=fake_file.read())
 
     assert core.worker(core.download_file(entry, str(dl_dir), checksums, 'rna-fasta'))

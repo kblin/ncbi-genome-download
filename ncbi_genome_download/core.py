@@ -9,7 +9,7 @@ from multiprocessing import Pool
 import requests
 from ncbi_genome_download.summary import SummaryReader
 
-NCBI_URI = 'http://ftp.ncbi.nih.gov/genomes'
+NCBI_URI = 'https://ftp.ncbi.nih.gov/genomes'
 SUPPORTED_DOMAINS = ['archaea', 'bacteria', 'fungi', 'invertebrate', 'plant',
                      'protozoa', 'unknown', 'vertebrate_mammalian',
                      'vertebrate_other', 'viral']
@@ -158,8 +158,8 @@ def grab_checksums_file(entry):
 
 
 def convert_ftp_url(url):
-    '''Convert FTP to HTTP URLs'''
-    return url.replace('ftp://', 'http://', 1)
+    '''Convert FTP to HTTPS URLs'''
+    return url.replace('ftp://', 'https://', 1)
 
 
 def parse_checksums(checksums_string):
