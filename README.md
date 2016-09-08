@@ -69,6 +69,13 @@ ncbi-genome-download --genus Streptomyces bacteria
 ```
 **Note**: This is a simple string match on the organism name provided by NCBI only.
 
+You can also use this with a slight trick to download genomes of a certain species as well:
+```
+ncbi-genome-download --genus "Streptomyces coelicolor" bacteria
+```
+**Note**: The quotes are important. Again, this is a simple string match on the organism
+name provided by the NCBI.
+
 To download bacterial RefSeq genomes based on their NCBI species taxonomy ID, run:
 ```
 ncbi-genome-download --species-taxid 562 bacteria
