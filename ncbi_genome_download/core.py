@@ -40,16 +40,21 @@ DownloadJob = namedtuple('DownloadJob', ['full_url', 'local_file', 'expected_che
 
 def download(args):
     '''Download data from NCBI'''
-
-    if args.domain == 'all':
-        for domain in SUPPORTED_DOMAINS:
-            _download(args.section, domain, args.uri, args.output, args.file_format,
+    try:
+        if args.domain == 'all':
+            for domain in SUPPORTED_DOMAINS:
+                _download(args.section, domain, args.uri, args.output, args.file_format,
+                          args.assembly_level, args.genus, args.species_taxid,
+                          args.taxid, args.parallel)
+        else:
+            _download(args.section, args.domain, args.uri, args.output, args.file_format,
                       args.assembly_level, args.genus, args.species_taxid,
                       args.taxid, args.parallel)
-    else:
-        _download(args.section, args.domain, args.uri, args.output, args.file_format,
-                  args.assembly_level, args.genus, args.species_taxid,
-                  args.taxid, args.parallel)
+    except requests.exceptions.ConnectionError as err:
+        logging.error('Download from NCBI failed: %r', err)
+        # Exit code 75 meas TEMPFAIL in C/C++, so let's stick with that for now.
+        return 75
+    return 0
 
 
 # pylint: disable=too-many-arguments

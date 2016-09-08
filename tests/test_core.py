@@ -2,6 +2,7 @@ import pytest
 import requests_mock
 from argparse import Namespace
 from os import path
+from requests.exceptions import ConnectionError
 
 from ncbi_genome_download import core
 
@@ -36,6 +37,15 @@ def test_download_all(monkeypatch, mocker):
                           genus='', species_taxid=None, taxid=None, parallel=1)
     core.download(fake_args)
     assert _download_mock.call_count == len(core.SUPPORTED_DOMAINS)
+
+
+def test_download_connection_err(monkeypatch, mocker):
+    _download_mock = mocker.MagicMock(side_effect=ConnectionError)
+    monkeypatch.setattr(core, '_download', _download_mock)
+    fake_args = Namespace(section='refseq', domain='all', uri=core.NCBI_URI,
+                          output='/tmp/fake', file_format='genbank', assembly_level='all',
+                          genus='', species_taxid=None, taxid=None, parallel=1)
+    assert core.download(fake_args) == 75
 
 
 def test__download(monkeypatch, mocker, req):
