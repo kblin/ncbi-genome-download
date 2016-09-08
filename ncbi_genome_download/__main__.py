@@ -42,6 +42,9 @@ def main():
     parser.add_argument('-p', '--parallel',
                         dest='parallel', default=1, type=int, metavar="N",
                         help='Run N downloads in parallel (default: 1)')
+    parser.add_argument('-r', '--retries',
+                        dest='retries', default=0, type=int, metavar="N",
+                        help='Retry download N times when connection to NCBI fails (default: 0)')
     parser.add_argument('-v', '--verbose',
                         action='store_true', default=False,
                         help='increase output verbosity')
@@ -63,7 +66,15 @@ def main():
 
     logging.basicConfig(format='%(levelname)s: %(message)s', level=log_level)
 
-    ncbi_genome_download.download(args)
+    retries = 0
+    ret = ncbi_genome_download.download(args)
+    while ret == 75 and retries < args.retries:
+        retries += 1
+        logging.error('Downloading from NCBI failed due to a connection error, retrying. Retries so far: %s',
+                      retries)
+        ret = ncbi_genome_download.download(args)
+
+    return ret
 
 
 if __name__ == '__main__':
