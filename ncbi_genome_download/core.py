@@ -44,14 +44,17 @@ def download(args):
     if args.domain == 'all':
         for domain in SUPPORTED_DOMAINS:
             _download(args.section, domain, args.uri, args.output, args.file_format,
-                      args.assembly_level, args.genus, args.parallel)
+                      args.assembly_level, args.genus, args.species_taxid,
+                      args.taxid, args.parallel)
     else:
         _download(args.section, args.domain, args.uri, args.output, args.file_format,
-                  args.assembly_level, args.genus, args.parallel)
+                  args.assembly_level, args.genus, args.species_taxid,
+                  args.taxid, args.parallel)
 
 
 # pylint: disable=too-many-arguments
-def _download(section, domain, uri, output, file_format, assembly_level, genus='', parallel=1):
+def _download(section, domain, uri, output, file_format, assembly_level, genus='',
+              species_taxid=None, taxid=None, parallel=1):
     '''Download a specified domain form a section'''
     summary_file = get_summary(section, domain, uri)
     entries = parse_summary(summary_file)
@@ -60,6 +63,14 @@ def _download(section, domain, uri, output, file_format, assembly_level, genus='
         if not entry['organism_name'].startswith(genus.capitalize()):
             logging.debug('Organism name %r does not start with %r as requested, skipping',
                           entry['organism_name'], genus)
+            continue
+        if species_taxid is not None and entry['species_taxid'] != species_taxid:
+            logging.debug('Species TaxID %r different from the one provided %r, skipping',
+                          entry['species_taxid'], species_taxid)
+            continue
+        if taxid is not None and entry['taxid'] != taxid:
+            logging.debug('Organism TaxID %r different from the one provided %r, skipping',
+                          entry['taxid'], taxid)
             continue
         if assembly_level != 'all' and entry['assembly_level'] != ASSEMBLY_LEVEL_MAP[assembly_level]:
             logging.debug('Skipping entry with assembly level %r', entry['assembly_level'])
