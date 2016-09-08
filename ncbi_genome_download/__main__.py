@@ -28,7 +28,8 @@ def main():
                         help='Only download sequences of the provided genus. (default: unset, download all)')
     parser.add_argument('-T', '--species-taxid',
                         dest='species_taxid',
-                        help='Only download sequences of the provided species NCBI taxonomy ID. (default: unset, download all)')
+                        help='Only download sequences of the provided species NCBI taxonomy ID. '
+                             '(default: unset, download all)')
     parser.add_argument('-t', '--taxid',
                         dest='taxid',
                         help='Only download sequences of the provided NCBI taxonomy ID. (default: unset, download all)')
