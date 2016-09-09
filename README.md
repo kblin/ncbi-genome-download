@@ -21,11 +21,15 @@ So this is a set of scripts that focuses on the actual genome downloading.
 pip install ncbi-genome-download
 ```
 
-
 Alternatively, clone this repository from GitHub, then run (in a python virtual environment)
 ```
 pip install .
 ```
+If this fails on older versions of Python, try updating your `pip` tool first:
+```
+pip install --upgrade pip
+```
+and then rerun the `ncbi-genome-download` install.
 
 `ncbi-genome-download` is only developed and tested on Python releases still under active
 support by the Python project. At the moment, this means versions 2.7, 3.3, 3.4, 3.5 and 3.6.
@@ -34,6 +38,7 @@ Specifically, no attempt at testing under Python versions older than 2.7 or 3.3 
 If your system is stuck on an older version of Python, consider using a tool like
 [Homebrew](http://brew.sh) or [Linuxbrew](http://linuxbrew.sh) to obtain a more up-to-date
 version.
+
 
 ## Usage
 

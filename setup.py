@@ -1,5 +1,6 @@
 import os
 import sys
+import setuptools
 from setuptools import setup
 from setuptools.command.test import test as TestCommand
 
@@ -10,7 +11,11 @@ def read(fname):
 
 def read_requires(fname):
     with open(fname, 'r') as fh:
-        requires = [l.strip() for l in fh.readlines()]
+        # Old setuptools don't understand environment markers :(
+        if tuple(map(int, setuptools.__version__.split('.'))) < (17, 1, 0):
+            requires = [l.split(';')[0].strip() for l in fh.readlines()]
+        else:
+            requires = [l.strip() for l in fh.readlines()]
 
     return requires
 
@@ -22,6 +27,7 @@ def read_version():
 
 
 tests_require_path = os.path.join('tests', 'requirements.txt')
+
 
 class PyTest(TestCommand):
     def finalize_options(self):

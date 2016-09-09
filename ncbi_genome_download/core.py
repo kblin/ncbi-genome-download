@@ -3,11 +3,19 @@ import errno
 import hashlib
 import logging
 import os
+import sys
 from io import StringIO
 from collections import namedtuple
 from multiprocessing import Pool
-import requests
 from ncbi_genome_download.summary import SummaryReader
+
+import requests
+
+# Python < 2.7.9 hack: fix ssl support
+if sys.version_info < (2, 7, 9):
+    from requests.packages.urllib3.contrib import pyopenssl
+    pyopenssl.inject_into_urllib3()
+
 
 NCBI_URI = 'https://ftp.ncbi.nih.gov/genomes'
 SUPPORTED_DOMAINS = ['archaea', 'bacteria', 'fungi', 'invertebrate', 'plant',
