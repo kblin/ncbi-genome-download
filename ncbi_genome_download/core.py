@@ -43,7 +43,7 @@ ASSEMBLY_LEVEL_MAP = {
 }
 
 
-DownloadJob = namedtuple('DownloadJob', ['full_url', 'local_file', 'expected_checksum'])
+DownloadJob = namedtuple('DownloadJob', ['full_url', 'local_file', 'expected_checksum', 'symlink_path'])
 
 
 def download(args):
@@ -53,11 +53,11 @@ def download(args):
             for domain in SUPPORTED_DOMAINS:
                 _download(args.section, domain, args.uri, args.output, args.file_format,
                           args.assembly_level, args.genus, args.species_taxid,
-                          args.taxid, args.parallel)
+                          args.taxid, args.human_readable, args.parallel)
         else:
             _download(args.section, args.domain, args.uri, args.output, args.file_format,
                       args.assembly_level, args.genus, args.species_taxid,
-                      args.taxid, args.parallel)
+                      args.taxid, args.human_readable, args.parallel)
     except requests.exceptions.ConnectionError as err:
         logging.error('Download from NCBI failed: %r', err)
         # Exit code 75 meas TEMPFAIL in C/C++, so let's stick with that for now.
@@ -67,7 +67,7 @@ def download(args):
 
 # pylint: disable=too-many-arguments
 def _download(section, domain, uri, output, file_format, assembly_level, genus='',
-              species_taxid=None, taxid=None, parallel=1):
+              species_taxid=None, taxid=None, human_readable=False, parallel=1):
     '''Download a specified domain form a section'''
     summary_file = get_summary(section, domain, uri)
     entries = parse_summary(summary_file)
@@ -88,7 +88,7 @@ def _download(section, domain, uri, output, file_format, assembly_level, genus='
         if assembly_level != 'all' and entry['assembly_level'] != ASSEMBLY_LEVEL_MAP[assembly_level]:
             logging.debug('Skipping entry with assembly level %r', entry['assembly_level'])
             continue
-        download_jobs.extend(download_entry(entry, section, domain, output, file_format))
+        download_jobs.extend(download_entry(entry, section, domain, output, file_format, human_readable))
 
     pool = Pool(processes=parallel)
     pool.map(worker, download_jobs)
@@ -98,7 +98,7 @@ def _download(section, domain, uri, output, file_format, assembly_level, genus='
 def worker(job):
     '''Run a single download job'''
     req = requests.get(job.full_url, stream=True)
-    return save_and_check(req, job.local_file, job.expected_checksum)
+    return save_and_check(req, job.local_file, job.expected_checksum, job.symlink_path)
 
 
 def get_summary(section, domain, uri):
@@ -115,10 +115,15 @@ def parse_summary(summary_file):
     return SummaryReader(summary_file)
 
 
-def download_entry(entry, section, domain, output, file_format):
+def download_entry(entry, section, domain, output, file_format, human_readable):
     '''Download an entry from the summary file'''
     logging.info('Downloading record %r', entry['assembly_accession'])
     full_output_dir = create_dir(entry, section, domain, output)
+
+    symlink_path = None
+    if human_readable:
+        symlink_path = create_readable_dir(entry, section, domain, output)
+
     checksums = grab_checksums_file(entry)
 
     # TODO: Only write this when the checksums file changed
@@ -136,7 +141,7 @@ def download_entry(entry, section, domain, output, file_format):
     for fmt in formats:
         try:
             if has_file_changed(full_output_dir, parsed_checksums, fmt):
-                download_jobs.append(download_file(entry, full_output_dir, parsed_checksums, fmt))
+                download_jobs.append(download_file(entry, full_output_dir, parsed_checksums, fmt, symlink_path))
         except ValueError as err:
             logging.error(err)
 
@@ -146,6 +151,23 @@ def download_entry(entry, section, domain, output, file_format):
 def create_dir(entry, section, domain, output):
     '''Create the output directory for the entry if needed'''
     full_output_dir = os.path.join(output, section, domain, entry['assembly_accession'])
+    try:
+        os.makedirs(full_output_dir)
+    except OSError as err:
+        if err.errno == errno.EEXIST and os.path.isdir(full_output_dir):
+            pass
+        else:
+            raise
+
+    return full_output_dir
+
+
+def create_readable_dir(entry, section, domain, output):
+    '''Create the a human-readable directory to link the entry to if needed'''
+    full_output_dir = os.path.join(output, 'human_readable', section, domain,
+                                   get_genus_label(entry),
+                                   get_species_label(entry),
+                                   get_strain_label(entry))
     try:
         os.makedirs(full_output_dir)
     except OSError as err:
@@ -226,18 +248,21 @@ def md5sum(filename):
     return hash_md5.hexdigest()
 
 
-def download_file(entry, directory, checksums, filetype='genbank'):
+def download_file(entry, directory, checksums, filetype='genbank', symlink_path=None):
     '''Download and verirfy a given file'''
     pattern = FORMAT_NAME_MAP[filetype]
     filename, expected_checksum = get_name_and_checksum(checksums, pattern)
     base_url = convert_ftp_url(entry['ftp_path'])
     full_url = '{}/{}'.format(base_url, filename)
     local_file = os.path.join(directory, filename)
+    full_symlink = None
+    if symlink_path is not None:
+        full_symlink = os.path.join(symlink_path, filename)
 
-    return DownloadJob(full_url, local_file, expected_checksum)
+    return DownloadJob(full_url, local_file, expected_checksum, full_symlink)
 
 
-def save_and_check(response, local_file, expected_checksum):
+def save_and_check(response, local_file, expected_checksum, symlink_path):
     '''Save the content of an http response and verify the checksum matches'''
 
     with open(local_file, 'wb') as handle:
@@ -250,4 +275,51 @@ def save_and_check(response, local_file, expected_checksum):
                       local_file, expected_checksum, actual_checksum)
         return False
 
+    if symlink_path is not None:
+        os.symlink(os.path.abspath(local_file), symlink_path)
+
     return True
+
+
+def get_genus_label(entry):
+    '''Get the genus name of an assembly summary entry'''
+    return entry['organism_name'].split(' ')[0]
+
+
+def get_species_label(entry):
+    '''Get the species name of an assembly summary entry'''
+    return entry['organism_name'].split(' ')[1]
+
+
+def get_strain_label(entry):
+    '''Try to extract a strain from an assemly summary entry
+
+    First this checks 'infraspecific_name', then 'isolate', then
+    it tries to get it from 'organism_name'. If all fails, it
+    falls back to just returning the assembly accesion number.
+    '''
+    def get_strain(entry):
+        strain = entry['infraspecific_name']
+        if strain != '':
+            strain = strain.split('=')[-1]
+            return strain
+
+        strain = entry['isolate']
+        if strain != '':
+            return strain
+
+        if len(entry['organism_name'].split(' ')) > 2:
+            strain = ' '.join(entry['organism_name'].split(' ')[2:])
+            return strain
+
+        return entry['assembly_accession']
+
+    def cleanup(strain):
+        strain = strain.strip()
+        strain = strain.replace(' ', '_')
+        strain = strain.replace(';', '_')
+        strain = strain.replace('/', '_')
+        strain = strain.replace('\\', '_')
+        return strain
+
+    return cleanup(get_strain(entry))

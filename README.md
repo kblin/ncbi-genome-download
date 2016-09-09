@@ -93,6 +93,17 @@ ncbi-genome-download --taxid 511145 bacteria
 ```
 **Note**: The above command will download the RefSeq genome belonging to _Escherichia coli str. K-12 substr. MG1655_.
 
+
+It is possible to also create a human-readable directory structure in parallel to mirroring
+the layout used by NCBI:
+```
+ncbo-genome-download --human-readable bacteria
+```
+This will use links to point to the appropriate files in the NCBI directory structure,
+so it saves file space. Note that links are not supported on some Windows file systems and some
+older versions of Windows.
+
+
 To get an overview of all options, run
 ```
 ncbi-genome-download --help

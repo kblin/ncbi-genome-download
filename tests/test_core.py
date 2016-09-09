@@ -23,10 +23,11 @@ def test_download_one(monkeypatch, mocker):
     monkeypatch.setattr(core, '_download', _download_mock)
     fake_args = Namespace(section='refseq', domain='bacteria', uri=core.NCBI_URI,
                           output='/tmp/fake', file_format='genbank', assembly_level='all',
-                          genus='', species_taxid=None, taxid=None, parallel=1)
+                          genus='', species_taxid=None, taxid=None, human_readable=False,
+                          parallel=1)
     core.download(fake_args)
     _download_mock.assert_called_with('refseq', 'bacteria', core.NCBI_URI, '/tmp/fake',
-                                      'genbank', 'all', '', None, None, 1)
+                                      'genbank', 'all', '', None, None, False, 1)
 
 
 def test_download_all(monkeypatch, mocker):
@@ -34,7 +35,8 @@ def test_download_all(monkeypatch, mocker):
     monkeypatch.setattr(core, '_download', _download_mock)
     fake_args = Namespace(section='refseq', domain='all', uri=core.NCBI_URI,
                           output='/tmp/fake', file_format='genbank', assembly_level='all',
-                          genus='', species_taxid=None, taxid=None, parallel=1)
+                          genus='', species_taxid=None, taxid=None, human_readable=False,
+                          parallel=1)
     core.download(fake_args)
     assert _download_mock.call_count == len(core.SUPPORTED_DOMAINS)
 
@@ -44,7 +46,8 @@ def test_download_connection_err(monkeypatch, mocker):
     monkeypatch.setattr(core, '_download', _download_mock)
     fake_args = Namespace(section='refseq', domain='all', uri=core.NCBI_URI,
                           output='/tmp/fake', file_format='genbank', assembly_level='all',
-                          genus='', species_taxid=None, taxid=None, parallel=1)
+                          genus='', species_taxid=None, taxid=None, human_readable=False,
+                          parallel=1)
     assert core.download(fake_args) == 75
 
 
@@ -200,10 +203,12 @@ def test_parse_summary():
         assert 'assembly_accession' in first
 
 
-def prepare_download_entry(req, tmpdir, format_map=core.FORMAT_NAME_MAP):
+def prepare_download_entry(req, tmpdir, format_map=core.FORMAT_NAME_MAP, human_readable=False):
     # Set up test env
     entry = {
         'assembly_accession': 'FAKE0.1',
+        'organism_name': 'Example species',
+        'infraspecific_name': 'strain=ABC 1234',
         'ftp_path': 'https://fake/genomes/FAKE0.1'
     }
 
@@ -220,7 +225,11 @@ def prepare_download_entry(req, tmpdir, format_map=core.FORMAT_NAME_MAP):
         full_url = 'https://fake/genomes/FAKE0.1/{}'.format(filename)
         local_file = str(outdir.join('refseq', 'bacteria', 'FAKE0.1', filename))
 
-        download_jobs.append(core.DownloadJob(full_url, local_file, checksum))
+        symlink_path = None
+        if human_readable:
+            symlink_path = str(outdir.join('human_readable', 'refseq', 'bacteria', 'Example', 'species', 'ABC_1234', filename))
+
+        download_jobs.append(core.DownloadJob(full_url, local_file, checksum, symlink_path))
         checksum_file_content += '{}\t./{}\n'.format(checksum, filename)
         req.get(full_url, text=seqfile.read())
 
@@ -231,14 +240,14 @@ def prepare_download_entry(req, tmpdir, format_map=core.FORMAT_NAME_MAP):
 
 def test_download_entry_genbank(req, tmpdir):
     entry, outdir, joblist = prepare_download_entry(req, tmpdir)
-    jobs = core.download_entry(entry, 'refseq', 'bacteria', str(outdir), 'genbank')
+    jobs = core.download_entry(entry, 'refseq', 'bacteria', str(outdir), 'genbank', None)
     expected = [j for j in joblist if j.local_file.endswith('_genomic.gbff.gz')]
     assert jobs == expected
 
 
 def test_download_entry_all(req, tmpdir):
     entry, outdir, expected = prepare_download_entry(req, tmpdir)
-    jobs = core.download_entry(entry, 'refseq', 'bacteria', str(outdir), 'all')
+    jobs = core.download_entry(entry, 'refseq', 'bacteria', str(outdir), 'all', None)
     assert jobs == expected
 
 
@@ -246,8 +255,15 @@ def test_download_entry_missing(req, tmpdir):
     name_map_copy = dict(core.FORMAT_NAME_MAP.items())
     del name_map_copy['genbank']
     entry, outdir, _ = prepare_download_entry(req, tmpdir, name_map_copy)
-    jobs = core.download_entry(entry, 'refseq', 'bacteria', str(outdir), 'genbank')
+    jobs = core.download_entry(entry, 'refseq', 'bacteria', str(outdir), 'genbank', None)
     assert jobs == []
+
+
+def test_download_entry_human_readable(req, tmpdir):
+    entry, outdir, joblist = prepare_download_entry(req, tmpdir, human_readable=True)
+    jobs = core.download_entry(entry, 'refseq', 'bacteria', str(outdir), 'genbank', True)
+    expected = [j for j in joblist if j.local_file.endswith('_genomic.gbff.gz')]
+    assert jobs == expected
 
 
 def test_create_dir(tmpdir):
@@ -263,8 +279,9 @@ def test_create_dir(tmpdir):
 def test_create_dir_exists(tmpdir):
     entry = {'assembly_accession': 'FAKE0.1'}
     output = tmpdir.mkdir('output')
-    output.mkdir('refseq').mkdir('bacteria').mkdir('FAKE0.1')
-    core.create_dir(entry, 'refseq', 'bacteria', str(output))
+    expected = output.mkdir('refseq').mkdir('bacteria').mkdir('FAKE0.1')
+    ret = core.create_dir(entry, 'refseq', 'bacteria', str(output))
+    assert ret == str(expected)
 
 
 def test_create_dir_isfile(tmpdir):
@@ -273,6 +290,32 @@ def test_create_dir_isfile(tmpdir):
     output.join('refseq', 'bacteria', 'FAKE0.1').write('foo', ensure=True)
     with pytest.raises(OSError):
         core.create_dir(entry, 'refseq', 'bacteria', str(output))
+
+
+def test_create_readable_dir(tmpdir):
+    entry = {'organism_name': 'Example species', 'infraspecific_name': 'strain=ABC 1234'}
+    output = tmpdir.mkdir('output')
+    ret = core.create_readable_dir(entry, 'refseq', 'bacteria', str(output))
+
+    expected = output.join('human_readable', 'refseq', 'bacteria', 'Example', 'species', 'ABC_1234')
+    assert expected.check()
+    assert ret == str(expected)
+
+
+def test_create_readable_dir_exists(tmpdir):
+    entry = {'organism_name': 'Example species', 'infraspecific_name': 'strain=ABC 1234'}
+    output = tmpdir.mkdir('output')
+    expected = output.mkdir('human_readable').mkdir('refseq').mkdir('bacteria').mkdir('Example').mkdir('species').mkdir('ABC_1234')
+    ret = core.create_readable_dir(entry, 'refseq', 'bacteria', str(output))
+    assert ret == str(expected)
+
+
+def test_create_readable_dir_isfile(tmpdir):
+    entry = {'organism_name': 'Example species', 'infraspecific_name': 'strain=ABC 1234'}
+    output = tmpdir.mkdir('output')
+    output.join('human_readable', 'refseq', 'bacteria', 'Example', 'species', 'ABC_1234').write('foo', ensure=True)
+    with pytest.raises(OSError):
+        core.create_readable_dir(entry, 'refseq', 'bacteria', str(output))
 
 
 def test_grab_checksums_file(req):
@@ -416,3 +459,63 @@ def test_download_file_rna_fasta(req, tmpdir):
     req.get('https://fake/path/fake_rna_from_genomic.fna.gz', text=fake_file.read())
 
     assert core.worker(core.download_file(entry, str(dl_dir), checksums, 'rna-fasta'))
+
+
+def test_download_file_symlink_path(req, tmpdir):
+    entry = {'ftp_path': 'ftp://fake/path'}
+    fake_file = tmpdir.join('fake_genomic.gbff.gz')
+    fake_file.write('foo')
+    assert fake_file.check()
+    checksum = core.md5sum(str(fake_file))
+    checksums = [{'checksum': checksum, 'file': fake_file.basename}]
+    dl_dir = tmpdir.mkdir('download')
+    symlink_dir = tmpdir.mkdir('symlink')
+    req.get('https://fake/path/fake_genomic.gbff.gz', text=fake_file.read())
+
+    assert core.worker(core.download_file(entry, str(dl_dir), checksums, symlink_path=str(symlink_dir)))
+    symlink = symlink_dir.join('fake_genomic.gbff.gz')
+    assert symlink.check()
+
+
+def test_get_genus_label():
+    fake_entry = {'organism_name': 'Example species ABC 1234'}
+    assert core.get_genus_label(fake_entry) == 'Example'
+
+
+def test_get_species_label():
+    fake_entry = {'organism_name': 'Example species ABC 1234'}
+    assert core.get_species_label(fake_entry) == 'species'
+
+
+def test_get_strain_label():
+    fake_entry = {'infraspecific_name': 'strain=ABC 1234'}
+    assert core.get_strain_label(fake_entry) == 'ABC_1234'
+
+    fake_entry = {'infraspecific_name': '', 'isolate': 'ABC 1234'}
+    assert core.get_strain_label(fake_entry) == 'ABC_1234'
+
+    fake_entry = {'infraspecific_name': '', 'isolate': '',
+                  'organism_name': 'Example species ABC 1234'}
+    assert core.get_strain_label(fake_entry) == 'ABC_1234'
+
+    fake_entry = {'infraspecific_name': '', 'isolate': '',
+                  'organism_name': 'Example strain', 'assembly_accession': 'ABC12345'}
+    assert core.get_strain_label(fake_entry) == 'ABC12345'
+
+    fake_entry = {'infraspecific_name': 'strain=ABC 1234; FOO'}
+    assert core.get_strain_label(fake_entry) == 'ABC_1234__FOO'
+
+    fake_entry = {'infraspecific_name': 'strain=ABC 1234 '}
+    assert core.get_strain_label(fake_entry) == 'ABC_1234'
+
+    fake_entry = {'infraspecific_name': 'strain= ABC 1234'}
+    assert core.get_strain_label(fake_entry) == 'ABC_1234'
+
+    fake_entry = {'infraspecific_name': 'strain=ABC/1234'}
+    assert core.get_strain_label(fake_entry) == 'ABC_1234'
+
+    fake_entry = {'infraspecific_name': 'strain=ABC//1234'}
+    assert core.get_strain_label(fake_entry) == 'ABC__1234'
+
+    fake_entry = {'infraspecific_name': 'strain=ABC\\1234'}
+    assert core.get_strain_label(fake_entry) == 'ABC_1234'

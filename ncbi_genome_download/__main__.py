@@ -36,6 +36,9 @@ def main():
     parser.add_argument('-o', '--output-folder',
                         dest='output', default=os.getcwd(),
                         help='Create output hierarchy in specified folder (default: current directory)')
+    parser.add_argument('-H', '--human-readable',
+                        dest='human_readable', default=False, action='store_true',
+                        help='Create links in human-readable hierarchy (might fail on Windows)')
     parser.add_argument('-u', '--uri',
                         dest='uri', default=ncbi_genome_download.NCBI_URI,
                         help='NCBI base URI to use')
