@@ -12,7 +12,7 @@ from ncbi_genome_download.summary import SummaryReader
 import requests
 
 # Python < 2.7.9 hack: fix ssl support
-if sys.version_info < (2, 7, 9):
+if sys.version_info < (2, 7, 9):  # pragma: no cover
     from requests.packages.urllib3.contrib import pyopenssl
     pyopenssl.inject_into_urllib3()
 
