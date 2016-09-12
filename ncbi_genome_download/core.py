@@ -197,6 +197,10 @@ def parse_checksums(checksums_string):
     checksums_list = []
     for line in checksums_string.split('\n'):
         try:
+            # skip empty lines
+            if line == '':
+                continue
+
             checksum, filename = line.split()
             # strip leading ./
             if filename.startswith('./'):
