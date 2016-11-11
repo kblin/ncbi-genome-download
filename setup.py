@@ -1,6 +1,5 @@
 import os
 import sys
-import setuptools
 from setuptools import setup
 from setuptools.command.test import test as TestCommand
 
@@ -9,24 +8,30 @@ def read(fname):
     return open(os.path.join(os.path.dirname(__file__), fname)).read()
 
 
-def read_requires(fname):
-    with open(fname, 'r') as fh:
-        # Old setuptools don't understand environment markers :(
-        if tuple(map(int, setuptools.__version__.split('.'))) < (17, 1, 0):
-            requires = [l.split(';')[0].strip() for l in fh.readlines()]
-        else:
-            requires = [l.strip() for l in fh.readlines()]
+install_requires = [
+    'requests >= 2.4.3',
+]
 
-    return requires
+# Can't use environment markers on old setuptools, so fix the requirements
+# dynamically here. For wheels, again override the requirements in setup.cfg
+# to not cause conflicts.
+if sys.version_info[:3] < (2, 7, 9):
+    install_requires.extend(['pyOpenSSL', 'ndg-httpsclient'])
+
+
+tests_require = [
+    'pytest',
+    'coverage',
+    'pytest-cov',
+    'requests-mock',
+    'pytest-mock',
+]
 
 
 def read_version():
     for line in open(os.path.join('ncbi_genome_download', '__init__.py'), 'r'):
         if line.startswith('__version__'):
             return line.split('=')[-1].strip().strip("'")
-
-
-tests_require_path = os.path.join('tests', 'requirements.txt')
 
 
 class PyTest(TestCommand):
@@ -48,8 +53,8 @@ setup(
     author_email='kblin@biosustain.dtu.dk',
     description='Download genome files from the NCBI FTP server.',
     long_description=read('README.md'),
-    install_requires=read_requires('requirements.txt'),
-    tests_require=read_requires(tests_require_path),
+    install_requires=install_requires,
+    tests_require=tests_require,
     cmdclass={'test': PyTest},
     entry_points={
         'console_scripts': [
@@ -68,6 +73,6 @@ setup(
         'Operating System :: OS Independent',
     ],
     extras_require={
-        'testing': read_requires(tests_require_path),
+        'testing': tests_require,
     },
 )
