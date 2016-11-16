@@ -97,7 +97,7 @@ ncbi-genome-download --taxid 511145 bacteria
 It is possible to also create a human-readable directory structure in parallel to mirroring
 the layout used by NCBI:
 ```
-ncbo-genome-download --human-readable bacteria
+ncbi-genome-download --human-readable bacteria
 ```
 This will use links to point to the appropriate files in the NCBI directory structure,
 so it saves file space. Note that links are not supported on some Windows file systems and some
