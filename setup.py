@@ -7,6 +7,10 @@ from setuptools.command.test import test as TestCommand
 def read(fname):
     return open(os.path.join(os.path.dirname(__file__), fname)).read()
 
+if os.path.exists('README.rst'):
+    long_description = read('README.rst')
+else:
+    long_description = read('README.md')
 
 install_requires = [
     'requests >= 2.4.3',
@@ -52,7 +56,7 @@ setup(
     author='Kai Blin',
     author_email='kblin@biosustain.dtu.dk',
     description='Download genome files from the NCBI FTP server.',
-    long_description=read('README.rst'),
+    long_description=long_description,
     install_requires=install_requires,
     tests_require=tests_require,
     cmdclass={'test': PyTest},
