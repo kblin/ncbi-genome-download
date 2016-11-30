@@ -52,7 +52,7 @@ setup(
     author='Kai Blin',
     author_email='kblin@biosustain.dtu.dk',
     description='Download genome files from the NCBI FTP server.',
-    long_description=read('README.md'),
+    long_description=read('README.rst'),
     install_requires=install_requires,
     tests_require=tests_require,
     cmdclass={'test': PyTest},
