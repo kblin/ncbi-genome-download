@@ -318,6 +318,38 @@ def test_create_readable_dir_isfile(tmpdir):
         core.create_readable_dir(entry, 'refseq', 'bacteria', str(output))
 
 
+def test_create_readable_dir_virus(tmpdir):
+    output = tmpdir.mkdir('output')
+    entry = {'organism_name': 'OnlyOneString-1', 'infraspecific_name': 'strain=ABC 1234'}
+    ret = core.create_readable_dir(entry, 'refseq', 'viral', str(output))
+
+    expected = output.join('human_readable', 'refseq', 'viral', 'OnlyOneString-1', 'ABC_1234')
+    assert expected.check()
+    assert ret == str(expected)
+
+    entry = {'organism_name': 'Two strings', 'infraspecific_name': 'strain=ABC 1234'}
+    ret = core.create_readable_dir(entry, 'refseq', 'viral', str(output))
+
+    expected = output.join('human_readable', 'refseq', 'viral', 'Two_strings', 'ABC_1234')
+    assert expected.check()
+    assert ret == str(expected)
+
+    entry = {'organism_name': 'This is four strings', 'infraspecific_name': 'strain=ABC 1234'}
+    ret = core.create_readable_dir(entry, 'refseq', 'viral', str(output))
+
+    expected = output.join('human_readable', 'refseq', 'viral', 'This_is_four_strings', 'ABC_1234')
+    assert expected.check()
+    assert ret == str(expected)
+
+    entry = {'organism_name': 'This is four strings', 'infraspecific_name': '',
+             'isolate': '', 'assembly_accession': 'ABC12345'}
+    ret = core.create_readable_dir(entry, 'refseq', 'viral', str(output))
+
+    expected = output.join('human_readable', 'refseq', 'viral', 'This_is_four_strings', 'ABC12345')
+    assert expected.check()
+    assert ret == str(expected)
+
+
 def test_grab_checksums_file(req):
     req.get('https://ftp.ncbi.nih.gov/genomes/all/FAKE0.1/md5checksums.txt', text='test')
     entry = {'ftp_path': 'ftp://ftp.ncbi.nih.gov/genomes/all/FAKE0.1'}
@@ -501,6 +533,10 @@ def test_get_strain_label():
     fake_entry = {'infraspecific_name': '', 'isolate': '',
                   'organism_name': 'Example strain', 'assembly_accession': 'ABC12345'}
     assert core.get_strain_label(fake_entry) == 'ABC12345'
+
+    fake_entry = {'infraspecific_name': '', 'isolate': '',
+                  'organism_name': 'Example strain with stupid name', 'assembly_accession': 'ABC12345'}
+    assert core.get_strain_label(fake_entry, viral=True) == 'ABC12345'
 
     fake_entry = {'infraspecific_name': 'strain=ABC 1234; FOO'}
     assert core.get_strain_label(fake_entry) == 'ABC_1234__FOO'

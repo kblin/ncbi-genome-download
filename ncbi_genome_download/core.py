@@ -164,10 +164,16 @@ def create_dir(entry, section, domain, output):
 
 def create_readable_dir(entry, section, domain, output):
     '''Create the a human-readable directory to link the entry to if needed'''
-    full_output_dir = os.path.join(output, 'human_readable', section, domain,
-                                   get_genus_label(entry),
-                                   get_species_label(entry),
-                                   get_strain_label(entry))
+    if domain != 'viral':
+        full_output_dir = os.path.join(output, 'human_readable', section, domain,
+                                       get_genus_label(entry),
+                                       get_species_label(entry),
+                                       get_strain_label(entry))
+    else:
+        full_output_dir = os.path.join(output, 'human_readable', section, domain,
+                                       entry['organism_name'].replace(' ', '_'),
+                                       get_strain_label(entry, viral=True))
+
     try:
         os.makedirs(full_output_dir)
     except OSError as err:
@@ -295,7 +301,7 @@ def get_species_label(entry):
     return entry['organism_name'].split(' ')[1]
 
 
-def get_strain_label(entry):
+def get_strain_label(entry, viral=False):
     '''Try to extract a strain from an assemly summary entry
 
     First this checks 'infraspecific_name', then 'isolate', then
@@ -312,7 +318,7 @@ def get_strain_label(entry):
         if strain != '':
             return strain
 
-        if len(entry['organism_name'].split(' ')) > 2:
+        if len(entry['organism_name'].split(' ')) > 2 and not viral:
             strain = ' '.join(entry['organism_name'].split(' ')[2:])
             return strain
 
