@@ -1,3 +1,4 @@
+import os
 import pytest
 import requests_mock
 from argparse import Namespace
@@ -508,6 +509,21 @@ def test_download_file_symlink_path(req, tmpdir):
     symlink = symlink_dir.join('fake_genomic.gbff.gz')
     assert symlink.check()
 
+def test_download_file_symlink_path_existed(req, tmpdir):
+    entry = {'ftp_path': 'ftp://fake/path'}
+    fake_file = tmpdir.join('fake_genomic.gbff.gz')
+    fake_file.write('foo')
+    assert fake_file.check()
+    checksum = core.md5sum(str(fake_file))
+    checksums = [{'checksum': checksum, 'file': fake_file.basename}]
+    dl_dir = tmpdir.mkdir('download')
+    symlink_dir = tmpdir.mkdir('symlink')
+    symlink = symlink_dir.join('fake_genomic.gbff.gz')
+    os.symlink("/foo/bar", str(symlink))
+    req.get('https://fake/path/fake_genomic.gbff.gz', text=fake_file.read())
+
+    assert core.worker(core.download_file(entry, str(dl_dir), checksums, symlink_path=str(symlink_dir)))
+    assert symlink.check()
 
 def test_get_genus_label():
     fake_entry = {'organism_name': 'Example species ABC 1234'}
