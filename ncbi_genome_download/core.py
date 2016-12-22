@@ -286,6 +286,8 @@ def save_and_check(response, local_file, expected_checksum, symlink_path):
         return False
 
     if symlink_path is not None:
+        if os.path.lexists(symlink_path):
+            os.unlink(symlink_path)
         os.symlink(os.path.abspath(local_file), symlink_path)
 
     return True
