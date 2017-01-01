@@ -151,7 +151,7 @@ def download_entry(entry, section, domain, output, file_format, human_readable):
 
 def create_symbolic_link(symlink_path, checksum, directory, filetype='genbank'):
     end = FORMAT_NAME_MAP[filetype]
-        
+
     for entry in checksum:
         if not entry['file'].endswith(end):
             # wrong file
@@ -165,6 +165,7 @@ def create_symbolic_link(symlink_path, checksum, directory, filetype='genbank'):
         if os.path.lexists(full_symlink):
             os.unlink(full_symlink)
         os.symlink(os.path.abspath(local_file), full_symlink)
+	break
 
 def create_dir(entry, section, domain, output):
     '''Create the output directory for the entry if needed'''
