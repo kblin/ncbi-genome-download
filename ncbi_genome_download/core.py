@@ -142,8 +142,8 @@ def download_entry(entry, section, domain, output, file_format, human_readable):
         try:
             if has_file_changed(full_output_dir, parsed_checksums, fmt):
                 download_jobs.append(download_file(entry, full_output_dir, parsed_checksums, fmt, symlink_path))
-	    elif human_readable:
-	        create_symbolic_link(symlink_path, parsed_checksums, full_output_dir, fmt)
+            elif human_readable:
+                create_symbolic_link(symlink_path, parsed_checksums, full_output_dir, fmt)
         except ValueError as err:
             logging.error(err)
 
@@ -165,7 +165,7 @@ def create_symbolic_link(symlink_path, checksum, directory, filetype='genbank'):
         if os.path.lexists(full_symlink):
             os.unlink(full_symlink)
         os.symlink(os.path.abspath(local_file), full_symlink)
-	break
+        break
 
 def create_dir(entry, section, domain, output):
     '''Create the output directory for the entry if needed'''
