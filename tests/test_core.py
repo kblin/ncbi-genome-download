@@ -204,7 +204,7 @@ def test_parse_summary():
         assert 'assembly_accession' in first
 
 
-def prepare_download_entry(req, tmpdir, format_map=core.FORMAT_NAME_MAP, human_readable=False):
+def prepare_download_entry(req, tmpdir, format_map=core.FORMAT_NAME_MAP, human_readable=False, create_local_file=False):
     # Set up test env
     entry = {
         'assembly_accession': 'FAKE0.1',
@@ -224,13 +224,15 @@ def prepare_download_entry(req, tmpdir, format_map=core.FORMAT_NAME_MAP, human_r
         checksum = core.md5sum(str(seqfile))
         filename = path.basename(str(seqfile))
         full_url = 'https://fake/genomes/FAKE0.1/{}'.format(filename)
-        local_file = str(outdir.join('refseq', 'bacteria', 'FAKE0.1', filename))
+        local_file = outdir.join('refseq', 'bacteria', 'FAKE0.1', filename)
+        if create_local_file:
+            local_file.write(seqfile.read(), ensure=True)
 
         symlink_path = None
         if human_readable:
             symlink_path = str(outdir.join('human_readable', 'refseq', 'bacteria', 'Example', 'species', 'ABC_1234', filename))
 
-        download_jobs.append(core.DownloadJob(full_url, local_file, checksum, symlink_path))
+        download_jobs.append(core.DownloadJob(full_url, str(local_file), checksum, symlink_path))
         checksum_file_content += '{}\t./{}\n'.format(checksum, filename)
         req.get(full_url, text=seqfile.read())
 
@@ -264,6 +266,14 @@ def test_download_entry_human_readable(req, tmpdir):
     entry, outdir, joblist = prepare_download_entry(req, tmpdir, human_readable=True)
     jobs = core.download_entry(entry, 'refseq', 'bacteria', str(outdir), 'genbank', True)
     expected = [j for j in joblist if j.local_file.endswith('_genomic.gbff.gz')]
+    assert jobs == expected
+
+
+def test_download_entry_symlink_only(req, tmpdir):
+    entry, outdir, joblist = prepare_download_entry(req, tmpdir, human_readable=True, create_local_file=True)
+    jobs = core.download_entry(entry, 'refseq', 'bacteria', str(outdir), 'genbank', True)
+    expected = [core.DownloadJob(None, j.local_file, None, j.symlink_path)
+                for j in joblist if j.local_file.endswith('_genomic.gbff.gz')]
     assert jobs == expected
 
 
@@ -414,6 +424,46 @@ def test_has_file_changed_unchanged(tmpdir):
     assert core.has_file_changed(str(tmpdir), checksums) is False
 
 
+def test_need_to_create_symlink_no_symlink(tmpdir):
+    checksums = [
+        {'checksum': 'fake', 'file': 'skipped'},
+        {'checksum': 'fake', 'file': 'fake_genomic.gbff.gz'},
+    ]
+    assert core.need_to_create_symlink(str(tmpdir), checksums, 'genbank', None) is False
+
+
+def test_need_to_create_symlink_correct_link(tmpdir):
+    fake_file = tmpdir.join('fake_genomic.gbff.gz')
+    fake_file.write('foo')
+    assert fake_file.check()
+    checksum = core.md5sum(str(fake_file))
+    human_readable_dir = tmpdir.mkdir('human_readable')
+    fake_link = human_readable_dir.join('fake_genomic.gbff.gz')
+    fake_link.mksymlinkto(str(fake_file))
+
+    checksums = [
+        {'checksum': 'fake', 'file': 'skipped'},
+        {'checksum': checksum, 'file': fake_file.basename},
+    ]
+
+    assert core.need_to_create_symlink(str(tmpdir), checksums, 'genbank', str(human_readable_dir)) is False
+
+
+def test_need_to_create_symlink(tmpdir):
+    fake_file = tmpdir.join('fake_genomic.gbff.gz')
+    fake_file.write('foo')
+    assert fake_file.check()
+    checksum = core.md5sum(str(fake_file))
+    human_readable_dir = tmpdir.mkdir('human_readable')
+
+    checksums = [
+        {'checksum': 'fake', 'file': 'skipped'},
+        {'checksum': checksum, 'file': fake_file.basename},
+    ]
+
+    assert core.need_to_create_symlink(str(tmpdir), checksums, 'genbank', str(human_readable_dir))
+
+
 def test_md5sum():
     expected = '74d72df33d621f5eb6300dc9a2e06573'
     filename = _get_file('partial_summary.txt')
@@ -431,7 +481,7 @@ def test_download_file_genbank(req, tmpdir):
     dl_dir = tmpdir.mkdir('download')
     req.get('https://fake/path/fake_genomic.gbff.gz', text=fake_file.read())
 
-    assert core.worker(core.download_file(entry, str(dl_dir), checksums))
+    assert core.worker(core.download_file_job(entry, str(dl_dir), checksums))
 
 
 def test_download_file_genbank_mismatch(req, tmpdir):
@@ -443,7 +493,7 @@ def test_download_file_genbank_mismatch(req, tmpdir):
     dl_dir = tmpdir.mkdir('download')
     req.get('https://fake/path/fake_genomic.gbff.gz', text=fake_file.read())
 
-    assert core.worker(core.download_file(entry, str(dl_dir), checksums)) is False
+    assert core.worker(core.download_file_job(entry, str(dl_dir), checksums)) is False
 
 
 def test_download_file_fasta(req, tmpdir):
@@ -462,7 +512,7 @@ def test_download_file_fasta(req, tmpdir):
     dl_dir = tmpdir.mkdir('download')
     req.get('https://fake/path/fake_genomic.fna.gz', text=fake_file.read())
 
-    assert core.worker(core.download_file(entry, str(dl_dir), checksums, 'fasta'))
+    assert core.worker(core.download_file_job(entry, str(dl_dir), checksums, 'fasta'))
 
 
 def test_download_file_cds_fasta(req, tmpdir):
@@ -477,7 +527,7 @@ def test_download_file_cds_fasta(req, tmpdir):
     dl_dir = tmpdir.mkdir('download')
     req.get('https://fake/path/fake_cds_from_genomic.fna.gz', text=fake_file.read())
 
-    assert core.worker(core.download_file(entry, str(dl_dir), checksums, 'cds-fasta'))
+    assert core.worker(core.download_file_job(entry, str(dl_dir), checksums, 'cds-fasta'))
 
 
 def test_download_file_rna_fasta(req, tmpdir):
@@ -492,7 +542,7 @@ def test_download_file_rna_fasta(req, tmpdir):
     dl_dir = tmpdir.mkdir('download')
     req.get('https://fake/path/fake_rna_from_genomic.fna.gz', text=fake_file.read())
 
-    assert core.worker(core.download_file(entry, str(dl_dir), checksums, 'rna-fasta'))
+    assert core.worker(core.download_file_job(entry, str(dl_dir), checksums, 'rna-fasta'))
 
 
 def test_download_file_symlink_path(req, tmpdir):
@@ -506,9 +556,41 @@ def test_download_file_symlink_path(req, tmpdir):
     symlink_dir = tmpdir.mkdir('symlink')
     req.get('https://fake/path/fake_genomic.gbff.gz', text=fake_file.read())
 
-    assert core.worker(core.download_file(entry, str(dl_dir), checksums, symlink_path=str(symlink_dir)))
+    assert core.worker(core.download_file_job(entry, str(dl_dir), checksums, symlink_path=str(symlink_dir)))
     symlink = symlink_dir.join('fake_genomic.gbff.gz')
     assert symlink.check()
+
+
+def test_create_symlink_job(tmpdir):
+    dl_dir = tmpdir.mkdir('download')
+    fake_file = dl_dir.join('fake_genomic.gbff.gz')
+    fake_file.write('foo')
+    assert fake_file.check()
+    checksum = core.md5sum(str(fake_file))
+    checksums = [{'checksum': checksum, 'file': fake_file.basename}]
+    symlink_dir = tmpdir.mkdir('symlink')
+
+    assert core.worker(core.create_symlink_job(str(dl_dir), checksums, 'genbank', str(symlink_dir)))
+    symlink = symlink_dir.join('fake_genomic.gbff.gz')
+    assert symlink.check()
+
+
+def test_create_symlink_job_remove_symlink(tmpdir):
+    dl_dir = tmpdir.mkdir('download')
+    fake_file = dl_dir.join('fake_genomic.gbff.gz')
+    fake_file.write('foo')
+    assert fake_file.check()
+    checksum = core.md5sum(str(fake_file))
+    checksums = [{'checksum': checksum, 'file': fake_file.basename}]
+    symlink_dir = tmpdir.mkdir('symlink')
+    wrong_file = symlink_dir.join('fake_genomic.gbff.gz')
+    wrong_file.write('bar')
+    assert wrong_file.check()
+
+    assert core.worker(core.create_symlink_job(str(dl_dir), checksums, 'genbank', str(symlink_dir)))
+    symlink = symlink_dir.join('fake_genomic.gbff.gz')
+    assert symlink.check()
+    assert str(symlink.realpath()) == str(fake_file)
 
 def test_download_file_symlink_path_existed(req, tmpdir):
     entry = {'ftp_path': 'ftp://fake/path'}
@@ -523,7 +605,7 @@ def test_download_file_symlink_path_existed(req, tmpdir):
     os.symlink("/foo/bar", str(symlink))
     req.get('https://fake/path/fake_genomic.gbff.gz', text=fake_file.read())
 
-    assert core.worker(core.download_file(entry, str(dl_dir), checksums, symlink_path=str(symlink_dir)))
+    assert core.worker(core.download_file_job(entry, str(dl_dir), checksums, symlink_path=str(symlink_dir)))
     assert symlink.check()
 
 def test_get_genus_label():

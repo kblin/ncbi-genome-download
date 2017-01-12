@@ -103,6 +103,10 @@ This will use links to point to the appropriate files in the NCBI directory stru
 so it saves file space. Note that links are not supported on some Windows file systems and some
 older versions of Windows.
 
+It is also possible to re-run a previous download with the `--human-readable` option.
+In this case, `ncbi-genome-download` will not download any new genome files, and just create
+human-readable directory structure. Note that if any files have been changed on the NCBI side,
+a file download will be triggered.
 
 To get an overview of all options, run
 ```

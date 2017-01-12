@@ -97,8 +97,12 @@ def _download(section, domain, uri, output, file_format, assembly_level, genus='
 
 def worker(job):
     '''Run a single download job'''
-    req = requests.get(job.full_url, stream=True)
-    return save_and_check(req, job.local_file, job.expected_checksum, job.symlink_path)
+    if job.full_url is not None:
+        req = requests.get(job.full_url, stream=True)
+        ret = save_and_check(req, job.local_file, job.expected_checksum)
+        if not ret:
+            return ret
+    return create_symlink(job.local_file, job.symlink_path)
 
 
 def get_summary(section, domain, uri):
@@ -141,7 +145,9 @@ def download_entry(entry, section, domain, output, file_format, human_readable):
     for fmt in formats:
         try:
             if has_file_changed(full_output_dir, parsed_checksums, fmt):
-                download_jobs.append(download_file(entry, full_output_dir, parsed_checksums, fmt, symlink_path))
+                download_jobs.append(download_file_job(entry, full_output_dir, parsed_checksums, fmt, symlink_path))
+            elif need_to_create_symlink(full_output_dir, parsed_checksums, fmt, symlink_path):
+                download_jobs.append(create_symlink_job(full_output_dir, parsed_checksums, fmt, symlink_path))
         except ValueError as err:
             logging.error(err)
 
@@ -232,6 +238,25 @@ def has_file_changed(directory, checksums, filetype='genbank'):
     return expected_checksum != actual_checksum
 
 
+def need_to_create_symlink(directory, checksums, filetype, symlink_path):
+    """Check if we need to create a symlink for an existing file"""
+    # If we don't have a symlink path, we don't need to create a symlink
+    if symlink_path is None:
+        return False
+
+    pattern = FORMAT_NAME_MAP[filetype]
+    filename, _ = get_name_and_checksum(checksums, pattern)
+    full_filename = os.path.join(directory, filename)
+    symlink_name = os.path.join(symlink_path, filename)
+
+    if os.path.islink(symlink_name):
+        existing_link = os.readlink(symlink_name)
+        if full_filename == existing_link:
+            return False
+
+    return True
+
+
 def get_name_and_checksum(checksums, end):
     '''Extract a full filename and checksum from the checksums list for a file ending in given end'''
     for entry in checksums:
@@ -258,7 +283,7 @@ def md5sum(filename):
     return hash_md5.hexdigest()
 
 
-def download_file(entry, directory, checksums, filetype='genbank', symlink_path=None):
+def download_file_job(entry, directory, checksums, filetype='genbank', symlink_path=None):
     '''Download and verirfy a given file'''
     pattern = FORMAT_NAME_MAP[filetype]
     filename, expected_checksum = get_name_and_checksum(checksums, pattern)
@@ -272,7 +297,16 @@ def download_file(entry, directory, checksums, filetype='genbank', symlink_path=
     return DownloadJob(full_url, local_file, expected_checksum, full_symlink)
 
 
-def save_and_check(response, local_file, expected_checksum, symlink_path):
+def create_symlink_job(directory, checksums, filetype, symlink_path):
+    """Create a symlink for an already downloaded file"""
+    pattern = FORMAT_NAME_MAP[filetype]
+    filename, _ = get_name_and_checksum(checksums, pattern)
+    local_file = os.path.join(directory, filename)
+    full_symlink = os.path.join(symlink_path, filename)
+    return DownloadJob(None, local_file, None, full_symlink)
+
+
+def save_and_check(response, local_file, expected_checksum):
     '''Save the content of an http response and verify the checksum matches'''
 
     with open(local_file, 'wb') as handle:
@@ -285,9 +319,15 @@ def save_and_check(response, local_file, expected_checksum, symlink_path):
                       local_file, expected_checksum, actual_checksum)
         return False
 
+    return True
+
+
+def create_symlink(local_file, symlink_path):
+    """Create a symlink if symlink path is given"""
     if symlink_path is not None:
-        if os.path.lexists(symlink_path):
+        if os.path.exists(symlink_path) or os.path.lexists(symlink_path):
             os.unlink(symlink_path)
+
         os.symlink(os.path.abspath(local_file), symlink_path)
 
     return True
