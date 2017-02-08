@@ -31,3 +31,5 @@ def test_virus():
     first = next(reader)
     assert 'assembly_accession' in first
     assert 'ftp_path' in first
+    for entry in reader:
+        assert 'assembly_accession' in entry
