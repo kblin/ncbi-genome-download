@@ -28,8 +28,12 @@ def test_bacteria_unicode():
 def test_virus():
     utf8_file = open_testfile('viral_summary.txt')
     reader = SummaryReader(utf8_file)
-    first = next(reader)
+    entries = list(reader)
+    first = entries[0]
     assert 'assembly_accession' in first
     assert 'ftp_path' in first
-    for entry in reader:
+    assert len(entries) == 6
+    for entry in entries:
         assert 'assembly_accession' in entry
+
+    # entry should now be the last

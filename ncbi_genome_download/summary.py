@@ -32,8 +32,21 @@ class SummaryReader(object):
                 raise StopIteration
             parts = line.split('\t')
             if len(parts) != len(self._fields):
-                logging.error('Invalid line length in summary file line %s. Expected %s, got %s. Skipping entry.',
+                logging.error('Invalid line length in summary file line %s. Expected %s, got %s. Attempting to fix.',
                               self._lineno, len(self._fields), len(parts))
+                submitter_idx = self._fields.index('submitter')
+                ftp_path_idx = self._fields.index('ftp_path')
+                # if there is a submitter, and the ftp_path is shifted by one
+                try:
+                    if parts[submitter_idx] != '' and parts[ftp_path_idx + 1].startswith('ftp://'):
+                        logging.error("Extra tab after submitter detected in line %s, fixing entry", self._lineno)
+                        # remove the extra field
+                        parts.pop(submitter_idx + 1)
+                        continue
+                except IndexError:
+                    # nope, that didn't work.
+                    pass
+                logging.error("Failed to fix line %s, skipping.", self._lineno)
         for i, val in enumerate(parts):
             entry[self._fields[i]] = val
         return entry
