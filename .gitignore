@@ -5,3 +5,7 @@ ncbi_genome_download.egg-info/*
 htmlcov/*
 .cache/*
 dist/*
+
+# Pycharm
+.idea/*
+
