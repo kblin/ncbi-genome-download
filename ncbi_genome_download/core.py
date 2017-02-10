@@ -175,7 +175,7 @@ def download(**kwargs):
         success code
 
     """
-    # Parse and preprocess keyword arguments
+    # Parse and pre-process keyword arguments
     section = kwargs.pop('section', EDefaults.SECTIONS.default)
     assert section in EDefaults.SECTIONS.choices, "Unsupported section: {}".format(section)
     group = kwargs.pop('group', EDefaults.TAXONOMIC_GROUPS.default)
@@ -203,32 +203,14 @@ def download(**kwargs):
         for key, _ in kwargs.items():
             logging.error('Unsupported keyword argument: {}'.format(key))
 
+    # Actual logic
     try:
         download_jobs = []
         for group in groups:
-            summary_file = get_summary(section, group, uri)
-            entries = parse_summary(summary_file)
-            for entry in entries:
-                if genus is not None and not entry['organism_name'].startswith(
-                        genus.capitalize()):
-                    logging.debug('Organism name %r does not start with %r as requested, skipping',
-                                  entry['organism_name'], genus)
-                    continue
-                if species_taxid is not None and entry['species_taxid'] != species_taxid:
-                    logging.debug('Species TaxID %r different from the one provided %r, skipping',
-                                  entry['species_taxid'], species_taxid)
-                    continue
-                if taxid is not None and entry['taxid'] != taxid:
-                    logging.debug('Organism TaxID %r different from the one provided %r, skipping',
-                                  entry['taxid'], taxid)
-                    continue
-                if assembly_level != 'all' \
-                        and entry['assembly_level'] != EAssemblyLevels.get_content(assembly_level):
-                    logging.debug('Skipping entry with assembly level %r', entry['assembly_level'])
-                    continue
-                download_jobs.extend(
-                    download_entry(entry, section, group, output, file_format, human_readable))
-
+            download_jobs.extend(
+                _download(section, group, uri, output, file_format, assembly_level, genus,
+                          species_taxid,
+                          taxid, human_readable))
         pool = Pool(processes=parallel)
         pool.map(worker, download_jobs)
 
@@ -237,6 +219,57 @@ def download(**kwargs):
         # Exit code 75 meas TEMPFAIL in C/C++, so let's stick with that for now.
         return 75
     return 0
+
+
+def _download(section, group, uri, output, file_format, assembly_level, genus, species_taxid,
+              taxid, human_readable):
+    """
+    Sole purpose is to ease the tests, no argument checking is done here: they must be processed
+    previously.
+    You *SHALL NOT* call this directly, but always call download()!
+
+    Parameters
+    ----------
+    section
+    group
+    uri
+    output
+    file_format
+    assembly_level
+    genus
+    species_taxid
+    taxid
+    human_readable
+
+    Returns
+    -------
+    list of DownloadJob
+
+    """
+    summary_file = get_summary(section, group, uri)
+    entries = parse_summary(summary_file)
+    download_jobs = []
+    for entry in entries:
+        if genus is not None and not entry['organism_name'].startswith(
+                genus.capitalize()):
+            logging.debug('Organism name %r does not start with %r as requested, skipping',
+                          entry['organism_name'], genus)
+            continue
+        if species_taxid is not None and entry['species_taxid'] != species_taxid:
+            logging.debug('Species TaxID %r different from the one provided %r, skipping',
+                          entry['species_taxid'], species_taxid)
+            continue
+        if taxid is not None and entry['taxid'] != taxid:
+            logging.debug('Organism TaxID %r different from the one provided %r, skipping',
+                          entry['taxid'], taxid)
+            continue
+        if assembly_level != 'all' \
+                and entry['assembly_level'] != EAssemblyLevels.get_content(assembly_level):
+            logging.debug('Skipping entry with assembly level %r', entry['assembly_level'])
+            continue
+        download_jobs.extend(
+            download_entry(entry, section, group, output, file_format, human_readable))
+    return download_jobs
 
 
 def worker(job):
