@@ -1,63 +1,165 @@
-'''Core functionality of ncbi-genome-download'''
+"""Core functionality of ncbi-genome-download"""
 import errno
 import hashlib
 import logging
 import os
 import sys
-from io import StringIO
 from collections import namedtuple
+from enum import Enum, unique
+from io import StringIO
 from multiprocessing import Pool
-from ncbi_genome_download.summary import SummaryReader
 
 import requests
+
+from ncbi_genome_download.summary import SummaryReader
 
 # Python < 2.7.9 hack: fix ssl support
 if sys.version_info < (2, 7, 9):  # pragma: no cover
     from requests.packages.urllib3.contrib import pyopenssl
+
     pyopenssl.inject_into_urllib3()
 
-
-NCBI_URI = 'https://ftp.ncbi.nih.gov/genomes'
 SUPPORTED_DOMAINS = ['archaea', 'bacteria', 'fungi', 'invertebrate', 'plant',
                      'protozoa', 'unknown', 'vertebrate_mammalian',
                      'vertebrate_other', 'viral']
 
 
-FORMAT_NAME_MAP = {
-    'genbank': '_genomic.gbff.gz',
-    'fasta': '_genomic.fna.gz',
-    'features': '_feature_table.txt.gz',
-    'gff': '_genomic.gff.gz',
-    'protein-fasta': '_protein.faa.gz',
-    'genpept': '_protein.gpff.gz',
-    'wgs': '_wgsmaster.gbff.gz',
-    'cds-fasta': '_cds_from_genomic.fna.gz',
-    'rna-fasta': '_rna_from_genomic.fna.gz',
-}
+@unique
+class EMap(Enum):
+    def __init__(self, key, content):
+        self.key = key
+        self.content = content
 
-ASSEMBLY_LEVEL_MAP = {
-    'complete': 'Complete Genome',
-    'chromosome': 'Chromosome',
-    'scaffold': 'Scaffold',
-    'contig': 'Contig'
-}
+    @classmethod
+    def keys(cls):
+        """
+
+        Returns
+        -------
+        list
+            containing all the keys of this map enumeration
+        """
+        keys = []
+        for _, member in cls.__members__.items():
+            keys.append(member.key)
+        return keys
+
+    @classmethod
+    def get(cls, key):
+        """
+        Get the enumeration map object associated with the given `key`.
+
+        Parameters
+        ----------
+        key
+
+        Returns
+        -------
+        cls instance
+
+        """
+        if not hasattr(cls, '_as_dict'):
+            as_dict = {}
+            for emap in list(cls):
+                as_dict.update({emap.key: emap})
+            cls._as_dict = as_dict
+        return cls._as_dict[key]
+
+    @classmethod
+    def get_content(cls, key):
+        """
+        Shortcut to get the content value for the enumeration map item with the given `key`.
+
+        Parameters
+        ----------
+        key
+
+        Returns
+        -------
+        type(content)
+
+        """
+        return cls.get(key).value.content
 
 
-DownloadJob = namedtuple('DownloadJob', ['full_url', 'local_file', 'expected_checksum', 'symlink_path'])
+class EFormats(EMap):
+    GENBANK = ('genbank', '_genomic.gbff.gz')
+    FASTA = ('fasta', '_genomic.fna.gz')
+    FEATURES = ('features', '_feature_table.txt.gz')
+    GFF = ('gff', '_genomic.gff.gz')
+    PROTFASTA = ('protein-fasta', '_protein.faa.gz')
+    GENREPT = ('genpept', '_protein.gpff.gz')
+    WGS = ('wgs', '_wgsmaster.gbff.gz')
+    CDSFASTA = ('cds-fasta', '_cds_from_genomic.fna.gz')
+    RNAFASTA = ('rna-fasta', '_rna_from_genomic.fna.gz')
 
 
-def download(args):
-    '''Download data from NCBI'''
+class EAssemblyLevels(EMap):
+    COMPLETE = ('complete', 'Complete Genome')
+    CHROMOSOME = ('chromosome', 'Chromosome')
+    SCAFFOLD = ('scaffold', 'Scaffold')
+    CONTIG = ('contig', 'Contig')
+
+
+@unique
+class EDefaults(Enum):
+    DOMAIN = ['all'] + SUPPORTED_DOMAINS
+    SECTION = ['refseq', 'genbank']
+    FORMAT = EFormats.keys() + ['all']
+    ASSEMBLY_LEVEL = ['all'] + EAssemblyLevels.keys()
+    GENUS = None
+    SPECIES_TAXID = None
+    TAXID = None
+    OUTPUT = os.getcwd()
+    URI = 'https://ftp.ncbi.nih.gov/genomes'
+    PROCESSES = 1
+    RETRIES = 0  # Currently not used
+
+    @property
+    def default(self):
+        return self.value[0] if isinstance(self, list) else self.value
+
+    @property
+    def choices(self):
+        return self.value if isinstance(self, list) else None
+
+
+DownloadJob = namedtuple('DownloadJob',
+                         ['full_url', 'local_file', 'expected_checksum', 'symlink_path'])
+
+
+def download(**kwargs):
+    """
+    Download data from NCBI
+
+    Parameters
+    ----------
+    section : str
+    domain : str
+    uri : str
+    output : str
+    file_format : str
+    assembly_level : str
+    genus : str
+    species_taxid : str
+    taxid : str
+    human_readable : bool
+    parallel: int
+
+    Returns
+    -------
+    int
+        success code
+    """
     try:
-        if args.domain == 'all':
-            for domain in SUPPORTED_DOMAINS:
-                _download(args.section, domain, args.uri, args.output, args.file_format,
-                          args.assembly_level, args.genus, args.species_taxid,
-                          args.taxid, args.human_readable, args.parallel)
+        domains = kwargs.pop('domain', EDefaults.DOMAIN.default)
+        if domains == 'all':
+            domains = SUPPORTED_DOMAINS
         else:
-            _download(args.section, args.domain, args.uri, args.output, args.file_format,
-                      args.assembly_level, args.genus, args.species_taxid,
-                      args.taxid, args.human_readable, args.parallel)
+            domains = [domains, ]
+        for domain in domains:
+            kwargs.update({'domain': domain})
+            _download(**kwargs)
     except requests.exceptions.ConnectionError as err:
         logging.error('Download from NCBI failed: %r', err)
         # Exit code 75 meas TEMPFAIL in C/C++, so let's stick with that for now.
@@ -65,10 +167,27 @@ def download(args):
     return 0
 
 
-# pylint: disable=too-many-arguments
-def _download(section, domain, uri, output, file_format, assembly_level, genus='',
-              species_taxid=None, taxid=None, human_readable=False, parallel=1):
-    '''Download a specified domain form a section'''
+def _download(**kwargs):
+    """
+    Download a specified domain from a section
+
+    Parameters are the same as for download.
+
+    """
+    section = kwargs.pop('section', EDefaults.SECTION.default)
+    domain = kwargs.pop('domain', EDefaults.DOMAIN.default)
+    assert domain != 'all', 'Can only download one domain at a time'
+    uri = kwargs.pop('uri', EDefaults.URI.default)
+    output = kwargs.pop('output', EDefaults.OUTPUT.default)
+    file_format = kwargs.pop('file_format', EDefaults.FORMAT.default)
+    assembly_level = kwargs.pop('assembly_level', EDefaults.ASSEMBLY_LEVEL.default)
+    genus = kwargs.pop('genus', EDefaults.GENUS.default)
+    species_taxid = kwargs.pop('species_taxid', EDefaults.SPECIES_TAXID.default)
+    taxid = kwargs.pop('taxid', EDefaults.TAXID.default)
+    human_readable = kwargs.pop('human_readable', False)
+    parallel = kwargs.pop('parallel', EDefaults.PROCESSES.default)
+    # TODO: warning/error if unrecognized option
+
     summary_file = get_summary(section, domain, uri)
     entries = parse_summary(summary_file)
     download_jobs = []
@@ -85,18 +204,19 @@ def _download(section, domain, uri, output, file_format, assembly_level, genus='
             logging.debug('Organism TaxID %r different from the one provided %r, skipping',
                           entry['taxid'], taxid)
             continue
-        if assembly_level != 'all' and entry['assembly_level'] != ASSEMBLY_LEVEL_MAP[assembly_level]:
+        if assembly_level != 'all' and entry['assembly_level'] != EAssemblyLevels.get_content(
+                assembly_level):
             logging.debug('Skipping entry with assembly level %r', entry['assembly_level'])
             continue
-        download_jobs.extend(download_entry(entry, section, domain, output, file_format, human_readable))
+        download_jobs.extend(
+            download_entry(entry, section, domain, output, file_format, human_readable))
 
     pool = Pool(processes=parallel)
     pool.map(worker, download_jobs)
-# pylint: enable=too-many-arguments
 
 
 def worker(job):
-    '''Run a single download job'''
+    """Run a single download job"""
     if job.full_url is not None:
         req = requests.get(job.full_url, stream=True)
         ret = save_and_check(req, job.local_file, job.expected_checksum)
@@ -106,7 +226,7 @@ def worker(job):
 
 
 def get_summary(section, domain, uri):
-    '''Get the assembly_summary.txt file from NCBI and return a StringIO object for it'''
+    """Get the assembly_summary.txt file from NCBI and return a StringIO object for it"""
     logging.debug('Downloading summary for %r/%r uri: %r', section, domain, uri)
     url = '{uri}/{section}/{domain}/assembly_summary.txt'.format(
         section=section, domain=domain, uri=uri)
@@ -115,12 +235,12 @@ def get_summary(section, domain, uri):
 
 
 def parse_summary(summary_file):
-    '''Parse the summary file from TSV format to a csv DictReader'''
+    """Parse the summary file from TSV format to a csv DictReader"""
     return SummaryReader(summary_file)
 
 
 def download_entry(entry, section, domain, output, file_format, human_readable):
-    '''Download an entry from the summary file'''
+    """Download an entry from the summary file"""
     logging.info('Downloading record %r', entry['assembly_accession'])
     full_output_dir = create_dir(entry, section, domain, output)
 
@@ -137,7 +257,7 @@ def download_entry(entry, section, domain, output, file_format, human_readable):
     parsed_checksums = parse_checksums(checksums)
 
     if file_format == 'all':
-        formats = FORMAT_NAME_MAP.keys()
+        formats = EFormats.keys()
     else:
         formats = [file_format]
 
@@ -145,9 +265,11 @@ def download_entry(entry, section, domain, output, file_format, human_readable):
     for fmt in formats:
         try:
             if has_file_changed(full_output_dir, parsed_checksums, fmt):
-                download_jobs.append(download_file_job(entry, full_output_dir, parsed_checksums, fmt, symlink_path))
+                download_jobs.append(
+                    download_file_job(entry, full_output_dir, parsed_checksums, fmt, symlink_path))
             elif need_to_create_symlink(full_output_dir, parsed_checksums, fmt, symlink_path):
-                download_jobs.append(create_symlink_job(full_output_dir, parsed_checksums, fmt, symlink_path))
+                download_jobs.append(
+                    create_symlink_job(full_output_dir, parsed_checksums, fmt, symlink_path))
         except ValueError as err:
             logging.error(err)
 
@@ -155,7 +277,7 @@ def download_entry(entry, section, domain, output, file_format, human_readable):
 
 
 def create_dir(entry, section, domain, output):
-    '''Create the output directory for the entry if needed'''
+    """Create the output directory for the entry if needed"""
     full_output_dir = os.path.join(output, section, domain, entry['assembly_accession'])
     try:
         os.makedirs(full_output_dir)
@@ -169,7 +291,7 @@ def create_dir(entry, section, domain, output):
 
 
 def create_readable_dir(entry, section, domain, output):
-    '''Create the a human-readable directory to link the entry to if needed'''
+    """Create the a human-readable directory to link the entry to if needed"""
     if domain != 'viral':
         full_output_dir = os.path.join(output, 'human_readable', section, domain,
                                        get_genus_label(entry),
@@ -192,7 +314,7 @@ def create_readable_dir(entry, section, domain, output):
 
 
 def grab_checksums_file(entry):
-    '''Grab the checksum file for a given entry'''
+    """Grab the checksum file for a given entry"""
     http_url = convert_ftp_url(entry['ftp_path'])
     full_url = '{}/md5checksums.txt'.format(http_url)
     req = requests.get(full_url)
@@ -200,12 +322,12 @@ def grab_checksums_file(entry):
 
 
 def convert_ftp_url(url):
-    '''Convert FTP to HTTPS URLs'''
+    """Convert FTP to HTTPS URLs"""
     return url.replace('ftp://', 'https://', 1)
 
 
 def parse_checksums(checksums_string):
-    '''Parse a file containing checksums and filenames'''
+    """Parse a file containing checksums and filenames"""
     checksums_list = []
     for line in checksums_string.split('\n'):
         try:
@@ -226,8 +348,8 @@ def parse_checksums(checksums_string):
 
 
 def has_file_changed(directory, checksums, filetype='genbank'):
-    '''Check if the checksum of a given file has changed'''
-    pattern = FORMAT_NAME_MAP[filetype]
+    """Check if the checksum of a given file has changed"""
+    pattern = EFormats.get_content(filetype)
     filename, expected_checksum = get_name_and_checksum(checksums, pattern)
     full_filename = os.path.join(directory, filename)
     # if file doesn't exist, it has changed
@@ -244,7 +366,7 @@ def need_to_create_symlink(directory, checksums, filetype, symlink_path):
     if symlink_path is None:
         return False
 
-    pattern = FORMAT_NAME_MAP[filetype]
+    pattern = EFormats.get_content(filetype)
     filename, _ = get_name_and_checksum(checksums, pattern)
     full_filename = os.path.join(directory, filename)
     symlink_name = os.path.join(symlink_path, filename)
@@ -258,7 +380,7 @@ def need_to_create_symlink(directory, checksums, filetype, symlink_path):
 
 
 def get_name_and_checksum(checksums, end):
-    '''Extract a full filename and checksum from the checksums list for a file ending in given end'''
+    """Extract a full filename and checksum from the checksums list for a file ending in given end"""
     for entry in checksums:
         if not entry['file'].endswith(end):
             # wrong file
@@ -275,7 +397,7 @@ def get_name_and_checksum(checksums, end):
 
 
 def md5sum(filename):
-    '''Calculate the md5sum of a file and return the hexdigest'''
+    """Calculate the md5sum of a file and return the hexdigest"""
     hash_md5 = hashlib.md5()
     with open(filename, 'rb') as handle:
         for chunk in iter(lambda: handle.read(4096), b''):
@@ -284,8 +406,8 @@ def md5sum(filename):
 
 
 def download_file_job(entry, directory, checksums, filetype='genbank', symlink_path=None):
-    '''Download and verirfy a given file'''
-    pattern = FORMAT_NAME_MAP[filetype]
+    """Download and verirfy a given file"""
+    pattern = EFormats.get_content(filetype)
     filename, expected_checksum = get_name_and_checksum(checksums, pattern)
     base_url = convert_ftp_url(entry['ftp_path'])
     full_url = '{}/{}'.format(base_url, filename)
@@ -299,7 +421,7 @@ def download_file_job(entry, directory, checksums, filetype='genbank', symlink_p
 
 def create_symlink_job(directory, checksums, filetype, symlink_path):
     """Create a symlink for an already downloaded file"""
-    pattern = FORMAT_NAME_MAP[filetype]
+    pattern = EFormats.get_content(filetype)
     filename, _ = get_name_and_checksum(checksums, pattern)
     local_file = os.path.join(directory, filename)
     full_symlink = os.path.join(symlink_path, filename)
@@ -307,7 +429,7 @@ def create_symlink_job(directory, checksums, filetype, symlink_path):
 
 
 def save_and_check(response, local_file, expected_checksum):
-    '''Save the content of an http response and verify the checksum matches'''
+    """Save the content of an http response and verify the checksum matches"""
 
     with open(local_file, 'wb') as handle:
         for chunk in response.iter_content(4096):
@@ -334,22 +456,23 @@ def create_symlink(local_file, symlink_path):
 
 
 def get_genus_label(entry):
-    '''Get the genus name of an assembly summary entry'''
+    """Get the genus name of an assembly summary entry"""
     return entry['organism_name'].split(' ')[0]
 
 
 def get_species_label(entry):
-    '''Get the species name of an assembly summary entry'''
+    """Get the species name of an assembly summary entry"""
     return entry['organism_name'].split(' ')[1]
 
 
 def get_strain_label(entry, viral=False):
-    '''Try to extract a strain from an assemly summary entry
+    """Try to extract a strain from an assemly summary entry
 
     First this checks 'infraspecific_name', then 'isolate', then
     it tries to get it from 'organism_name'. If all fails, it
     falls back to just returning the assembly accesion number.
-    '''
+    """
+
     def get_strain(entry):
         strain = entry['infraspecific_name']
         if strain != '':

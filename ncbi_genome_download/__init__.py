@@ -1,10 +1,11 @@
-'''Download genome files from the NCBI'''
+"""Download genome files from the NCBI"""
 from ncbi_genome_download.core import (
     download,
     NCBI_URI,
     SUPPORTED_DOMAINS,
     FORMAT_NAME_MAP,
     ASSEMBLY_LEVEL_MAP,
+    EDefaults
 )
 __version__ = '0.2.3'
 __all__ = [
@@ -12,5 +13,6 @@ __all__ = [
     'NCBI_URI',
     'SUPPORTED_DOMAINS',
     'FORMAT_NAME_MAP',
-    'ASSEMBLY_LEVEL_MAP'
+    'ASSEMBLY_LEVEL_MAP',
+    'EDefaults'
 ]
