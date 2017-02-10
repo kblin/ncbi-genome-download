@@ -20,8 +20,8 @@ def req():
         yield req
 
 
-def test_download_defaults(monkeypatch, mock):
-    download_mock = mock.MagicMock()
+def test_download_defaults(monkeypatch, mocker):
+    download_mock = mocker.MagicMock()
     monkeypatch.setattr(core, 'download', download_mock)
     core.download()
     assert download_mock.call_count == len(core.SUPPORTED_TAXONOMIC_GROUPS)
