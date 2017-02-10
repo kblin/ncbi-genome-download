@@ -11,7 +11,7 @@ from multiprocessing import Pool
 
 import requests
 
-from ncbi_genome_download.summary import SummaryReader
+from .summary import SummaryReader
 
 # Python < 2.7.9 hack: fix ssl support
 if sys.version_info < (2, 7, 9):  # pragma: no cover

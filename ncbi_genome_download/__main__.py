@@ -2,8 +2,9 @@
 import argparse
 import logging
 
-import ncbi_genome_download as ngd
-from ncbi_genome_download import EDefaults as dflt
+from . import __version__
+from . import download
+from . import EDefaults as dflt
 
 
 def main():
@@ -55,7 +56,7 @@ def main():
                         help='increase output verbosity')
     parser.add_argument('-d', '--debug', action='store_true',
                         help='print debugging information')
-    parser.add_argument('-V', '--version', action='version', version=ngd.__version__,
+    parser.add_argument('-V', '--version', action='version', version=__version__,
                         help='print version information')
 
     args = parser.parse_args()
@@ -70,13 +71,13 @@ def main():
     logging.basicConfig(format='%(levelname)s: %(message)s', level=log_level)
 
     retries = 0
-    ret = ngd.download(vars(args))
+    ret = download(vars(args))
     while ret == 75 and retries < args.retries:
         retries += 1
         logging.error(
             'Downloading from NCBI failed due to a connection error, retrying. Retries so far: %s',
             retries)
-        ret = ngd.download(args)
+        ret = download(args)
 
     return ret
 

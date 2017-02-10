@@ -1,5 +1,5 @@
 """Download genome files from the NCBI"""
-from ncbi_genome_download.core import (
+from .core import (
     download,
     SUPPORTED_TAXONOMIC_GROUPS,
     EFormats,
