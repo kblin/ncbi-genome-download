@@ -206,7 +206,7 @@ def test_parse_summary():
         assert 'assembly_accession' in first
 
 
-def prepare_download_entry(req, tmpdir, format_map=core.EFormats.as_dict(), human_readable=False,
+def prepare_download_entry(req, tmpdir, format_map=core.EFormats, human_readable=False,
                            create_local_file=False):
     # Set up test env
     entry = {
@@ -260,7 +260,7 @@ def test_download_entry_all(req, tmpdir):
 
 
 def test_download_entry_missing(req, tmpdir):
-    name_map_copy = dict(core.EFormats.as_dict().items())
+    name_map_copy = dict(core.EFormats.items())
     del name_map_copy['genbank']
     entry, outdir, _ = prepare_download_entry(req, tmpdir, name_map_copy)
     jobs = core.download_entry(entry, 'refseq', 'bacteria', str(outdir), 'genbank', None)
