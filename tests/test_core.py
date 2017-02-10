@@ -59,7 +59,7 @@ def test__download(monkeypatch, mocker, req):
     mocker.spy(core, 'get_summary')
     mocker.spy(core, 'parse_summary')
     mocker.patch('ncbi_genome_download.core.download_entry')
-    core._download('refseq', 'bacteria', core.NCBI_URI, '/tmp/fake', 'genbank', 'all')
+    core.download('refseq', 'bacteria', core.NCBI_URI, '/tmp/fake', 'genbank', 'all')
     assert core.get_summary.call_count == 1
     assert core.parse_summary.call_count == 1
     assert core.download_entry.call_count == 4
@@ -72,7 +72,7 @@ def test__download_complete(monkeypatch, mocker, req):
     mocker.spy(core, 'get_summary')
     mocker.spy(core, 'parse_summary')
     mocker.patch('ncbi_genome_download.core.download_entry')
-    core._download('refseq', 'bacteria', core.NCBI_URI, '/tmp/fake', 'genbank', 'complete')
+    core.download('refseq', 'bacteria', core.NCBI_URI, '/tmp/fake', 'genbank', 'complete')
     assert core.get_summary.call_count == 1
     assert core.parse_summary.call_count == 1
     assert core.download_entry.call_count == 1
@@ -87,7 +87,7 @@ def test__download_chromosome(monkeypatch, mocker, req):
     mocker.spy(core, 'get_summary')
     mocker.spy(core, 'parse_summary')
     mocker.patch('ncbi_genome_download.core.download_entry')
-    core._download('refseq', 'bacteria', core.NCBI_URI, '/tmp/fake', 'genbank', 'chromosome')
+    core.download('refseq', 'bacteria', core.NCBI_URI, '/tmp/fake', 'genbank', 'chromosome')
     assert core.get_summary.call_count == 1
     assert core.parse_summary.call_count == 1
     assert core.download_entry.call_count == 1
@@ -102,7 +102,7 @@ def test__download_scaffold(monkeypatch, mocker, req):
     mocker.spy(core, 'get_summary')
     mocker.spy(core, 'parse_summary')
     mocker.patch('ncbi_genome_download.core.download_entry')
-    core._download('refseq', 'bacteria', core.NCBI_URI, '/tmp/fake', 'genbank', 'scaffold')
+    core.download('refseq', 'bacteria', core.NCBI_URI, '/tmp/fake', 'genbank', 'scaffold')
     assert core.get_summary.call_count == 1
     assert core.parse_summary.call_count == 1
     assert core.download_entry.call_count == 1
@@ -117,7 +117,7 @@ def test__download_contig(monkeypatch, mocker, req):
     mocker.spy(core, 'get_summary')
     mocker.spy(core, 'parse_summary')
     mocker.patch('ncbi_genome_download.core.download_entry')
-    core._download('refseq', 'bacteria', core.NCBI_URI, '/tmp/fake', 'genbank', 'contig')
+    core.download('refseq', 'bacteria', core.NCBI_URI, '/tmp/fake', 'genbank', 'contig')
     assert core.get_summary.call_count == 1
     assert core.parse_summary.call_count == 1
     assert core.download_entry.call_count == 1
@@ -132,7 +132,7 @@ def test__download_genus(monkeypatch, mocker, req):
     mocker.spy(core, 'get_summary')
     mocker.spy(core, 'parse_summary')
     mocker.patch('ncbi_genome_download.core.download_entry')
-    core._download('refseq', 'bacteria', core.NCBI_URI, '/tmp/fake', 'genbank', 'all', 'Azorhizobium')
+    core.download('refseq', 'bacteria', core.NCBI_URI, '/tmp/fake', 'genbank', 'all', 'Azorhizobium')
     assert core.get_summary.call_count == 1
     assert core.parse_summary.call_count == 1
     assert core.download_entry.call_count == 1
@@ -147,7 +147,7 @@ def test__download_genus_lowercase(monkeypatch, mocker, req):
     mocker.spy(core, 'get_summary')
     mocker.spy(core, 'parse_summary')
     mocker.patch('ncbi_genome_download.core.download_entry')
-    core._download('refseq', 'bacteria', core.NCBI_URI, '/tmp/fake', 'genbank', 'all', 'azorhizobium')
+    core.download('refseq', 'bacteria', core.NCBI_URI, '/tmp/fake', 'genbank', 'all', 'azorhizobium')
     assert core.get_summary.call_count == 1
     assert core.parse_summary.call_count == 1
     assert core.download_entry.call_count == 1
@@ -162,7 +162,7 @@ def test__download_taxid(monkeypatch, mocker, req):
     mocker.spy(core, 'get_summary')
     mocker.spy(core, 'parse_summary')
     mocker.patch('ncbi_genome_download.core.download_entry')
-    core._download('refseq', 'bacteria', core.NCBI_URI, '/tmp/fake', 'genbank', 'all', '', None, '438753')
+    core.download('refseq', 'bacteria', core.NCBI_URI, '/tmp/fake', 'genbank', 'all', '', None, '438753')
     assert core.get_summary.call_count == 1
     assert core.parse_summary.call_count == 1
     assert core.download_entry.call_count == 1
@@ -177,7 +177,7 @@ def test__download_species_taxid(monkeypatch, mocker, req):
     mocker.spy(core, 'get_summary')
     mocker.spy(core, 'parse_summary')
     mocker.patch('ncbi_genome_download.core.download_entry')
-    core._download('refseq', 'bacteria', core.NCBI_URI, '/tmp/fake', 'genbank', 'all', '', '7')
+    core.download('refseq', 'bacteria', core.NCBI_URI, '/tmp/fake', 'genbank', 'all', '', '7')
     assert core.get_summary.call_count == 1
     assert core.parse_summary.call_count == 1
     assert core.download_entry.call_count == 1

@@ -150,37 +150,25 @@ def download(**kwargs):
     -------
     int
         success code
-    """
-    try:
-        domains = kwargs.pop('domain', EDefaults.DOMAIN.default)
-        if domains == 'all':
-            domains = SUPPORTED_DOMAINS
-        else:
-            domains = [domains, ]
-        for domain in domains:
-            kwargs.update({'domain': domain})
-            _download(**kwargs)
-    except requests.exceptions.ConnectionError as err:
-        logging.error('Download from NCBI failed: %r', err)
-        # Exit code 75 meas TEMPFAIL in C/C++, so let's stick with that for now.
-        return 75
-    return 0
-
-
-def _download(**kwargs):
-    """
-    Download a specified domain from a section
-
-    Parameters are the same as for download.
 
     """
+    # Parse and preprocess keyword arguments
     section = kwargs.pop('section', EDefaults.SECTION.default)
+    assert section in EDefaults.SECTION.choices, "Unsupported section: {}".format(section)
     domain = kwargs.pop('domain', EDefaults.DOMAIN.default)
-    assert domain != 'all', 'Can only download one domain at a time'
+    assert domain in EDefaults.DOMAIN.choices, "Unsupported domain: {}".format(domain)
+    if domain == 'all':
+        domains = SUPPORTED_DOMAINS
+    else:
+        domains = [domain, ]
     uri = kwargs.pop('uri', EDefaults.URI.default)
     output = kwargs.pop('output', EDefaults.OUTPUT.default)
     file_format = kwargs.pop('file_format', EDefaults.FORMAT.default)
+    assert file_format in EDefaults.FORMAT.choices, \
+        "Unsupported file format: {}".format(file_format)
     assembly_level = kwargs.pop('assembly_level', EDefaults.ASSEMBLY_LEVEL.default)
+    assert assembly_level in EDefaults.ASSEMBLY_LEVEL.choices, \
+        "Unsupported assembly level: {}".format(assembly_level)
     genus = kwargs.pop('genus', EDefaults.GENUS.default)
     species_taxid = kwargs.pop('species_taxid', EDefaults.SPECIES_TAXID.default)
     taxid = kwargs.pop('taxid', EDefaults.TAXID.default)
@@ -188,31 +176,40 @@ def _download(**kwargs):
     parallel = kwargs.pop('parallel', EDefaults.PROCESSES.default)
     # TODO: warning/error if unrecognized option
 
-    summary_file = get_summary(section, domain, uri)
-    entries = parse_summary(summary_file)
-    download_jobs = []
-    for entry in entries:
-        if not entry['organism_name'].startswith(genus.capitalize()):
-            logging.debug('Organism name %r does not start with %r as requested, skipping',
-                          entry['organism_name'], genus)
-            continue
-        if species_taxid is not None and entry['species_taxid'] != species_taxid:
-            logging.debug('Species TaxID %r different from the one provided %r, skipping',
-                          entry['species_taxid'], species_taxid)
-            continue
-        if taxid is not None and entry['taxid'] != taxid:
-            logging.debug('Organism TaxID %r different from the one provided %r, skipping',
-                          entry['taxid'], taxid)
-            continue
-        if assembly_level != 'all' and entry['assembly_level'] != EAssemblyLevels.get_content(
-                assembly_level):
-            logging.debug('Skipping entry with assembly level %r', entry['assembly_level'])
-            continue
-        download_jobs.extend(
-            download_entry(entry, section, domain, output, file_format, human_readable))
+    try:
+        download_jobs = []
+        for domain in domains:
+            summary_file = get_summary(section, domain, uri)
+            entries = parse_summary(summary_file)
+            for entry in entries:
+                if not entry['organism_name'].startswith(genus.capitalize()):
+                    logging.debug('Organism name %r does not start with %r as requested, skipping',
+                                  entry['organism_name'], genus)
+                    continue
+                if species_taxid is not None and entry['species_taxid'] != species_taxid:
+                    logging.debug('Species TaxID %r different from the one provided %r, skipping',
+                                  entry['species_taxid'], species_taxid)
+                    continue
+                if taxid is not None and entry['taxid'] != taxid:
+                    logging.debug('Organism TaxID %r different from the one provided %r, skipping',
+                                  entry['taxid'], taxid)
+                    continue
+                if assembly_level != 'all' and entry[
+                    'assembly_level'] != EAssemblyLevels.get_content(
+                    assembly_level):
+                    logging.debug('Skipping entry with assembly level %r', entry['assembly_level'])
+                    continue
+                download_jobs.extend(
+                    download_entry(entry, section, domain, output, file_format, human_readable))
 
-    pool = Pool(processes=parallel)
-    pool.map(worker, download_jobs)
+        pool = Pool(processes=parallel)
+        pool.map(worker, download_jobs)
+
+    except requests.exceptions.ConnectionError as err:
+        logging.error('Download from NCBI failed: %r', err)
+        # Exit code 75 meas TEMPFAIL in C/C++, so let's stick with that for now.
+        return 75
+    return 0
 
 
 def worker(job):
