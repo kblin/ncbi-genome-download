@@ -116,7 +116,7 @@ class EMap(Enum):
         type(content)
 
         """
-        return cls.get(key).value.content
+        return cls.get(key).content
 
 
 class EFormats(EMap):
