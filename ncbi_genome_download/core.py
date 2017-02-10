@@ -51,7 +51,10 @@ class EMap(Enum):
         list
             containing all the keys of this map enumeration
         """
-        return cls.as_dict().keys()
+        keys = []
+        for _, member in cls.__members__.items():
+            keys.append(member.key)
+        return keys
 
     @classmethod
     def items(cls):
@@ -62,7 +65,10 @@ class EMap(Enum):
         -------
         list of tuple
         """
-        return cls.as_dict().items()
+        items = []
+        for _, member in cls.__members__.items():
+            items.append((member.key, member.content))
+        return items
 
     @classmethod
     def as_dict(cls):
