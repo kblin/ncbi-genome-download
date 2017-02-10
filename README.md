@@ -113,6 +113,15 @@ To get an overview of all options, run
 ncbi-genome-download --help
 ```
 
+### As a method
+You can also use it as a method call. Pass the same keyword arguments as described above or in the
+`--help`:
+```
+import ncbi_genome_download as ngd
+ngd.download()
+```
+**Note**: To specify a taxonomic group, like *bacteria*, use the `tax_group` keyword.
+
 ## License
 All code is available under the Apache License version 2, see the
 [`LICENSE`](LICENSE) file for details.
