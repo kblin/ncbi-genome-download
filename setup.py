@@ -22,6 +22,9 @@ install_requires = [
 if sys.version_info[:3] < (2, 7, 9):
     install_requires.extend(['pyOpenSSL', 'ndg-httpsclient'])
 
+# Enum is only available since 3.4
+if sys.version_info[:3] < (3, 4, 0):
+    install_requires.extend(['enum34',])
 
 tests_require = [
     'pytest',
