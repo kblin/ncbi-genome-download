@@ -1,15 +1,16 @@
 import os
+from os import path
+
 import pytest
 import requests_mock
-from argparse import Namespace
-from os import path
 from requests.exceptions import ConnectionError
 
 from ncbi_genome_download import core
+from ncbi_genome_download.core import EDefaults as dflt
 
 
 def _get_file(fname):
-    '''Get a file from the test directory'''
+    """Get a file from the test directory"""
     return path.join(path.dirname(__file__), fname)
 
 
@@ -19,60 +20,57 @@ def req():
         yield req
 
 
+def test_download_defaults(monkeypatch, mocker):
+    download_mock = mocker.MagicMock()
+    monkeypatch.setattr(core, 'download', download_mock)
+    core.download()
+    assert download_mock.call_count == len(core.SUPPORTED_DOMAINS)
+
+
+# TODO: test unrecognized arguments, invalid formats and out of choices values
+
 def test_download_one(monkeypatch, mocker):
-    _download_mock = mocker.MagicMock()
-    monkeypatch.setattr(core, '_download', _download_mock)
-    fake_args = Namespace(section='refseq', domain='bacteria', uri=core.NCBI_URI,
-                          output='/tmp/fake', file_format='genbank', assembly_level='all',
-                          genus='', species_taxid=None, taxid=None, human_readable=False,
-                          parallel=1)
-    core.download(fake_args)
-    _download_mock.assert_called_with('refseq', 'bacteria', core.NCBI_URI, '/tmp/fake',
-                                      'genbank', 'all', '', None, None, False, 1)
+    download_mock = mocker.MagicMock()
+    monkeypatch.setattr(core, 'download', download_mock)
+    kwargs = {'domain': 'bacteria', 'output': '/tmp/fake'}
+    core.download(**kwargs)
+    download_mock.assert_called_with(**kwargs)
 
 
 def test_download_all(monkeypatch, mocker):
-    _download_mock = mocker.MagicMock()
-    monkeypatch.setattr(core, '_download', _download_mock)
-    fake_args = Namespace(section='refseq', domain='all', uri=core.NCBI_URI,
-                          output='/tmp/fake', file_format='genbank', assembly_level='all',
-                          genus='', species_taxid=None, taxid=None, human_readable=False,
-                          parallel=1)
-    core.download(fake_args)
-    assert _download_mock.call_count == len(core.SUPPORTED_DOMAINS)
+    download_mock = mocker.MagicMock()
+    monkeypatch.setattr(core, 'download', download_mock)
+    core.download(domain='all', output='/tmp/fake')
+    assert download_mock.call_count == len(core.SUPPORTED_DOMAINS)
 
 
 def test_download_connection_err(monkeypatch, mocker):
-    _download_mock = mocker.MagicMock(side_effect=ConnectionError)
-    monkeypatch.setattr(core, '_download', _download_mock)
-    fake_args = Namespace(section='refseq', domain='all', uri=core.NCBI_URI,
-                          output='/tmp/fake', file_format='genbank', assembly_level='all',
-                          genus='', species_taxid=None, taxid=None, human_readable=False,
-                          parallel=1)
-    assert core.download(fake_args) == 75
+    download_mock = mocker.MagicMock(side_effect=ConnectionError)
+    monkeypatch.setattr(core, 'download', download_mock)
+    assert core.download() == 75
 
 
-def test__download(monkeypatch, mocker, req):
+def test_download(monkeypatch, mocker, req):
     summary_contents = open(_get_file('partial_summary.txt'), 'r').read()
     req.get('https://ftp.ncbi.nih.gov/genomes/refseq/bacteria/assembly_summary.txt',
             text=summary_contents)
     mocker.spy(core, 'get_summary')
     mocker.spy(core, 'parse_summary')
     mocker.patch('ncbi_genome_download.core.download_entry')
-    core.download('refseq', 'bacteria', core.NCBI_URI, '/tmp/fake', 'genbank', 'all')
+    core.download(domain='bacteria', output='/tmp/fake')
     assert core.get_summary.call_count == 1
     assert core.parse_summary.call_count == 1
     assert core.download_entry.call_count == 4
 
 
-def test__download_complete(monkeypatch, mocker, req):
+def test_download_complete(monkeypatch, mocker, req):
     summary_contents = open(_get_file('assembly_status.txt'), 'r').read()
     req.get('https://ftp.ncbi.nih.gov/genomes/refseq/bacteria/assembly_summary.txt',
             text=summary_contents)
     mocker.spy(core, 'get_summary')
     mocker.spy(core, 'parse_summary')
     mocker.patch('ncbi_genome_download.core.download_entry')
-    core.download('refseq', 'bacteria', core.NCBI_URI, '/tmp/fake', 'genbank', 'complete')
+    core.download(domain='bacteria', output='/tmp/fake', assembly_level='complete')
     assert core.get_summary.call_count == 1
     assert core.parse_summary.call_count == 1
     assert core.download_entry.call_count == 1
@@ -80,14 +78,14 @@ def test__download_complete(monkeypatch, mocker, req):
     assert core.download_entry.call_args_list[0][0][0]['assembly_level'] == 'Complete Genome'
 
 
-def test__download_chromosome(monkeypatch, mocker, req):
+def test_download_chromosome(monkeypatch, mocker, req):
     summary_contents = open(_get_file('assembly_status.txt'), 'r').read()
     req.get('https://ftp.ncbi.nih.gov/genomes/refseq/bacteria/assembly_summary.txt',
             text=summary_contents)
     mocker.spy(core, 'get_summary')
     mocker.spy(core, 'parse_summary')
     mocker.patch('ncbi_genome_download.core.download_entry')
-    core.download('refseq', 'bacteria', core.NCBI_URI, '/tmp/fake', 'genbank', 'chromosome')
+    core.download(domain='bacteria', output='/tmp/fake', assembly_level='chromosome')
     assert core.get_summary.call_count == 1
     assert core.parse_summary.call_count == 1
     assert core.download_entry.call_count == 1
@@ -95,14 +93,14 @@ def test__download_chromosome(monkeypatch, mocker, req):
     assert core.download_entry.call_args_list[0][0][0]['assembly_level'] == 'Chromosome'
 
 
-def test__download_scaffold(monkeypatch, mocker, req):
+def test_download_scaffold(monkeypatch, mocker, req):
     summary_contents = open(_get_file('assembly_status.txt'), 'r').read()
     req.get('https://ftp.ncbi.nih.gov/genomes/refseq/bacteria/assembly_summary.txt',
             text=summary_contents)
     mocker.spy(core, 'get_summary')
     mocker.spy(core, 'parse_summary')
     mocker.patch('ncbi_genome_download.core.download_entry')
-    core.download('refseq', 'bacteria', core.NCBI_URI, '/tmp/fake', 'genbank', 'scaffold')
+    core.download(domain='bacteria', output='/tmp/fake', assembly_level='scaffold')
     assert core.get_summary.call_count == 1
     assert core.parse_summary.call_count == 1
     assert core.download_entry.call_count == 1
@@ -110,14 +108,14 @@ def test__download_scaffold(monkeypatch, mocker, req):
     assert core.download_entry.call_args_list[0][0][0]['assembly_level'] == 'Scaffold'
 
 
-def test__download_contig(monkeypatch, mocker, req):
+def test_download_contig(monkeypatch, mocker, req):
     summary_contents = open(_get_file('assembly_status.txt'), 'r').read()
     req.get('https://ftp.ncbi.nih.gov/genomes/refseq/bacteria/assembly_summary.txt',
             text=summary_contents)
     mocker.spy(core, 'get_summary')
     mocker.spy(core, 'parse_summary')
     mocker.patch('ncbi_genome_download.core.download_entry')
-    core.download('refseq', 'bacteria', core.NCBI_URI, '/tmp/fake', 'genbank', 'contig')
+    core.download(domain='bacteria', output='/tmp/fake', assembly_level='contig')
     assert core.get_summary.call_count == 1
     assert core.parse_summary.call_count == 1
     assert core.download_entry.call_count == 1
@@ -125,69 +123,73 @@ def test__download_contig(monkeypatch, mocker, req):
     assert core.download_entry.call_args_list[0][0][0]['assembly_level'] == 'Contig'
 
 
-def test__download_genus(monkeypatch, mocker, req):
+def test_download_genus(monkeypatch, mocker, req):
     summary_contents = open(_get_file('partial_summary.txt'), 'r').read()
     req.get('https://ftp.ncbi.nih.gov/genomes/refseq/bacteria/assembly_summary.txt',
             text=summary_contents)
     mocker.spy(core, 'get_summary')
     mocker.spy(core, 'parse_summary')
     mocker.patch('ncbi_genome_download.core.download_entry')
-    core.download('refseq', 'bacteria', core.NCBI_URI, '/tmp/fake', 'genbank', 'all', 'Azorhizobium')
+    core.download(domain='bacteria', output='/tmp/fake', genus='Azorhizobium')
     assert core.get_summary.call_count == 1
     assert core.parse_summary.call_count == 1
     assert core.download_entry.call_count == 1
     # Many nested tuples in call_args_list, no kidding.
-    assert core.download_entry.call_args_list[0][0][0]['organism_name'] == 'Azorhizobium caulinodans ORS 571'
+    assert core.download_entry.call_args_list[0][0][0][
+               'organism_name'] == 'Azorhizobium caulinodans ORS 571'
 
 
-def test__download_genus_lowercase(monkeypatch, mocker, req):
+def test_download_genus_lowercase(monkeypatch, mocker, req):
     summary_contents = open(_get_file('partial_summary.txt'), 'r').read()
     req.get('https://ftp.ncbi.nih.gov/genomes/refseq/bacteria/assembly_summary.txt',
             text=summary_contents)
     mocker.spy(core, 'get_summary')
     mocker.spy(core, 'parse_summary')
     mocker.patch('ncbi_genome_download.core.download_entry')
-    core.download('refseq', 'bacteria', core.NCBI_URI, '/tmp/fake', 'genbank', 'all', 'azorhizobium')
+    core.download(domain='bacteria', output='/tmp/fake', genus='azorhizobium')
     assert core.get_summary.call_count == 1
     assert core.parse_summary.call_count == 1
     assert core.download_entry.call_count == 1
     # Many nested tuples in call_args_list, no kidding.
-    assert core.download_entry.call_args_list[0][0][0]['organism_name'] == 'Azorhizobium caulinodans ORS 571'
+    assert core.download_entry.call_args_list[0][0][0][
+               'organism_name'] == 'Azorhizobium caulinodans ORS 571'
 
 
-def test__download_taxid(monkeypatch, mocker, req):
+def test_download_taxid(monkeypatch, mocker, req):
     summary_contents = open(_get_file('partial_summary.txt'), 'r').read()
     req.get('https://ftp.ncbi.nih.gov/genomes/refseq/bacteria/assembly_summary.txt',
             text=summary_contents)
     mocker.spy(core, 'get_summary')
     mocker.spy(core, 'parse_summary')
     mocker.patch('ncbi_genome_download.core.download_entry')
-    core.download('refseq', 'bacteria', core.NCBI_URI, '/tmp/fake', 'genbank', 'all', '', None, '438753')
+    core.download(domain='bacteria', output='/tmp/fake', taxid='438753')
     assert core.get_summary.call_count == 1
     assert core.parse_summary.call_count == 1
     assert core.download_entry.call_count == 1
     # Many nested tuples in call_args_list, no kidding.
-    assert core.download_entry.call_args_list[0][0][0]['organism_name'] == 'Azorhizobium caulinodans ORS 571'
+    assert core.download_entry.call_args_list[0][0][0][
+               'organism_name'] == 'Azorhizobium caulinodans ORS 571'
 
 
-def test__download_species_taxid(monkeypatch, mocker, req):
+def test_download_species_taxid(monkeypatch, mocker, req):
     summary_contents = open(_get_file('partial_summary.txt'), 'r').read()
     req.get('https://ftp.ncbi.nih.gov/genomes/refseq/bacteria/assembly_summary.txt',
             text=summary_contents)
     mocker.spy(core, 'get_summary')
     mocker.spy(core, 'parse_summary')
     mocker.patch('ncbi_genome_download.core.download_entry')
-    core.download('refseq', 'bacteria', core.NCBI_URI, '/tmp/fake', 'genbank', 'all', '', '7')
+    core.download(domain='bacteria', output='/tmp/fake', species_taxid='7')
     assert core.get_summary.call_count == 1
     assert core.parse_summary.call_count == 1
     assert core.download_entry.call_count == 1
     # Many nested tuples in call_args_list, no kidding.
-    assert core.download_entry.call_args_list[0][0][0]['organism_name'] == 'Azorhizobium caulinodans ORS 571'
+    assert core.download_entry.call_args_list[0][0][0][
+               'organism_name'] == 'Azorhizobium caulinodans ORS 571'
 
 
 def test_get_summary(req):
     req.get('https://ftp.ncbi.nih.gov/genomes/refseq/bacteria/assembly_summary.txt', text='test')
-    ret = core.get_summary('refseq', 'bacteria', core.NCBI_URI)
+    ret = core.get_summary('refseq', 'bacteria', dflt.URI.default)
     assert ret.read() == 'test'
 
 
@@ -204,7 +206,8 @@ def test_parse_summary():
         assert 'assembly_accession' in first
 
 
-def prepare_download_entry(req, tmpdir, format_map=core.FORMAT_NAME_MAP, human_readable=False, create_local_file=False):
+def prepare_download_entry(req, tmpdir, format_map=core.EFormats.as_dict(), human_readable=False,
+                           create_local_file=False):
     # Set up test env
     entry = {
         'assembly_accession': 'FAKE0.1',
@@ -230,7 +233,9 @@ def prepare_download_entry(req, tmpdir, format_map=core.FORMAT_NAME_MAP, human_r
 
         symlink_path = None
         if human_readable:
-            symlink_path = str(outdir.join('human_readable', 'refseq', 'bacteria', 'Example', 'species', 'ABC_1234', filename))
+            symlink_path = str(
+                outdir.join('human_readable', 'refseq', 'bacteria', 'Example', 'species',
+                            'ABC_1234', filename))
 
         download_jobs.append(core.DownloadJob(full_url, str(local_file), checksum, symlink_path))
         checksum_file_content += '{}\t./{}\n'.format(checksum, filename)
@@ -255,7 +260,7 @@ def test_download_entry_all(req, tmpdir):
 
 
 def test_download_entry_missing(req, tmpdir):
-    name_map_copy = dict(core.FORMAT_NAME_MAP.items())
+    name_map_copy = dict(core.EFormats.as_dict().items())
     del name_map_copy['genbank']
     entry, outdir, _ = prepare_download_entry(req, tmpdir, name_map_copy)
     jobs = core.download_entry(entry, 'refseq', 'bacteria', str(outdir), 'genbank', None)
@@ -270,7 +275,8 @@ def test_download_entry_human_readable(req, tmpdir):
 
 
 def test_download_entry_symlink_only(req, tmpdir):
-    entry, outdir, joblist = prepare_download_entry(req, tmpdir, human_readable=True, create_local_file=True)
+    entry, outdir, joblist = prepare_download_entry(req, tmpdir, human_readable=True,
+                                                    create_local_file=True)
     jobs = core.download_entry(entry, 'refseq', 'bacteria', str(outdir), 'genbank', True)
     expected = [core.DownloadJob(None, j.local_file, None, j.symlink_path)
                 for j in joblist if j.local_file.endswith('_genomic.gbff.gz')]
@@ -308,7 +314,8 @@ def test_create_readable_dir(tmpdir):
     output = tmpdir.mkdir('output')
     ret = core.create_readable_dir(entry, 'refseq', 'bacteria', str(output))
 
-    expected = output.join('human_readable', 'refseq', 'bacteria', 'Example', 'species', 'ABC_1234')
+    expected = output.join('human_readable', 'refseq', 'bacteria', 'Example', 'species',
+                           'ABC_1234')
     assert expected.check()
     assert ret == str(expected)
 
@@ -316,7 +323,8 @@ def test_create_readable_dir(tmpdir):
 def test_create_readable_dir_exists(tmpdir):
     entry = {'organism_name': 'Example species', 'infraspecific_name': 'strain=ABC 1234'}
     output = tmpdir.mkdir('output')
-    expected = output.mkdir('human_readable').mkdir('refseq').mkdir('bacteria').mkdir('Example').mkdir('species').mkdir('ABC_1234')
+    expected = output.mkdir('human_readable').mkdir('refseq').mkdir('bacteria').mkdir(
+        'Example').mkdir('species').mkdir('ABC_1234')
     ret = core.create_readable_dir(entry, 'refseq', 'bacteria', str(output))
     assert ret == str(expected)
 
@@ -324,7 +332,8 @@ def test_create_readable_dir_exists(tmpdir):
 def test_create_readable_dir_isfile(tmpdir):
     entry = {'organism_name': 'Example species', 'infraspecific_name': 'strain=ABC 1234'}
     output = tmpdir.mkdir('output')
-    output.join('human_readable', 'refseq', 'bacteria', 'Example', 'species', 'ABC_1234').write('foo', ensure=True)
+    output.join('human_readable', 'refseq', 'bacteria', 'Example', 'species', 'ABC_1234').write(
+        'foo', ensure=True)
     with pytest.raises(OSError):
         core.create_readable_dir(entry, 'refseq', 'bacteria', str(output))
 
@@ -369,7 +378,7 @@ def test_grab_checksums_file(req):
 
 
 def test_parse_checksums():
-    checksums_string = '''\
+    checksums_string = """\
 d3c2634cedd0efe05cbf8a5f5384d921  ./GCF_000009605.1_ASM960v1_feature_table.txt.gz
 42c1bb1447aea2512a17aeb3645b55e9  ./GCF_000009605.1_ASM960v1_genomic.fna.gz
 8a685d49d826c4f0ad05152e906f3250  ./GCF_000009605.1_ASM960v1_genomic.gbff.gz
@@ -377,14 +386,20 @@ e2d9e1cfa085cb462a73d3d2d2c22be5  ./GCF_000009605.1_ASM960v1_genomic.gff.gz
 d8ce7c80d457e012f9d368a4673dea65  ./GCF_000009605.1_ASM960v1_protein.faa.gz
 This_is_totally_an_invalid_line!
 620a09de4286f66113317456c0dc8f66  ./GCF_000009605.1_ASM960v1_protein.gpff.gz
-'''
+"""
     expected = [
-        {'checksum': 'd3c2634cedd0efe05cbf8a5f5384d921', 'file': 'GCF_000009605.1_ASM960v1_feature_table.txt.gz'},
-        {'checksum': '42c1bb1447aea2512a17aeb3645b55e9', 'file': 'GCF_000009605.1_ASM960v1_genomic.fna.gz'},
-        {'checksum': '8a685d49d826c4f0ad05152e906f3250', 'file': 'GCF_000009605.1_ASM960v1_genomic.gbff.gz'},
-        {'checksum': 'e2d9e1cfa085cb462a73d3d2d2c22be5', 'file': 'GCF_000009605.1_ASM960v1_genomic.gff.gz'},
-        {'checksum': 'd8ce7c80d457e012f9d368a4673dea65', 'file': 'GCF_000009605.1_ASM960v1_protein.faa.gz'},
-        {'checksum': '620a09de4286f66113317456c0dc8f66', 'file': 'GCF_000009605.1_ASM960v1_protein.gpff.gz'},
+        {'checksum': 'd3c2634cedd0efe05cbf8a5f5384d921',
+         'file': 'GCF_000009605.1_ASM960v1_feature_table.txt.gz'},
+        {'checksum': '42c1bb1447aea2512a17aeb3645b55e9',
+         'file': 'GCF_000009605.1_ASM960v1_genomic.fna.gz'},
+        {'checksum': '8a685d49d826c4f0ad05152e906f3250',
+         'file': 'GCF_000009605.1_ASM960v1_genomic.gbff.gz'},
+        {'checksum': 'e2d9e1cfa085cb462a73d3d2d2c22be5',
+         'file': 'GCF_000009605.1_ASM960v1_genomic.gff.gz'},
+        {'checksum': 'd8ce7c80d457e012f9d368a4673dea65',
+         'file': 'GCF_000009605.1_ASM960v1_protein.faa.gz'},
+        {'checksum': '620a09de4286f66113317456c0dc8f66',
+         'file': 'GCF_000009605.1_ASM960v1_protein.gpff.gz'},
     ]
 
     ret = core.parse_checksums(checksums_string)
@@ -446,7 +461,8 @@ def test_need_to_create_symlink_correct_link(tmpdir):
         {'checksum': checksum, 'file': fake_file.basename},
     ]
 
-    assert core.need_to_create_symlink(str(tmpdir), checksums, 'genbank', str(human_readable_dir)) is False
+    assert core.need_to_create_symlink(str(tmpdir), checksums, 'genbank',
+                                       str(human_readable_dir)) is False
 
 
 def test_need_to_create_symlink(tmpdir):
@@ -556,7 +572,8 @@ def test_download_file_symlink_path(req, tmpdir):
     symlink_dir = tmpdir.mkdir('symlink')
     req.get('https://fake/path/fake_genomic.gbff.gz', text=fake_file.read())
 
-    assert core.worker(core.download_file_job(entry, str(dl_dir), checksums, symlink_path=str(symlink_dir)))
+    assert core.worker(
+        core.download_file_job(entry, str(dl_dir), checksums, symlink_path=str(symlink_dir)))
     symlink = symlink_dir.join('fake_genomic.gbff.gz')
     assert symlink.check()
 
@@ -570,7 +587,8 @@ def test_create_symlink_job(tmpdir):
     checksums = [{'checksum': checksum, 'file': fake_file.basename}]
     symlink_dir = tmpdir.mkdir('symlink')
 
-    assert core.worker(core.create_symlink_job(str(dl_dir), checksums, 'genbank', str(symlink_dir)))
+    assert core.worker(
+        core.create_symlink_job(str(dl_dir), checksums, 'genbank', str(symlink_dir)))
     symlink = symlink_dir.join('fake_genomic.gbff.gz')
     assert symlink.check()
 
@@ -587,10 +605,12 @@ def test_create_symlink_job_remove_symlink(tmpdir):
     wrong_file.write('bar')
     assert wrong_file.check()
 
-    assert core.worker(core.create_symlink_job(str(dl_dir), checksums, 'genbank', str(symlink_dir)))
+    assert core.worker(
+        core.create_symlink_job(str(dl_dir), checksums, 'genbank', str(symlink_dir)))
     symlink = symlink_dir.join('fake_genomic.gbff.gz')
     assert symlink.check()
     assert str(symlink.realpath()) == str(fake_file)
+
 
 def test_download_file_symlink_path_existed(req, tmpdir):
     entry = {'ftp_path': 'ftp://fake/path'}
@@ -605,8 +625,10 @@ def test_download_file_symlink_path_existed(req, tmpdir):
     os.symlink("/foo/bar", str(symlink))
     req.get('https://fake/path/fake_genomic.gbff.gz', text=fake_file.read())
 
-    assert core.worker(core.download_file_job(entry, str(dl_dir), checksums, symlink_path=str(symlink_dir)))
+    assert core.worker(
+        core.download_file_job(entry, str(dl_dir), checksums, symlink_path=str(symlink_dir)))
     assert symlink.check()
+
 
 def test_get_genus_label():
     fake_entry = {'organism_name': 'Example species ABC 1234'}
@@ -634,7 +656,8 @@ def test_get_strain_label():
     assert core.get_strain_label(fake_entry) == 'ABC12345'
 
     fake_entry = {'infraspecific_name': '', 'isolate': '',
-                  'organism_name': 'Example strain with stupid name', 'assembly_accession': 'ABC12345'}
+                  'organism_name': 'Example strain with stupid name',
+                  'assembly_accession': 'ABC12345'}
     assert core.get_strain_label(fake_entry, viral=True) == 'ABC12345'
 
     fake_entry = {'infraspecific_name': 'strain=ABC 1234; FOO'}
