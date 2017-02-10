@@ -28,6 +28,7 @@ class EMap(Enum):
     """
     Enumeration of (`key`, `content`) pairs. The name `content` is used, because `value` is
      already an attribute of the Enum instances.
+     We use an enumeration to ensure the immutability of the elements.
     """
 
     def __init__(self, key, content):
@@ -71,22 +72,6 @@ class EMap(Enum):
         return items
 
     @classmethod
-    def as_dict(cls):
-        """
-
-        Returns
-        -------
-        dict
-            representation of this enumeration map
-        """
-        if not hasattr(cls, '_as_dict'):
-            as_dict = {}
-            for emap in list(cls):
-                as_dict.update({emap.key: emap.content})
-            cls._as_dict = as_dict
-        return cls._as_dict
-
-    @classmethod
     def get_content(cls, key):
         """
         Shortcut to get the content value for the enumeration map item with the given `key`.
@@ -100,7 +85,12 @@ class EMap(Enum):
         type(content)
 
         """
-        return cls.as_dict()[key]
+        if not hasattr(cls, '_as_dict'):
+            as_dict = {}
+            for emap in list(cls):
+                as_dict.update({emap.key: emap.content})
+            cls._as_dict = as_dict
+        return cls._as_dict[key]
 
 
 class EFormats(EMap):
