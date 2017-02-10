@@ -131,11 +131,11 @@ class EDefaults(Enum):
 
     @property
     def default(self):
-        return self.value[0] if isinstance(self, list) else self.value
+        return self.value[0] if isinstance(self.value, list) else self.value
 
     @property
     def choices(self):
-        return self.value if isinstance(self, list) else None
+        return self.value if isinstance(self.value, list) else None
 
 
 DownloadJob = namedtuple('DownloadJob',
@@ -179,7 +179,7 @@ def download(**kwargs):
     section = kwargs.pop('section', EDefaults.SECTIONS.default)
     assert section in EDefaults.SECTIONS.choices, "Unsupported section: {}".format(section)
     group = kwargs.pop('group', EDefaults.TAXONOMIC_GROUPS.default)
-    assert group in EDefaults.TAXONOMIC_GROUPS.choices, "Unsupported domain: {}".format(group)
+    assert group in EDefaults.TAXONOMIC_GROUPS.choices, "Unsupported group: {}".format(group)
     if group == 'all':
         groups = SUPPORTED_TAXONOMIC_GROUPS
     else:
@@ -198,7 +198,7 @@ def download(**kwargs):
     human_readable = kwargs.pop('human_readable', False)
     parallel = kwargs.pop('parallel', EDefaults.NB_PROCESSES.default)
     # FIXME: improve error handling and feedback
-    assert len(kwargs) == 0, "Unrecognized option(s)"
+    assert len(kwargs) == 0, "Unrecognized option(s): {}".format(kwargs.keys())
     if len(kwargs) > 0:
         for key, _ in kwargs.items():
             logging.error('Unsupported keyword argument: {}'.format(key))
@@ -209,7 +209,8 @@ def download(**kwargs):
             summary_file = get_summary(section, group, uri)
             entries = parse_summary(summary_file)
             for entry in entries:
-                if not entry['organism_name'].startswith(genus.capitalize()):
+                if genus is not None and not entry['organism_name'].startswith(
+                        genus.capitalize()):
                     logging.debug('Organism name %r does not start with %r as requested, skipping',
                                   entry['organism_name'], genus)
                     continue
