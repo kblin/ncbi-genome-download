@@ -19,25 +19,32 @@ if sys.version_info < (2, 7, 9):  # pragma: no cover
 
     pyopenssl.inject_into_urllib3()
 
-SUPPORTED_DOMAINS = ['archaea', 'bacteria', 'fungi', 'invertebrate', 'plant',
-                     'protozoa', 'unknown', 'vertebrate_mammalian',
-                     'vertebrate_other', 'viral']
+SUPPORTED_TAXONOMIC_GROUPS = ['archaea', 'bacteria', 'fungi', 'invertebrate', 'plant', 'protozoa',
+                              'unknown', 'vertebrate_mammalian', 'vertebrate_other', 'viral']
 
 
 @unique
 class EMap(Enum):
     """
     Enumeration of (`key`, `content`) pairs. The name `content` is used, because `value` is
-     already an attribute of the Enum.
+     already an attribute of the Enum instances.
     """
 
     def __init__(self, key, content):
+        """
+
+        Parameters
+        ----------
+        key : str
+        content : object
+        """
         self.key = key
         self.content = content
 
     @classmethod
     def keys(cls):
         """
+        Simulate dict.keys() on this enumeration map
 
         Returns
         -------
@@ -51,6 +58,13 @@ class EMap(Enum):
 
     @classmethod
     def items(cls):
+        """
+        Simulate dict.items() on this enumeration map
+
+        Returns
+        -------
+        list of tuple
+        """
         items = []
         for _, member in cls.__members__.items():
             items.append((member.key, member.content))
@@ -58,6 +72,13 @@ class EMap(Enum):
 
     @classmethod
     def as_dict(cls):
+        """
+
+        Returns
+        -------
+        dict
+            representation of this enumeration map
+        """
         if not hasattr(cls, '_as_dict'):
             as_dict = {}
             for emap in list(cls):
@@ -88,7 +109,7 @@ class EMap(Enum):
 
         Parameters
         ----------
-        key
+        key : str
 
         Returns
         -------
@@ -117,19 +138,18 @@ class EAssemblyLevels(EMap):
     CONTIG = ('contig', 'Contig')
 
 
-@unique
 class EDefaults(Enum):
-    DOMAIN = ['all'] + SUPPORTED_DOMAINS
-    SECTION = ['refseq', 'genbank']
-    FORMAT = EFormats.keys() + ['all']
-    ASSEMBLY_LEVEL = ['all'] + EAssemblyLevels.keys()
+    TAXONOMIC_GROUPS = ['all'] + SUPPORTED_TAXONOMIC_GROUPS
+    SECTIONS = ['refseq', 'genbank']
+    FORMATS = EFormats.keys() + ['all']
+    ASSEMBLY_LEVELS = ['all'] + EAssemblyLevels.keys()
     GENUS = None
     SPECIES_TAXID = None
     TAXID = None
     OUTPUT = os.getcwd()
     URI = 'https://ftp.ncbi.nih.gov/genomes'
-    PROCESSES = 1
-    RETRIES = 0  # Currently not used
+    NB_PROCESSES = 1
+    NB_RETRIES = 0  # Currently not used
 
     @property
     def default(self):
@@ -151,16 +171,25 @@ def download(**kwargs):
     Parameters
     ----------
     section : str
-    domain : str
+        NCBI directory
+    group : str
+        Taxonomic group
     uri : str
     output : str
+        directory in which to save the downloaded files
     file_format : str
+        of the saved files
     assembly_level : str
+        as defined by NCBI
     genus : str
+        "organism_name" in NCBI
     species_taxid : str
+        as defined by NCBI
     taxid : str
+        as defined by NCBI
     human_readable : bool
     parallel: int
+        to use multiprocessing for requests
 
     Returns
     -------
@@ -169,27 +198,27 @@ def download(**kwargs):
 
     """
     # Parse and preprocess keyword arguments
-    section = kwargs.pop('section', EDefaults.SECTION.default)
-    assert section in EDefaults.SECTION.choices, "Unsupported section: {}".format(section)
-    domain = kwargs.pop('domain', EDefaults.DOMAIN.default)
-    assert domain in EDefaults.DOMAIN.choices, "Unsupported domain: {}".format(domain)
-    if domain == 'all':
-        domains = SUPPORTED_DOMAINS
+    section = kwargs.pop('section', EDefaults.SECTIONS.default)
+    assert section in EDefaults.SECTIONS.choices, "Unsupported section: {}".format(section)
+    group = kwargs.pop('group', EDefaults.TAXONOMIC_GROUPS.default)
+    assert group in EDefaults.TAXONOMIC_GROUPS.choices, "Unsupported domain: {}".format(group)
+    if group == 'all':
+        groups = SUPPORTED_TAXONOMIC_GROUPS
     else:
-        domains = [domain, ]
+        groups = [group, ]
     uri = kwargs.pop('uri', EDefaults.URI.default)
     output = kwargs.pop('output', EDefaults.OUTPUT.default)
-    file_format = kwargs.pop('file_format', EDefaults.FORMAT.default)
-    assert file_format in EDefaults.FORMAT.choices, \
+    file_format = kwargs.pop('file_format', EDefaults.FORMATS.default)
+    assert file_format in EDefaults.FORMATS.choices, \
         "Unsupported file format: {}".format(file_format)
-    assembly_level = kwargs.pop('assembly_level', EDefaults.ASSEMBLY_LEVEL.default)
-    assert assembly_level in EDefaults.ASSEMBLY_LEVEL.choices, \
+    assembly_level = kwargs.pop('assembly_level', EDefaults.ASSEMBLY_LEVELS.default)
+    assert assembly_level in EDefaults.ASSEMBLY_LEVELS.choices, \
         "Unsupported assembly level: {}".format(assembly_level)
     genus = kwargs.pop('genus', EDefaults.GENUS.default)
     species_taxid = kwargs.pop('species_taxid', EDefaults.SPECIES_TAXID.default)
     taxid = kwargs.pop('taxid', EDefaults.TAXID.default)
     human_readable = kwargs.pop('human_readable', False)
-    parallel = kwargs.pop('parallel', EDefaults.PROCESSES.default)
+    parallel = kwargs.pop('parallel', EDefaults.NB_PROCESSES.default)
     # FIXME: improve error handling and feedback
     assert len(kwargs) == 0, "Unrecognized option(s)"
     if len(kwargs) > 0:
@@ -198,8 +227,8 @@ def download(**kwargs):
 
     try:
         download_jobs = []
-        for domain in domains:
-            summary_file = get_summary(section, domain, uri)
+        for group in groups:
+            summary_file = get_summary(section, group, uri)
             entries = parse_summary(summary_file)
             for entry in entries:
                 if not entry['organism_name'].startswith(genus.capitalize()):
@@ -220,7 +249,7 @@ def download(**kwargs):
                     logging.debug('Skipping entry with assembly level %r', entry['assembly_level'])
                     continue
                 download_jobs.extend(
-                    download_entry(entry, section, domain, output, file_format, human_readable))
+                    download_entry(entry, section, group, output, file_format, human_readable))
 
         pool = Pool(processes=parallel)
         pool.map(worker, download_jobs)

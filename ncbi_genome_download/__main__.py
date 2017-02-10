@@ -9,21 +9,21 @@ from ncbi_genome_download import EDefaults as dflt
 def main():
     """Build and parse command line"""
     parser = argparse.ArgumentParser()
-    parser.add_argument('domain',
-                        choices=dflt.DOMAIN.choices,
-                        default=dflt.DOMAIN.default,
-                        help='The NCBI "domain" to download (default: %(default)s)')
+    parser.add_argument('group',
+                        choices=dflt.TAXONOMIC_GROUPS.choices,
+                        default=dflt.TAXONOMIC_GROUPS.default,
+                        help='The NCBI taxonomic group to download (default: %(default)s)')
     parser.add_argument('-s', '--section', dest='section',
-                        default=dflt.SECTION.default,
-                        choices=dflt.SECTION.choices,
+                        choices=dflt.SECTIONS.choices,
+                        default=dflt.SECTIONS.default,
                         help='NCBI section to download (default: %(default)s)')
     parser.add_argument('-F', '--format', dest='file_format',
-                        default=dflt.FORMAT.default,
-                        choices=dflt.FORMAT.choices,
+                        choices=dflt.FORMATS.choices,
+                        default=dflt.FORMATS.default,
                         help='Which format to download (default: %(default)s)')
     parser.add_argument('-l', '--assembly-level', dest='assembly_level',
-                        default=dflt.ASSEMBLY_LEVEL.default,
-                        choices=dflt.ASSEMBLY_LEVEL.choices,
+                        choices=dflt.ASSEMBLY_LEVELS.choices,
+                        default=dflt.ASSEMBLY_LEVELS.default,
                         help='Assembly level of genomes to download (default: %(default)s)')
     parser.add_argument('-g', '--genus', dest='genus',
                         default=dflt.GENUS.default,
@@ -32,25 +32,23 @@ def main():
                         default=dflt.SPECIES_TAXID.default,
                         help='Only download sequences of the provided species NCBI taxonomy ID. '
                              '(default: %(default)s)')
-    parser.add_argument('-t', '--taxid',
-                        dest='taxid',
+    parser.add_argument('-t', '--taxid', dest='taxid',
                         default=dflt.TAXID.default,
                         help='Only download sequences of the provided NCBI taxonomy ID. ('
                              'default: %(default)s)')
-    parser.add_argument('-o', '--output-folder',
-                        dest='output', default=dflt.OUTPUT.default,
+    parser.add_argument('-o', '--output-folder', dest='output',
+                        default=dflt.OUTPUT.default,
                         help='Create output hierarchy in specified folder (default: %(default)s)')
-    parser.add_argument('-H', '--human-readable',
-                        dest='human_readable', action='store_true',
+    parser.add_argument('-H', '--human-readable', dest='human_readable', action='store_true',
                         help='Create links in human-readable hierarchy (might fail on Windows)')
-    parser.add_argument('-u', '--uri',
-                        dest='uri', default=dflt.URI.default,
+    parser.add_argument('-u', '--uri', dest='uri',
+                        default=dflt.URI.default,
                         help='NCBI base URI to use (default: %(default)s)')
     parser.add_argument('-p', '--parallel', dest='parallel', type=int, metavar="N",
-                        default=dflt.PROCESSES.default,
+                        default=dflt.NB_PROCESSES.default,
                         help='Run %(metavar)s downloads in parallel (default: %(default)s)')
     parser.add_argument('-r', '--retries', dest='retries', type=int, metavar="N",
-                        default=dflt.RETRIES.default,
+                        default=dflt.NB_RETRIES.default,
                         help='Retry download %(metavar)s times when connection to NCBI fails ('
                              'default: %(default)s)')
     parser.add_argument('-v', '--verbose', action='store_true',

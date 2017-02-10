@@ -24,7 +24,7 @@ def test_download_defaults(monkeypatch, mocker):
     download_mock = mocker.MagicMock()
     monkeypatch.setattr(core, 'download', download_mock)
     core.download()
-    assert download_mock.call_count == len(core.SUPPORTED_DOMAINS)
+    assert download_mock.call_count == len(core.SUPPORTED_TAXONOMIC_GROUPS)
 
 
 # TODO: test unrecognized arguments, invalid formats and out of choices values
@@ -41,7 +41,7 @@ def test_download_all(monkeypatch, mocker):
     download_mock = mocker.MagicMock()
     monkeypatch.setattr(core, 'download', download_mock)
     core.download(domain='all', output='/tmp/fake')
-    assert download_mock.call_count == len(core.SUPPORTED_DOMAINS)
+    assert download_mock.call_count == len(core.SUPPORTED_TAXONOMIC_GROUPS)
 
 
 def test_download_connection_err(monkeypatch, mocker):
