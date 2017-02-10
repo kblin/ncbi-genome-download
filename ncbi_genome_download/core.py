@@ -51,10 +51,7 @@ class EMap(Enum):
         list
             containing all the keys of this map enumeration
         """
-        keys = []
-        for _, member in cls.__members__.items():
-            keys.append(member.key)
-        return keys
+        return cls.as_dict().keys()
 
     @classmethod
     def items(cls):
@@ -65,10 +62,7 @@ class EMap(Enum):
         -------
         list of tuple
         """
-        items = []
-        for _, member in cls.__members__.items():
-            items.append((member.key, member.content))
-        return items
+        return cls.as_dict().items()
 
     @classmethod
     def as_dict(cls):
@@ -82,25 +76,9 @@ class EMap(Enum):
         if not hasattr(cls, '_as_dict'):
             as_dict = {}
             for emap in list(cls):
-                as_dict.update({emap.key: emap})
+                as_dict.update({emap.key: emap.content})
             cls._as_dict = as_dict
         return cls._as_dict
-
-    @classmethod
-    def get(cls, key):
-        """
-        Get the enumeration map object associated with the given `key`.
-
-        Parameters
-        ----------
-        key
-
-        Returns
-        -------
-        cls instance
-
-        """
-        return cls.as_dict()[key]
 
     @classmethod
     def get_content(cls, key):
@@ -116,7 +94,7 @@ class EMap(Enum):
         type(content)
 
         """
-        return cls.get(key).content
+        return cls.as_dict()[key]
 
 
 class EFormats(EMap):
@@ -141,8 +119,8 @@ class EAssemblyLevels(EMap):
 class EDefaults(Enum):
     TAXONOMIC_GROUPS = ['all'] + SUPPORTED_TAXONOMIC_GROUPS
     SECTIONS = ['refseq', 'genbank']
-    FORMATS = EFormats.keys() + ['all']
-    ASSEMBLY_LEVELS = ['all'] + EAssemblyLevels.keys()
+    FORMATS = list(EFormats.keys()) + ['all']
+    ASSEMBLY_LEVELS = ['all'] + list(EAssemblyLevels.keys())
     GENUS = None
     SPECIES_TAXID = None
     TAXID = None
@@ -243,9 +221,8 @@ def download(**kwargs):
                     logging.debug('Organism TaxID %r different from the one provided %r, skipping',
                                   entry['taxid'], taxid)
                     continue
-                if assembly_level != 'all' and entry[
-                    'assembly_level'] != EAssemblyLevels.get_content(
-                    assembly_level):
+                if assembly_level != 'all' \
+                        and entry['assembly_level'] != EAssemblyLevels.get_content(assembly_level):
                     logging.debug('Skipping entry with assembly level %r', entry['assembly_level'])
                     continue
                 download_jobs.extend(
