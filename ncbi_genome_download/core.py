@@ -26,6 +26,11 @@ SUPPORTED_DOMAINS = ['archaea', 'bacteria', 'fungi', 'invertebrate', 'plant',
 
 @unique
 class EMap(Enum):
+    """
+    Enumeration of (`key`, `content`) pairs. The name `content` is used, because `value` is
+     already an attribute of the Enum.
+    """
+
     def __init__(self, key, content):
         self.key = key
         self.content = content
@@ -45,6 +50,22 @@ class EMap(Enum):
         return keys
 
     @classmethod
+    def items(cls):
+        items = []
+        for _, member in cls.__members__.items():
+            items.append((member.key, member.content))
+        return items
+
+    @classmethod
+    def as_dict(cls):
+        if not hasattr(cls, '_as_dict'):
+            as_dict = {}
+            for emap in list(cls):
+                as_dict.update({emap.key: emap})
+            cls._as_dict = as_dict
+        return cls._as_dict
+
+    @classmethod
     def get(cls, key):
         """
         Get the enumeration map object associated with the given `key`.
@@ -58,12 +79,7 @@ class EMap(Enum):
         cls instance
 
         """
-        if not hasattr(cls, '_as_dict'):
-            as_dict = {}
-            for emap in list(cls):
-                as_dict.update({emap.key: emap})
-            cls._as_dict = as_dict
-        return cls._as_dict[key]
+        return cls.as_dict()[key]
 
     @classmethod
     def get_content(cls, key):
@@ -174,7 +190,11 @@ def download(**kwargs):
     taxid = kwargs.pop('taxid', EDefaults.TAXID.default)
     human_readable = kwargs.pop('human_readable', False)
     parallel = kwargs.pop('parallel', EDefaults.PROCESSES.default)
-    # TODO: warning/error if unrecognized option
+    # FIXME: improve error handling and feedback
+    assert len(kwargs) == 0, "Unrecognized option(s)"
+    if len(kwargs) > 0:
+        for key, _ in kwargs.items():
+            logging.error('Unsupported keyword argument: {}'.format(key))
 
     try:
         download_jobs = []
