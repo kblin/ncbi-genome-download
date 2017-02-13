@@ -388,18 +388,12 @@ This_is_totally_an_invalid_line!
 620a09de4286f66113317456c0dc8f66  ./GCF_000009605.1_ASM960v1_protein.gpff.gz
 """
     expected = [
-        {'checksum': 'd3c2634cedd0efe05cbf8a5f5384d921',
-         'file': 'GCF_000009605.1_ASM960v1_feature_table.txt.gz'},
-        {'checksum': '42c1bb1447aea2512a17aeb3645b55e9',
-         'file': 'GCF_000009605.1_ASM960v1_genomic.fna.gz'},
-        {'checksum': '8a685d49d826c4f0ad05152e906f3250',
-         'file': 'GCF_000009605.1_ASM960v1_genomic.gbff.gz'},
-        {'checksum': 'e2d9e1cfa085cb462a73d3d2d2c22be5',
-         'file': 'GCF_000009605.1_ASM960v1_genomic.gff.gz'},
-        {'checksum': 'd8ce7c80d457e012f9d368a4673dea65',
-         'file': 'GCF_000009605.1_ASM960v1_protein.faa.gz'},
-        {'checksum': '620a09de4286f66113317456c0dc8f66',
-         'file': 'GCF_000009605.1_ASM960v1_protein.gpff.gz'},
+        {'checksum': 'd3c2634cedd0efe05cbf8a5f5384d921', 'file': 'GCF_000009605.1_ASM960v1_feature_table.txt.gz'},
+        {'checksum': '42c1bb1447aea2512a17aeb3645b55e9', 'file': 'GCF_000009605.1_ASM960v1_genomic.fna.gz'},
+        {'checksum': '8a685d49d826c4f0ad05152e906f3250', 'file': 'GCF_000009605.1_ASM960v1_genomic.gbff.gz'},
+        {'checksum': 'e2d9e1cfa085cb462a73d3d2d2c22be5', 'file': 'GCF_000009605.1_ASM960v1_genomic.gff.gz'},
+        {'checksum': 'd8ce7c80d457e012f9d368a4673dea65', 'file': 'GCF_000009605.1_ASM960v1_protein.faa.gz'},
+        {'checksum': '620a09de4286f66113317456c0dc8f66', 'file': 'GCF_000009605.1_ASM960v1_protein.gpff.gz'},
     ]
 
     ret = core.parse_checksums(checksums_string)
