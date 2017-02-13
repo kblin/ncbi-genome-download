@@ -16,7 +16,6 @@ from .summary import SummaryReader
 # Python < 2.7.9 hack: fix ssl support
 if sys.version_info < (2, 7, 9):  # pragma: no cover
     from requests.packages.urllib3.contrib import pyopenssl
-
     pyopenssl.inject_into_urllib3()
 
 SUPPORTED_TAXONOMIC_GROUPS = ['archaea', 'bacteria', 'fungi', 'invertebrate', 'plant', 'protozoa',
