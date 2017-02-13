@@ -52,10 +52,12 @@ class EMap(Enum):
         list
             containing all the keys of this map enumeration
         """
-        keys = []
-        for _, member in cls.__members__.items():
-            keys.append(member.key)
-        return keys
+        if not hasattr(cls, '_keys'):
+            keys = []
+            for _, member in cls.__members__.items():
+                keys.append(member.key)
+            cls._keys = keys
+        return cls._keys
 
     @classmethod
     def items(cls):
@@ -66,10 +68,12 @@ class EMap(Enum):
         -------
         list of tuple
         """
-        items = []
-        for _, member in cls.__members__.items():
-            items.append((member.key, member.content))
-        return items
+        if not hasattr(cls, '_items'):
+            items = []
+            for _, member in cls.__members__.items():
+                items.append((member.key, member.content))
+            cls._items = items
+        return cls._items
 
     @classmethod
     def get_content(cls, key):
