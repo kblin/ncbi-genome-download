@@ -199,9 +199,6 @@ def download(**kwargs):
     parallel = kwargs.pop('parallel', EDefaults.NB_PROCESSES.default)
     # FIXME: improve error handling and feedback
     assert len(kwargs) == 0, "Unrecognized option(s): {}".format(kwargs.keys())
-    if len(kwargs) > 0:
-        for key, _ in kwargs.items():
-            logging.error('Unsupported keyword argument: {}'.format(key))
 
     # Actual logic
     try:
