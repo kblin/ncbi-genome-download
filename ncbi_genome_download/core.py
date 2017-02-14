@@ -144,6 +144,8 @@ DownloadJob = namedtuple('DownloadJob',
                          ['full_url', 'local_file', 'expected_checksum', 'symlink_path'])
 
 
+# pylint and I disagree on code style here. Shut up, pylint.
+# pylint: disable=too-many-locals
 def download(**kwargs):
     """
     Download data from NCBI
@@ -227,8 +229,11 @@ def download(**kwargs):
         # Exit code 75 meas TEMPFAIL in C/C++, so let's stick with that for now.
         return 75
     return 0
+# pylint: enable=too-many-locals
 
 
+# pylint and I disagree on code style here. Shut up, pylint.
+# pylint: disable=too-many-arguments
 def _download(section, group, uri, output, file_format, assembly_level, genus, species_taxid,
               taxid, human_readable):
     """
@@ -278,6 +283,7 @@ def _download(section, group, uri, output, file_format, assembly_level, genus, s
         download_jobs.extend(
             download_entry(entry, section, group, output, file_format, human_readable))
     return download_jobs
+# pylint: enable=too-many-arguments
 
 
 def worker(job):
@@ -311,6 +317,8 @@ def parse_summary(summary_file):
     return SummaryReader(summary_file)
 
 
+# pylint and I disagree on code style here. Shut up, pylint.
+# pylint: disable=too-many-arguments
 def download_entry(entry, section, domain, output, file_format, human_readable):
     """Download an entry from the summary file"""
     logging.info('Downloading record %r', entry['assembly_accession'])
@@ -346,6 +354,7 @@ def download_entry(entry, section, domain, output, file_format, human_readable):
             logging.error(err)
 
     return download_jobs
+# pylint: enable=too-many-arguments
 
 
 def create_dir(entry, section, domain, output):
