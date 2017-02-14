@@ -97,8 +97,8 @@ class EMap(Enum):
 
 
 class EFormats(EMap):
-    __order__ = 'GENBANK FASTA FEATURES GFF PROTFASTA GENREPT WGS CDSFASTA RNAFASTA'
     # only needed in Python 2
+    __order__ = 'GENBANK FASTA FEATURES GFF PROTFASTA GENREPT WGS CDSFASTA RNAFASTA'
     GENBANK = ('genbank', '_genomic.gbff.gz')
     FASTA = ('fasta', '_genomic.fna.gz')
     FEATURES = ('features', '_feature_table.txt.gz')
