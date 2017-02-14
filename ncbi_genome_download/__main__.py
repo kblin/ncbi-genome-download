@@ -70,14 +70,18 @@ def main():
 
     logging.basicConfig(format='%(levelname)s: %(message)s', level=log_level)
 
+    kwargs = vars(args)
+    del kwargs['debug']
+    del kwargs['verbose']
+    del kwargs['retries']
     retries = 0
-    ret = download(vars(args))
+    ret = download(**kwargs)
     while ret == 75 and retries < args.retries:
         retries += 1
         logging.error(
             'Downloading from NCBI failed due to a connection error, retrying. Retries so far: %s',
             retries)
-        ret = download(args)
+        ret = download(**kwargs)
 
     return ret
 
