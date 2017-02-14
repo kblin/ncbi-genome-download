@@ -2,9 +2,9 @@
 import argparse
 import logging
 
-from . import __version__
-from . import download
-from . import EDefaults as dflt
+from ncbi_genome_download import __version__
+from ncbi_genome_download import download
+from ncbi_genome_download import EDefaults as dflt
 
 
 def main():
