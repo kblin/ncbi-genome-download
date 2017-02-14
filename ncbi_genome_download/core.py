@@ -210,8 +210,17 @@ def download(**kwargs):
                 _download(section, group, uri, output, file_format, assembly_level, genus,
                           species_taxid,
                           taxid, human_readable))
+
         pool = Pool(processes=parallel)
-        pool.map(worker, download_jobs)
+        jobs = pool.map_async(worker, download_jobs)
+        try:
+            # 0xFFFF is just "a really long time"
+            jobs.get(0xFFFF)
+        except KeyboardInterrupt:  # pragma: no cover
+            # TODO: Actually test this once I figure out how to do this in py.test
+            logging.error("Interrupted by user")
+            return 1
+
 
     except requests.exceptions.ConnectionError as err:
         logging.error('Download from NCBI failed: %r', err)
@@ -273,12 +282,19 @@ def _download(section, group, uri, output, file_format, assembly_level, genus, s
 
 def worker(job):
     """Run a single download job"""
-    if job.full_url is not None:
-        req = requests.get(job.full_url, stream=True)
-        ret = save_and_check(req, job.local_file, job.expected_checksum)
-        if not ret:
-            return ret
-    return create_symlink(job.local_file, job.symlink_path)
+    ret = -1
+    try:
+        if job.full_url is not None:
+            req = requests.get(job.full_url, stream=True)
+            ret = save_and_check(req, job.local_file, job.expected_checksum)
+            if not ret:
+                return ret
+        ret = create_symlink(job.local_file, job.symlink_path)
+    except KeyboardInterrupt:  # pragma: no cover
+        # TODO: Actually test this once I figure out how to do this in py.test
+        logging.debug("Ignoring keyboard interrupt.")
+
+    return ret
 
 
 def get_summary(section, domain, uri):
