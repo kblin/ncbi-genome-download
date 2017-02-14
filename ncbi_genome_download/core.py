@@ -97,6 +97,8 @@ class EMap(Enum):
 
 
 class EFormats(EMap):
+    __order__ = 'GENBANK FASTA FEATURES GFF PROTFASTA GENREPT WGS CDSFASTA RNAFASTA'
+    # only needed in Python 2
     GENBANK = ('genbank', '_genomic.gbff.gz')
     FASTA = ('fasta', '_genomic.fna.gz')
     FEATURES = ('features', '_feature_table.txt.gz')
@@ -109,6 +111,7 @@ class EFormats(EMap):
 
 
 class EAssemblyLevels(EMap):
+    __order__ = 'COMPLETE CHROMOSOME SCAFFOLD CONTIG'  # only needed in Python 2
     COMPLETE = ('complete', 'Complete Genome')
     CHROMOSOME = ('chromosome', 'Chromosome')
     SCAFFOLD = ('scaffold', 'Scaffold')
