@@ -129,7 +129,6 @@ class EDefaults(Enum):
     OUTPUT = os.getcwd()
     URI = 'https://ftp.ncbi.nih.gov/genomes'
     NB_PROCESSES = 1
-    NB_RETRIES = 0  # Currently not used
 
     @property
     def default(self):
