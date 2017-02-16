@@ -49,7 +49,7 @@ def main():
                         default=dflt.NB_PROCESSES.default,
                         help='Run %(metavar)s downloads in parallel (default: %(default)s)')
     parser.add_argument('-r', '--retries', dest='retries', type=int, metavar="N",
-                        default=dflt.NB_RETRIES.default,
+                        default=0,
                         help='Retry download %(metavar)s times when connection to NCBI fails ('
                              'default: %(default)s)')
     parser.add_argument('-v', '--verbose', action='store_true',
@@ -73,14 +73,14 @@ def main():
     kwargs = vars(args)
     del kwargs['debug']
     del kwargs['verbose']
-    del kwargs['retries']
-    retries = 0
+    max_retries = kwargs.pop('retries')  # Default value is set in parser argument
+    attempts = 0
     ret = download(**kwargs)
-    while ret == 75 and retries < args.retries:
-        retries += 1
+    while ret == 75 and attempts < max_retries:
+        attempts += 1
         logging.error(
             'Downloading from NCBI failed due to a connection error, retrying. Retries so far: %s',
-            retries)
+            attempts)
         ret = download(**kwargs)
 
     return ret
