@@ -128,6 +128,7 @@ class EDefaults(Enum):
     TAXID = None
     OUTPUT = os.getcwd()
     URI = 'https://ftp.ncbi.nih.gov/genomes'
+    PROXIES = None
     NB_PROCESSES = 1
 
     @property
@@ -156,6 +157,9 @@ def download(**kwargs):
     group : str
         Taxonomic group
     uri : str
+    proxies : dict
+        Proxies settings for requests, as defined in the requests documentation
+        http://docs.python-requests.org/en/latest/user/advanced/#proxies
     output : str
         directory in which to save the downloaded files
     file_format : str
@@ -188,6 +192,7 @@ def download(**kwargs):
     else:
         groups = [group, ]
     uri = kwargs.pop('uri', EDefaults.URI.default)
+    proxies = kwargs.pop('proxies', EDefaults.PROXIES.default)
     output = kwargs.pop('output', EDefaults.OUTPUT.default)
     file_format = kwargs.pop('file_format', EDefaults.FORMATS.default)
     assert file_format in EDefaults.FORMATS.choices, \
@@ -209,11 +214,10 @@ def download(**kwargs):
         for group in groups:
             download_jobs.extend(
                 _download(section, group, uri, output, file_format, assembly_level, genus,
-                          species_taxid,
-                          taxid, human_readable))
+                          species_taxid, taxid, human_readable, proxies))
 
         pool = Pool(processes=parallel)
-        jobs = pool.map_async(worker, download_jobs)
+        jobs = pool.starmap_async(worker, download_jobs)
         try:
             # 0xFFFF is just "a really long time"
             jobs.get(0xFFFF)
@@ -221,7 +225,6 @@ def download(**kwargs):
             # TODO: Actually test this once I figure out how to do this in py.test
             logging.error("Interrupted by user")
             return 1
-
 
     except requests.exceptions.ConnectionError as err:
         logging.error('Download from NCBI failed: %r', err)
@@ -233,8 +236,8 @@ def download(**kwargs):
 
 # pylint and I disagree on code style here. Shut up, pylint.
 # pylint: disable=too-many-arguments
-def _download(section, group, uri, output, file_format, assembly_level, genus, species_taxid,
-              taxid, human_readable):
+def _download(section, group, uri, output, file_format, assembly_level, genus,
+              species_taxid, taxid, human_readable, proxies=None):
     """
     Sole purpose is to ease the tests, no argument checking is done here: they must be processed
     previously.
@@ -252,13 +255,14 @@ def _download(section, group, uri, output, file_format, assembly_level, genus, s
     species_taxid
     taxid
     human_readable
+    proxies
 
     Returns
     -------
     list of DownloadJob
 
     """
-    summary_file = get_summary(section, group, uri)
+    summary_file = get_summary(section, group, uri, proxies)
     entries = parse_summary(summary_file)
     download_jobs = []
     for entry in entries:
@@ -280,17 +284,17 @@ def _download(section, group, uri, output, file_format, assembly_level, genus, s
             logging.debug('Skipping entry with assembly level %r', entry['assembly_level'])
             continue
         download_jobs.extend(
-            download_entry(entry, section, group, output, file_format, human_readable))
+            download_entry(entry, section, group, output, file_format, human_readable, proxies))
     return download_jobs
 # pylint: enable=too-many-arguments
 
 
-def worker(job):
+def worker(job, proxies=None):
     """Run a single download job"""
     ret = -1
     try:
         if job.full_url is not None:
-            req = requests.get(job.full_url, stream=True)
+            req = requests.get(job.full_url, stream=True, proxies=proxies)
             ret = save_and_check(req, job.local_file, job.expected_checksum)
             if not ret:
                 return ret
@@ -302,12 +306,12 @@ def worker(job):
     return ret
 
 
-def get_summary(section, domain, uri):
+def get_summary(section, domain, uri, proxies=None):
     """Get the assembly_summary.txt file from NCBI and return a StringIO object for it"""
     logging.debug('Downloading summary for %r/%r uri: %r', section, domain, uri)
     url = '{uri}/{section}/{domain}/assembly_summary.txt'.format(
         section=section, domain=domain, uri=uri)
-    req = requests.get(url)
+    req = requests.get(url, proxies=proxies)
     return StringIO(req.text)
 
 
@@ -318,7 +322,7 @@ def parse_summary(summary_file):
 
 # pylint and I disagree on code style here. Shut up, pylint.
 # pylint: disable=too-many-arguments
-def download_entry(entry, section, domain, output, file_format, human_readable):
+def download_entry(entry, section, domain, output, file_format, human_readable, proxies=None):
     """Download an entry from the summary file"""
     logging.info('Downloading record %r', entry['assembly_accession'])
     full_output_dir = create_dir(entry, section, domain, output)
@@ -327,7 +331,7 @@ def download_entry(entry, section, domain, output, file_format, human_readable):
     if human_readable:
         symlink_path = create_readable_dir(entry, section, domain, output)
 
-    checksums = grab_checksums_file(entry)
+    checksums = grab_checksums_file(entry, proxies)
 
     # TODO: Only write this when the checksums file changed
     with open(os.path.join(full_output_dir, 'MD5SUMS'), 'w') as handle:
@@ -344,11 +348,13 @@ def download_entry(entry, section, domain, output, file_format, human_readable):
     for fmt in formats:
         try:
             if has_file_changed(full_output_dir, parsed_checksums, fmt):
-                download_jobs.append(
-                    download_file_job(entry, full_output_dir, parsed_checksums, fmt, symlink_path))
+                download_jobs.append((
+                    download_file_job(entry, full_output_dir, parsed_checksums, fmt, symlink_path),
+                    proxies))
             elif need_to_create_symlink(full_output_dir, parsed_checksums, fmt, symlink_path):
-                download_jobs.append(
-                    create_symlink_job(full_output_dir, parsed_checksums, fmt, symlink_path))
+                download_jobs.append((
+                    create_symlink_job(full_output_dir, parsed_checksums, fmt, symlink_path),
+                    proxies))
         except ValueError as err:
             logging.error(err)
 
@@ -393,11 +399,11 @@ def create_readable_dir(entry, section, domain, output):
     return full_output_dir
 
 
-def grab_checksums_file(entry):
+def grab_checksums_file(entry, proxies=None):
     """Grab the checksum file for a given entry"""
     http_url = convert_ftp_url(entry['ftp_path'])
     full_url = '{}/md5checksums.txt'.format(http_url)
-    req = requests.get(full_url)
+    req = requests.get(full_url, proxies=proxies)
     return req.text
 
 

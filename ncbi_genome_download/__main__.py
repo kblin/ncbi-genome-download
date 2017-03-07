@@ -45,6 +45,12 @@ def main():
     parser.add_argument('-u', '--uri', dest='uri',
                         default=dflt.URI.default,
                         help='NCBI base URI to use (default: %(default)s)')
+    parser.add_argument('--http-proxy', dest='http_proxy', metavar='URL',
+                        help='HTTP proxy URL, use the usual syntax: '
+                             'http://user:password@host:port/')
+    parser.add_argument('--https-proxy', dest='https_proxy', metavar='URL',
+                        help='HTTPS proxy URL, use the usual syntax: '
+                             'http://user:password@host:port/')
     parser.add_argument('-p', '--parallel', dest='parallel', type=int, metavar="N",
                         default=dflt.NB_PROCESSES.default,
                         help='Run %(metavar)s downloads in parallel (default: %(default)s)')
@@ -71,6 +77,13 @@ def main():
     logging.basicConfig(format='%(levelname)s: %(message)s', level=log_level)
 
     kwargs = vars(args)
+    proxy_http, proxy_https = kwargs.get('http_proxy', None), kwargs.get('https_proxy', None)
+    proxies = {}
+    if proxy_http:
+        proxies['http'] = proxy_http
+    if proxy_https:
+        proxies['https'] = proxy_https
+    kwargs['proxies'] = proxies
     del kwargs['debug']
     del kwargs['verbose']
     max_retries = kwargs.pop('retries')  # Default value is set in parser argument
