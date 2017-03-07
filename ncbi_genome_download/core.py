@@ -217,7 +217,17 @@ def download(**kwargs):
                           species_taxid, taxid, human_readable, proxies))
 
         pool = Pool(processes=parallel)
-        jobs = pool.starmap_async(worker, download_jobs)
+        # https://docs.python.org/3.3/library/multiprocessing.html#multiprocessing.pool.Pool.starmap_async
+        if sys.version_info >= (3, 3):
+            jobs = pool.starmap_async(worker, download_jobs)
+        else:
+            # Inspired by http://stackoverflow.com/a/5443941/
+            import itertools
+
+            def starmap(params):
+                return worker(*params)
+
+            jobs = pool.map_async(starmap, download_jobs)
         try:
             # 0xFFFF is just "a really long time"
             jobs.get(0xFFFF)
