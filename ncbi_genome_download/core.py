@@ -98,7 +98,7 @@ class EMap(Enum):
 
 class EFormats(EMap):
     # only needed in Python 2
-    __order__ = 'GENBANK FASTA FEATURES GFF PROTFASTA GENREPT WGS CDSFASTA RNAFASTA'
+    __order__ = 'GENBANK FASTA FEATURES GFF PROTFASTA GENREPT WGS CDSFASTA RNAFASTA ASSEMBLYREPORT ASSEMBLYSTATS'
     GENBANK = ('genbank', '_genomic.gbff.gz')
     FASTA = ('fasta', '_genomic.fna.gz')
     FEATURES = ('features', '_feature_table.txt.gz')
@@ -108,6 +108,8 @@ class EFormats(EMap):
     WGS = ('wgs', '_wgsmaster.gbff.gz')
     CDSFASTA = ('cds-fasta', '_cds_from_genomic.fna.gz')
     RNAFASTA = ('rna-fasta', '_rna_from_genomic.fna.gz')
+    ASSEMBLYREPORT = ('assembly-report', '_assembly_report.txt')
+    ASSEMBLYSTATS = ('assembly-stats', '_assembly_stats.txt')
 
 
 class EAssemblyLevels(EMap):
