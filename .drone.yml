@@ -1,8 +1,9 @@
-build:
-  image: alpine
-  commands:
-    - apk --no-cache add python py-pip gcc python-dev musl-dev libffi-dev openssl-dev
-    - pip install -r requirements.txt
-    - pip install -r tests/requirements.txt
-    - pip install .
-    - py.test -v
+pipeline:
+  build:
+    image: alpine
+    commands:
+      - apk --no-cache add python py-pip gcc python-dev musl-dev libffi-dev openssl-dev
+      - pip install -r requirements.txt
+      - pip install -r tests/requirements.txt
+      - pip install .
+      - py.test -v
