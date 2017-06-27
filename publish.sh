@@ -4,5 +4,7 @@ set -euo pipefail
 PANDOC=pandoc
 
 ${PANDOC} -f markdown_github -t rst -o README.rst README.md
-python setup.py sdist upload -r pypi
+rm -rf dist
+python setup.py sdist bdist_wheel
+twine upload dist/*
 rm README.rst
