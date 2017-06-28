@@ -237,7 +237,8 @@ def prepare_download_entry(req, tmpdir, format_map=core.EFormats, human_readable
                 outdir.join('human_readable', 'refseq', 'bacteria', 'Example', 'species',
                             'ABC_1234', filename))
 
-        download_jobs.append(core.DownloadJob(full_url, str(local_file), checksum, symlink_path))
+        download_jobs.append((core.DownloadJob(full_url, str(local_file), checksum, symlink_path),
+                              None))
         checksum_file_content += '{}\t./{}\n'.format(checksum, filename)
         req.get(full_url, text=seqfile.read())
 
@@ -249,7 +250,7 @@ def prepare_download_entry(req, tmpdir, format_map=core.EFormats, human_readable
 def test_download_entry_genbank(req, tmpdir):
     entry, outdir, joblist = prepare_download_entry(req, tmpdir)
     jobs = core.download_entry(entry, 'refseq', 'bacteria', str(outdir), 'genbank', None)
-    expected = [j for j in joblist if j.local_file.endswith('_genomic.gbff.gz')]
+    expected = [(j[0], None) for j in joblist if j[0].local_file.endswith('_genomic.gbff.gz')]
     assert jobs == expected
 
 
@@ -270,7 +271,7 @@ def test_download_entry_missing(req, tmpdir):
 def test_download_entry_human_readable(req, tmpdir):
     entry, outdir, joblist = prepare_download_entry(req, tmpdir, human_readable=True)
     jobs = core.download_entry(entry, 'refseq', 'bacteria', str(outdir), 'genbank', True)
-    expected = [j for j in joblist if j.local_file.endswith('_genomic.gbff.gz')]
+    expected = [(j[0], None) for j in joblist if j[0].local_file.endswith('_genomic.gbff.gz')]
     assert jobs == expected
 
 
@@ -278,8 +279,8 @@ def test_download_entry_symlink_only(req, tmpdir):
     entry, outdir, joblist = prepare_download_entry(req, tmpdir, human_readable=True,
                                                     create_local_file=True)
     jobs = core.download_entry(entry, 'refseq', 'bacteria', str(outdir), 'genbank', True)
-    expected = [core.DownloadJob(None, j.local_file, None, j.symlink_path)
-                for j in joblist if j.local_file.endswith('_genomic.gbff.gz')]
+    expected = [(core.DownloadJob(None, j[0].local_file, None, j[0].symlink_path), None)
+                for j in joblist if j[0].local_file.endswith('_genomic.gbff.gz')]
     assert jobs == expected
 
 
