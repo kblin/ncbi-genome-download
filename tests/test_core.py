@@ -187,6 +187,22 @@ def test_download_species_taxid(monkeypatch, mocker, req):
                'organism_name'] == 'Azorhizobium caulinodans ORS 571'
 
 
+def test_download_refseq_category(monkeypatch, mocker, req):
+    summary_contents = open(_get_file('assembly_status.txt'), 'r').read()
+    req.get('https://ftp.ncbi.nih.gov/genomes/refseq/bacteria/assembly_summary.txt',
+            text=summary_contents)
+    mocker.spy(core, 'get_summary')
+    mocker.spy(core, 'parse_summary')
+    mocker.patch('ncbi_genome_download.core.download_entry')
+    core.download(group='bacteria', output='/tmp/fake', refseq_category='reference')
+    assert core.get_summary.call_count == 1
+    assert core.parse_summary.call_count == 1
+    assert core.download_entry.call_count == 1
+    # Many nested tuples in call_args_list, no kidding.
+    assert core.download_entry.call_args_list[0][0][0][
+               'organism_name'] == 'Streptomyces coelicolor A3(2)'
+
+
 def test_get_summary(req):
     req.get('https://ftp.ncbi.nih.gov/genomes/refseq/bacteria/assembly_summary.txt', text='test')
     ret = core.get_summary('refseq', 'bacteria', dflt.URI.default)

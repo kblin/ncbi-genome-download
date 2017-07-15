@@ -120,11 +120,18 @@ class EAssemblyLevels(EMap):
     CONTIG = ('contig', 'Contig')
 
 
+class ERefseqCategories(EMap):
+    __order__ = 'REFERENCE REPRESENTATIVE'
+    REFERENCE = ('reference', 'reference genome')
+    REPRESENTATIVE = ('representative', 'representative genome')
+
+
 class EDefaults(Enum):
     TAXONOMIC_GROUPS = ['all'] + SUPPORTED_TAXONOMIC_GROUPS
     SECTIONS = ['refseq', 'genbank']
     FORMATS = list(EFormats.keys()) + ['all']
     ASSEMBLY_LEVELS = ['all'] + list(EAssemblyLevels.keys())
+    REFSEQ_CATEGORIES = ['all'] + list(ERefseqCategories.keys())
     GENUS = None
     SPECIES_TAXID = None
     TAXID = None
@@ -164,6 +171,8 @@ def download(**kwargs):
         of the saved files
     assembly_level : str
         as defined by NCBI
+    refseq_category: str
+        as defined by NCBI
     genus : str
         "organism_name" in NCBI
     species_taxid : str
@@ -197,6 +206,9 @@ def download(**kwargs):
     assembly_level = kwargs.pop('assembly_level', EDefaults.ASSEMBLY_LEVELS.default)
     assert assembly_level in EDefaults.ASSEMBLY_LEVELS.choices, \
         "Unsupported assembly level: {}".format(assembly_level)
+    refseq_category = kwargs.pop('refseq_category', EDefaults.REFSEQ_CATEGORIES.default)
+    assert refseq_category in EDefaults.REFSEQ_CATEGORIES.choices, \
+        "Unsupported refseq_category: {}".format(refseq_category)
     genus = kwargs.pop('genus', EDefaults.GENUS.default)
     species_taxid = kwargs.pop('species_taxid', EDefaults.SPECIES_TAXID.default)
     taxid = kwargs.pop('taxid', EDefaults.TAXID.default)
@@ -211,8 +223,7 @@ def download(**kwargs):
         for group in groups:
             download_jobs.extend(
                 _download(section, group, uri, output, file_format, assembly_level, genus,
-                          species_taxid,
-                          taxid, human_readable))
+                          species_taxid, taxid, human_readable, refseq_category))
 
         pool = Pool(processes=parallel)
         jobs = pool.map_async(worker, download_jobs)
@@ -236,7 +247,7 @@ def download(**kwargs):
 # pylint and I disagree on code style here. Shut up, pylint.
 # pylint: disable=too-many-arguments
 def _download(section, group, uri, output, file_format, assembly_level, genus, species_taxid,
-              taxid, human_readable):
+              taxid, human_readable, refseq_category):
     """
     Sole purpose is to ease the tests, no argument checking is done here: they must be processed
     previously.
@@ -254,6 +265,7 @@ def _download(section, group, uri, output, file_format, assembly_level, genus, s
     species_taxid
     taxid
     human_readable
+    refseq_category
 
     Returns
     -------
@@ -280,6 +292,9 @@ def _download(section, group, uri, output, file_format, assembly_level, genus, s
         if assembly_level != 'all' \
                 and entry['assembly_level'] != EAssemblyLevels.get_content(assembly_level):
             logging.debug('Skipping entry with assembly level %r', entry['assembly_level'])
+            continue
+        if refseq_category != 'all' and entry['refseq_category'] != ERefseqCategories.get_content(refseq_category):
+            logging.debug('Skipping entry with refseq_category %r, not %r', entry['refseq_category'], refseq_category)
             continue
         download_jobs.extend(
             download_entry(entry, section, group, output, file_format, human_readable))

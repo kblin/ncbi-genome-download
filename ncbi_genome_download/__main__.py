@@ -37,6 +37,10 @@ def main():
                         default=dflt.TAXID.default,
                         help='Only download sequences of the provided NCBI taxonomy ID. ('
                              'default: %(default)s)')
+    parser.add_argument('-R', '--refseq-category', dest='refseq_category',
+                        choices=dflt.REFSEQ_CATEGORIES.choices,
+                        default=dflt.REFSEQ_CATEGORIES.default,
+                        help='Only download sequences of the provided refseq category (default: %(default)s)')
     parser.add_argument('-o', '--output-folder', dest='output',
                         default=dflt.OUTPUT.default,
                         help='Create output hierarchy in specified folder (default: %(default)s)')
