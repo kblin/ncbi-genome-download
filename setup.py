@@ -65,7 +65,8 @@ setup(
     cmdclass={'test': PyTest},
     entry_points={
         'console_scripts': [
-            'ncbi-genome-download=ncbi_genome_download.__main__:main'
+            'ncbi-genome-download=ncbi_genome_download.__main__:main',
+            'ngd=ncbi_genome_download.__main__:main'
         ],
     },
     packages=['ncbi_genome_download'],
