@@ -56,6 +56,8 @@ def main():
                         default=0,
                         help='Retry download %(metavar)s times when connection to NCBI fails ('
                              'default: %(default)s)')
+    parser.add_argument('-m', '--metadata-table', type=str,
+                        help='Save tab-delimited file with genome metadata')
     parser.add_argument('-v', '--verbose', action='store_true',
                         help='increase output verbosity')
     parser.add_argument('-d', '--debug', action='store_true',
