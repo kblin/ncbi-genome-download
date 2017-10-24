@@ -138,6 +138,7 @@ class EDefaults(Enum):
     OUTPUT = os.getcwd()
     URI = 'https://ftp.ncbi.nih.gov/genomes'
     NB_PROCESSES = 1
+    TABLE = None
 
     @property
     def default(self):
@@ -182,6 +183,8 @@ def download(**kwargs):
     human_readable : bool
     parallel: int
         to use multiprocessing for requests
+    table : str
+        file to store metadata
 
     Returns
     -------
@@ -214,8 +217,14 @@ def download(**kwargs):
     taxid = kwargs.pop('taxid', EDefaults.TAXID.default)
     human_readable = kwargs.pop('human_readable', False)
     parallel = kwargs.pop('parallel', EDefaults.NB_PROCESSES.default)
+    table = kwargs.pop('metadata_table', EDefaults.TABLE.default)
     # FIXME: improve error handling and feedback
     assert len(kwargs) == 0, "Unrecognized option(s): {}".format(kwargs.keys())
+
+    if table is not None:
+        logging.info('Creating metadata file: %r', table)
+        with open(table, 'wt') as metadata_table:
+            metadata_table.write(get_table_header())
 
     # Actual logic
     try:
@@ -223,7 +232,7 @@ def download(**kwargs):
         for group in groups:
             download_jobs.extend(
                 _download(section, group, uri, output, file_format, assembly_level, genus,
-                          species_taxid, taxid, human_readable, refseq_category))
+                          species_taxid, taxid, human_readable, refseq_category, table))
 
         pool = Pool(processes=parallel)
         jobs = pool.map_async(worker, download_jobs)
@@ -247,7 +256,7 @@ def download(**kwargs):
 # pylint and I disagree on code style here. Shut up, pylint.
 # pylint: disable=too-many-arguments
 def _download(section, group, uri, output, file_format, assembly_level, genus, species_taxid,
-              taxid, human_readable, refseq_category):
+              taxid, human_readable, refseq_category, table):
     """
     Sole purpose is to ease the tests, no argument checking is done here: they must be processed
     previously.
@@ -297,7 +306,7 @@ def _download(section, group, uri, output, file_format, assembly_level, genus, s
             logging.debug('Skipping entry with refseq_category %r, not %r', entry['refseq_category'], refseq_category)
             continue
         download_jobs.extend(
-            download_entry(entry, section, group, output, file_format, human_readable))
+            download_entry(entry, section, group, output, file_format, human_readable, table))
     return download_jobs
 # pylint: enable=too-many-arguments
 
@@ -335,7 +344,7 @@ def parse_summary(summary_file):
 
 # pylint and I disagree on code style here. Shut up, pylint.
 # pylint: disable=too-many-arguments
-def download_entry(entry, section, domain, output, file_format, human_readable):
+def download_entry(entry, section, domain, output, file_format, human_readable, table):
     """Download an entry from the summary file"""
     logging.info('Downloading record %r', entry['assembly_accession'])
     full_output_dir = create_dir(entry, section, domain, output)
@@ -362,7 +371,7 @@ def download_entry(entry, section, domain, output, file_format, human_readable):
         try:
             if has_file_changed(full_output_dir, parsed_checksums, fmt):
                 download_jobs.append(
-                    download_file_job(entry, full_output_dir, parsed_checksums, fmt, symlink_path))
+                    download_file_job(entry, full_output_dir, parsed_checksums, table, fmt, symlink_path))
             elif need_to_create_symlink(full_output_dir, parsed_checksums, fmt, symlink_path):
                 download_jobs.append(
                     create_symlink_job(full_output_dir, parsed_checksums, fmt, symlink_path))
@@ -502,7 +511,7 @@ def md5sum(filename):
     return hash_md5.hexdigest()
 
 
-def download_file_job(entry, directory, checksums, filetype='genbank', symlink_path=None):
+def download_file_job(entry, directory, checksums, table, filetype='genbank', symlink_path=None):
     """Download and verirfy a given file"""
     pattern = EFormats.get_content(filetype)
     filename, expected_checksum = get_name_and_checksum(checksums, pattern)
@@ -512,6 +521,9 @@ def download_file_job(entry, directory, checksums, filetype='genbank', symlink_p
     full_symlink = None
     if symlink_path is not None:
         full_symlink = os.path.join(symlink_path, filename)
+
+    if table is not None:
+        write_table_line(entry, table, local_file)
 
     return DownloadJob(full_url, local_file, expected_checksum, full_symlink)
 
@@ -595,3 +607,67 @@ def get_strain_label(entry, viral=False):
         return strain
 
     return cleanup(get_strain(entry))
+
+
+def get_table_header():
+    header_parts = ['assembly_accession',
+                    'bioproject',
+                    'biosample',
+                    'wgs_master',
+                    'excluded_from_refseq',
+                    'refseq_category',
+                    'relation_to_type_material',
+                    'taxid',
+                    'species_taxid',
+                    'organism_name',
+                    'infraspecific_name',
+                    'isolate',
+                    'version_status',
+                    'assembly_level',
+                    'release_type',
+                    'genome_rep',
+                    'seq_rel_date',
+                    'asm_name',
+                    'submitter',
+                    'gbrs_paired_asm',
+                    'paired_asm_comp',
+                    'ftp_path',
+                    'local_filename']
+    return '\t'.join(header_parts) + '\n'
+
+
+def get_table_line(entry, genome_filename):
+    line_parts = [entry.get('assembly_accession', ''),
+                  entry.get('bioproject', ''),
+                  entry.get('biosample', ''),
+                  entry.get('wgs_master', ''),
+                  entry.get('excluded_from_refseq', ''),
+                  entry.get('refseq_category', ''),
+                  entry.get('relation_to_type_material', ''),
+                  entry.get('taxid', ''),
+                  entry.get('species_taxid', ''),
+                  entry.get('organism_name', ''),
+                  entry.get('infraspecific_name', ''),
+                  entry.get('isolate', ''),
+                  entry.get('version_status', ''),
+                  entry.get('assembly_level', ''),
+                  entry.get('release_type', ''),
+                  entry.get('genome_rep', ''),
+                  entry.get('seq_rel_date', ''),
+                  entry.get('asm_name', ''),
+                  entry.get('submitter', ''),
+                  entry.get('gbrs_paired_asm', ''),
+                  entry.get('paired_asm_comp', ''),
+                  entry.get('ftp_path', ''),
+                  './' + os.path.relpath(genome_filename)]
+    return '\t'.join(line_parts) + '\n'
+
+
+def write_table_line(entry, table_filename, genome_filename):
+    with open(table_filename, 'at') as metadata_table:
+        table_line = get_table_line(entry, genome_filename)
+        try:
+            metadata_table.write(table_line)
+        except UnicodeEncodeError:
+            ascii_table_line = ''.join([i if ord(i) < 128 else '?' for i in table_line])
+            metadata_table.write(ascii_table_line)
