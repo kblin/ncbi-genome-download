@@ -5,13 +5,13 @@ import hashlib
 import logging
 import os
 import sys
-from collections import namedtuple
 from enum import Enum, unique
 from io import StringIO
 from multiprocessing import Pool
 
 import requests
 
+from .jobs import DownloadJob
 from .summary import SummaryReader
 
 # Python < 2.7.9 hack: fix ssl support
@@ -148,10 +148,6 @@ class EDefaults(Enum):
     @property
     def choices(self):
         return self.value if isinstance(self.value, list) else None
-
-
-DownloadJob = namedtuple('DownloadJob',
-                         ['full_url', 'local_file', 'expected_checksum', 'symlink_path'])
 
 
 def argument_parser(version=None):
