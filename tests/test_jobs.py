@@ -8,3 +8,4 @@ def test_job_eq():
 
     assert job_a == job_b
     assert job_a != job_c
+    assert job_b != args
