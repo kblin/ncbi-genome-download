@@ -313,7 +313,7 @@ def _download(section, group, uri, output, file_format, assembly_level, genus, s
 
 def worker(job):
     """Run a single download job"""
-    ret = -1
+    ret = False
     try:
         if job.full_url is not None:
             req = requests.get(job.full_url, stream=True)
