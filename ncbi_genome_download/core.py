@@ -371,7 +371,7 @@ def download_entry(entry, section, domain, output, file_format, human_readable, 
         try:
             if has_file_changed(full_output_dir, parsed_checksums, fmt):
                 download_jobs.append(
-                    download_file_job(entry, full_output_dir, parsed_checksums, table, fmt, symlink_path))
+                    download_file_job(entry, full_output_dir, parsed_checksums, fmt, symlink_path, table))
             elif need_to_create_symlink(full_output_dir, parsed_checksums, fmt, symlink_path):
                 download_jobs.append(
                     create_symlink_job(full_output_dir, parsed_checksums, fmt, symlink_path))
@@ -511,7 +511,7 @@ def md5sum(filename):
     return hash_md5.hexdigest()
 
 
-def download_file_job(entry, directory, checksums, table, filetype='genbank', symlink_path=None):
+def download_file_job(entry, directory, checksums, filetype='genbank', symlink_path=None, table=None):
     """Download and verirfy a given file"""
     pattern = EFormats.get_content(filetype)
     filename, expected_checksum = get_name_and_checksum(checksums, pattern)
