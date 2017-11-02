@@ -7,3 +7,8 @@ pipeline:
       - pip install -r tests/requirements.txt
       - pip install .
       - py.test -v
+
+  slack:
+    image: plugins/slack
+    channel: tools
+    secrets: [ slack_webhook ]
