@@ -223,6 +223,7 @@ def argument_parser(version=None):
 def download(**kwargs):
     """
     Download data from NCBI
+
     Parameters
     ----------
     section : str
@@ -274,6 +275,9 @@ def download(**kwargs):
 
     return args_download(args)
 
+
+# pylint and I disagree on code style here. Shut up, pylint.
+# pylint: disable=too-many-locals
 def args_download(args):
     """
     Download data from NCBI
@@ -356,10 +360,11 @@ _
         # Exit code 75 meas TEMPFAIL in C/C++, so let's stick with that for now.
         return 75
     return 0
+# pylint: enable=too-many-locals
 
 
 # pylint and I disagree on code style here. Shut up, pylint.
-# pylint: disable=too-many-arguments
+# pylint: disable=too-many-arguments,too-many-locals
 def _download(section, group, uri, output, file_formats, assembly_level, genera, species_taxids,
               taxids, human_readable, refseq_category, table):
     """
@@ -418,7 +423,7 @@ def _download(section, group, uri, output, file_formats, assembly_level, genera,
         download_jobs.extend(
             download_entry(entry, section, group, output, file_formats, human_readable, table))
     return download_jobs
-# pylint: enable=too-many-arguments
+# pylint: enable=too-many-arguments,too-many-locals
 
 
 def worker(job):
@@ -453,7 +458,7 @@ def parse_summary(summary_file):
 
 
 # pylint and I disagree on code style here. Shut up, pylint.
-# pylint: disable=too-many-arguments
+# pylint: disable=too-many-arguments,too-many-locals
 def download_entry(entry, section, domain, output, file_formats, human_readable, table=None):
     """Download an entry from the summary file"""
     logging.info('Downloading record %r', entry['assembly_accession'])
@@ -484,7 +489,7 @@ def download_entry(entry, section, domain, output, file_formats, human_readable,
             logging.error(err)
 
     return download_jobs
-# pylint: enable=too-many-arguments
+# pylint: enable=too-many-arguments,too-many-locals
 
 
 def create_dir(entry, section, domain, output):
@@ -616,6 +621,8 @@ def md5sum(filename):
     return hash_md5.hexdigest()
 
 
+# pylint and I disagree on code style here. Shut up, pylint.
+# pylint: disable=too-many-arguments
 def download_file_job(entry, directory, checksums, filetype='genbank', symlink_path=None, table=None):
     """Download and verirfy a given file"""
     pattern = EFormats.get_content(filetype)
@@ -631,6 +638,7 @@ def download_file_job(entry, directory, checksums, filetype='genbank', symlink_p
         write_table_line(entry, table, local_file)
 
     return DownloadJob(full_url, local_file, expected_checksum, full_symlink)
+# pylint: enable=too-many-arguments,too-many-locals
 
 
 def create_symlink_job(directory, checksums, filetype, symlink_path):
