@@ -344,7 +344,7 @@ def parse_summary(summary_file):
 
 # pylint and I disagree on code style here. Shut up, pylint.
 # pylint: disable=too-many-arguments
-def download_entry(entry, section, domain, output, file_format, human_readable, table):
+def download_entry(entry, section, domain, output, file_format, human_readable, table=None):
     """Download an entry from the summary file"""
     logging.info('Downloading record %r', entry['assembly_accession'])
     full_output_dir = create_dir(entry, section, domain, output)
