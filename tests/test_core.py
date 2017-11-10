@@ -266,13 +266,13 @@ def test_download_entry_genbank(req, tmpdir):
     entry, outdir, joblist = prepare_download_entry(req, tmpdir)
     jobs = core.download_entry(entry, 'refseq', 'bacteria', str(outdir), 'genbank', None)
     expected = [j for j in joblist if j.local_file.endswith('_genomic.gbff.gz')]
-    assert jobs == expected
+    assert list(jobs) == expected
 
 
 def test_download_entry_all(req, tmpdir):
     entry, outdir, expected = prepare_download_entry(req, tmpdir)
     jobs = core.download_entry(entry, 'refseq', 'bacteria', str(outdir), 'all', None)
-    assert jobs == expected
+    assert list(jobs) == expected
 
 
 def test_download_entry_missing(req, tmpdir):
@@ -280,14 +280,14 @@ def test_download_entry_missing(req, tmpdir):
     del name_map_copy['genbank']
     entry, outdir, _ = prepare_download_entry(req, tmpdir, name_map_copy)
     jobs = core.download_entry(entry, 'refseq', 'bacteria', str(outdir), 'genbank', None)
-    assert jobs == []
+    assert list(jobs) == []
 
 
 def test_download_entry_human_readable(req, tmpdir):
     entry, outdir, joblist = prepare_download_entry(req, tmpdir, human_readable=True)
     jobs = core.download_entry(entry, 'refseq', 'bacteria', str(outdir), 'genbank', True)
     expected = [j for j in joblist if j.local_file.endswith('_genomic.gbff.gz')]
-    assert jobs == expected
+    assert list(jobs) == expected
 
 
 def test_download_entry_symlink_only(req, tmpdir):
@@ -296,7 +296,7 @@ def test_download_entry_symlink_only(req, tmpdir):
     jobs = core.download_entry(entry, 'refseq', 'bacteria', str(outdir), 'genbank', True)
     expected = [core.DownloadJob(None, j.local_file, None, j.symlink_path)
                 for j in joblist if j.local_file.endswith('_genomic.gbff.gz')]
-    assert jobs == expected
+    assert list(jobs) == expected
 
 
 def test_create_dir(tmpdir):
