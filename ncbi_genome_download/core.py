@@ -153,38 +153,38 @@ DownloadJob = namedtuple('DownloadJob',
                          ['full_url', 'local_file', 'expected_checksum', 'symlink_path'])
 
 
-# pylint and I disagree on code style here. Shut up, pylint.
-# pylint: disable=too-many-locals
 def download(args):
     """
     Download data from NCBI
 
     Parameters
     ----------
-    section : str
-        NCBI directory
-    group : str
-        Taxonomic group
-    uri : str
-    output : str
+    args: Namespace
+        Arguments from argparser containing the following keys:
+        section : str
+            NCBI directory
+        group : str
+            Taxonomic group
+        uri : str
+            output : str
         directory in which to save the downloaded files
-    file_format : str
-        of the saved files
-    assembly_level : str
-        as defined by NCBI
-    refseq_category: str
-        as defined by NCBI
-    genus : str
-        "organism_name" in NCBI
-    species_taxid : str
-        as defined by NCBI
-    taxid : str
-        as defined by NCBI
-    human_readable : bool
-    parallel: int
-        to use multiprocessing for requests
-    table : str
-        file to store metadata
+            file_format : str
+                of the saved files
+        assembly_level : str
+            as defined by NCBI
+        refseq_category: str
+            as defined by NCBI
+        genus : str
+            "organism_name" in NCBI
+        species_taxid : str
+            as defined by NCBI
+        taxid : str
+            as defined by NCBI
+        human_readable : bool
+        parallel: int
+            to use multiprocessing for requests
+        metadata_table : str
+            file to store metadata
 
     Returns
     -------
@@ -236,7 +236,6 @@ def download(args):
         # Exit code 75 meas TEMPFAIL in C/C++, so let's stick with that for now.
         return 75
     return 0
-# pylint: enable=too-many-locals
 
 
 # pylint and I disagree on code style here. Shut up, pylint.
