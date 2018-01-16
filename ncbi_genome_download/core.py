@@ -201,10 +201,13 @@ def download(args):
     else:
         groups = args.group.split(',')
 
+
     formats = args.file_format.split(',')
     for format in formats:
         assert format in EDefaults.FORMATS.choices, \
             "Unsupported file format: {file_format}".format(file_format=format)
+    if 'all' in formats:
+        formats = EFormats.keys()
 
     assert args.assembly_level in EDefaults.ASSEMBLY_LEVELS.choices, \
         "Unsupported assembly level: {}".format(args.assembly_level)
@@ -234,13 +237,9 @@ def download(args):
     try:
         download_jobs = []
         for group in groups:
-            for genus in genus_list:
-                for taxid in taxid_list:
-                    for species_taxid in species_taxid_list:
-                        for format in formats:
-                            download_jobs.extend(
-                            _download(args.section, group, args.uri, args.output, format, args.assembly_level, genus,
-                            species_taxid, taxid, args.human_readable, args.refseq_category, args.metadata_table))
+            download_jobs.extend(
+            _download(args.section, group, args.uri, args.output, formats, args.assembly_level, genus_list,
+            species_taxid_list, taxid_list, args.human_readable, args.refseq_category, args.metadata_table))
 
         pool = Pool(processes=args.parallel)
         jobs = pool.map_async(worker, download_jobs)
@@ -262,8 +261,8 @@ def download(args):
 
 # pylint and I disagree on code style here. Shut up, pylint.
 # pylint: disable=too-many-arguments
-def _download(section, group, uri, output, file_format, assembly_level, genus, species_taxid,
-              taxid, human_readable, refseq_category, table):
+def _download(section, group, uri, output, file_formats, assembly_level, genera, species_taxids,
+              taxids, human_readable, refseq_category, table):
     """
     Sole purpose is to ease the tests, no argument checking is done here: they must be processed
     previously.
@@ -275,7 +274,7 @@ def _download(section, group, uri, output, file_format, assembly_level, genus, s
     group
     uri
     output
-    file_format
+    file_formats
     assembly_level
     genus
     species_taxid
@@ -292,28 +291,31 @@ def _download(section, group, uri, output, file_format, assembly_level, genus, s
     entries = parse_summary(summary_file)
     download_jobs = []
     for entry in entries:
-        if genus and not entry['organism_name'].startswith(
-                genus.capitalize()):
-            logging.debug('Organism name %r does not start with %r as requested, skipping',
-                          entry['organism_name'], genus)
-            continue
-        if species_taxid and entry['species_taxid'] != species_taxid:
-            logging.debug('Species TaxID %r different from the one provided %r, skipping',
-                          entry['species_taxid'], species_taxid)
-            continue
-        if taxid and entry['taxid'] != taxid:
-            logging.debug('Organism TaxID %r different from the one provided %r, skipping',
-                          entry['taxid'], taxid)
-            continue
-        if assembly_level != 'all' \
-                and entry['assembly_level'] != EAssemblyLevels.get_content(assembly_level):
-            logging.debug('Skipping entry with assembly level %r', entry['assembly_level'])
-            continue
-        if refseq_category != 'all' and entry['refseq_category'] != ERefseqCategories.get_content(refseq_category):
-            logging.debug('Skipping entry with refseq_category %r, not %r', entry['refseq_category'], refseq_category)
-            continue
-        download_jobs.extend(
-            download_entry(entry, section, group, output, file_format, human_readable, table))
+        for genus in genera:
+            for taxid in taxids:
+                for species_taxid in species_taxids:
+                    if genus and not entry['organism_name'].startswith(
+                            genus.capitalize()):
+                        logging.debug('Organism name %r does not start with %r as requested, skipping',
+                                      entry['organism_name'], genus)
+                        continue
+                    if species_taxid and entry['species_taxid'] != species_taxid:
+                        logging.debug('Species TaxID %r different from the one provided %r, skipping',
+                                      entry['species_taxid'], species_taxid)
+                        continue
+                    if taxid and entry['taxid'] != taxid:
+                        logging.debug('Organism TaxID %r different from the one provided %r, skipping',
+                                      entry['taxid'], taxid)
+                        continue
+                    if assembly_level != 'all' \
+                            and entry['assembly_level'] != EAssemblyLevels.get_content(assembly_level):
+                        logging.debug('Skipping entry with assembly level %r', entry['assembly_level'])
+                        continue
+                    if refseq_category != 'all' and entry['refseq_category'] != ERefseqCategories.get_content(refseq_category):
+                        logging.debug('Skipping entry with refseq_category %r, not %r', entry['refseq_category'], refseq_category)
+                        continue
+                    download_jobs.extend(
+                        download_entry(entry, section, group, output, file_formats, human_readable, table))
     return download_jobs
 # pylint: enable=too-many-arguments
 
@@ -351,7 +353,7 @@ def parse_summary(summary_file):
 
 # pylint and I disagree on code style here. Shut up, pylint.
 # pylint: disable=too-many-arguments
-def download_entry(entry, section, domain, output, file_format, human_readable, table=None):
+def download_entry(entry, section, domain, output, file_formats, human_readable, table=None):
     """Download an entry from the summary file"""
     logging.info('Downloading record %r', entry['assembly_accession'])
     full_output_dir = create_dir(entry, section, domain, output)
@@ -368,13 +370,8 @@ def download_entry(entry, section, domain, output, file_format, human_readable, 
 
     parsed_checksums = parse_checksums(checksums)
 
-    if file_format == 'all':
-        formats = EFormats.keys()
-    else:
-        formats = [file_format]
-
     download_jobs = []
-    for fmt in formats:
+    for fmt in file_formats:
         try:
             if has_file_changed(full_output_dir, parsed_checksums, fmt):
                 download_jobs.append(
