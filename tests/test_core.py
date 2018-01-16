@@ -277,8 +277,7 @@ def prepare_download_entry(req, tmpdir, format_map=core.EFormats, human_readable
 
 def test_download_entry_genbank(req, tmpdir):
     entry, outdir, joblist = prepare_download_entry(req, tmpdir)
-    jobs = core.download_entry(entry, 'refseq', 'bacteria', str(outdir), 'genbank', None)
-    core.download_entry()
+    jobs = core.download_entry(entry, 'refseq', 'bacteria', str(outdir), ['genbank'], None)
     expected = [j for j in joblist if j.local_file.endswith('_genomic.gbff.gz')]
     assert jobs == expected
 
