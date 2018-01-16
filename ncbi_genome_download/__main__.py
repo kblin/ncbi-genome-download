@@ -11,33 +11,40 @@ def main():
     """Build and parse command line"""
     parser = argparse.ArgumentParser()
     parser.add_argument('group',
-                        choices=dflt.TAXONOMIC_GROUPS.choices,
+                        #choices=dflt.TAXONOMIC_GROUPS.choices, # Moved choice checking to method
                         default=dflt.TAXONOMIC_GROUPS.default,
-                        help='The NCBI taxonomic group to download (default: %(default)s)')
+                        help='The NCBI taxonomic group to download (default: %(default)s). '
+                        'A comma-separated list of taxonomic groups is also possible. For example: "bacteria,viral"'
+                        'Choose from: {choices}'.format(choices=dflt.TAXONOMIC_GROUPS.choices))
     parser.add_argument('-s', '--section', dest='section',
                         choices=dflt.SECTIONS.choices,
                         default=dflt.SECTIONS.default,
                         help='NCBI section to download (default: %(default)s)')
     parser.add_argument('-F', '--format', dest='file_format',
-                        #choices=dflt.FORMATS.choices,
+                        #choices=dflt.FORMATS.choices, # Moved choice checking to method
                         default=dflt.FORMATS.default,
                         help='Which format to download (default: %(default)s).'+
-                        'Choose from: {choices}'.format(choices=dflt.FORMATS.choices.))
+                        'Choose from: {choices}'.format(choices=dflt.FORMATS.choices))
     parser.add_argument('-l', '--assembly-level', dest='assembly_level',
                         choices=dflt.ASSEMBLY_LEVELS.choices,
                         default=dflt.ASSEMBLY_LEVELS.default,
                         help='Assembly level of genomes to download (default: %(default)s)')
     parser.add_argument('-g', '--genus', dest='genus',
                         default=dflt.GENUS.default,
-                        help='Only download sequences of the provided genus. (default: %(default)s)')
+                        help='Only download sequences of the provided genus. '
+                        'A comma-seperated list of genera is also possible. For example: "Streptomyces coelicolor,Escherichia coli".'
+                        '(default: %(default)s)')
     parser.add_argument('-T', '--species-taxid', dest='species_taxid',
                         default=dflt.SPECIES_TAXID.default,
                         help='Only download sequences of the provided species NCBI taxonomy ID. '
-                             '(default: %(default)s)')
+                            'A comma-separated list of species taxids is also possible. For example: "52342,12325". '
+                             '(default: %(default)s)'
+                            )
     parser.add_argument('-t', '--taxid', dest='taxid',
                         default=dflt.TAXID.default,
-                        help='Only download sequences of the provided NCBI taxonomy ID. ('
-                             'default: %(default)s)')
+                        help='Only download sequences of the provided NCBI taxonomy ID. '
+                             'A comma-separated list of taxids is also possible. For example: "9606,9685". '
+                             '(default: %(default)s)')
     parser.add_argument('-R', '--refseq-category', dest='refseq_category',
                         choices=dflt.REFSEQ_CATEGORIES.choices,
                         default=dflt.REFSEQ_CATEGORIES.default,
