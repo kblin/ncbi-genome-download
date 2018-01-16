@@ -76,18 +76,15 @@ def main():
 
     logging.basicConfig(format='%(levelname)s: %(message)s', level=log_level)
 
-    kwargs = vars(args)
-    del kwargs['debug']
-    del kwargs['verbose']
-    max_retries = kwargs.pop('retries')  # Default value is set in parser argument
+    max_retries = args.retries
     attempts = 0
-    ret = download(**kwargs)
+    ret = download(args)
     while ret == 75 and attempts < max_retries:
         attempts += 1
         logging.error(
             'Downloading from NCBI failed due to a connection error, retrying. Retries so far: %s',
             attempts)
-        ret = download(**kwargs)
+        ret = download(args)
 
     return ret
 
