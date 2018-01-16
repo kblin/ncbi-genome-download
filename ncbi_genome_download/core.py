@@ -204,7 +204,7 @@ def download(args):
     formats = args.file_format.split(',')
     for format in formats:
         assert format in EDefaults.FORMATS.choices, \
-            "Unsupported file format: {}".format(format)
+            "Unsupported file format: {file_format}".format(file_format=format)
 
     assert args.assembly_level in EDefaults.ASSEMBLY_LEVELS.choices, \
         "Unsupported assembly level: {}".format(args.assembly_level)
@@ -216,14 +216,31 @@ def download(args):
         with open(args.metadata_table, 'wt') as metadata_table:
             metadata_table.write(get_table_header())
 
+    if bool(args.taxid):
+        taxid_list=args.taxid.split(',')
+    else:
+        taxid_list=[None]
+    if args.species_taxid:
+        species_taxid_list=args.species_taxid.split(',')
+    else:
+        species_taxid_list=[None]
+
+    if args.genus:
+        genus_list=args.genus.split(',')
+    else:
+        genus_list=[None]
+
     # Actual logic
     try:
         download_jobs = []
         for group in groups:
-            for format in formats:
-                download_jobs.extend(
-                    _download(args.section, group, args.uri, args.output, format, args.assembly_level, args.genus,
-                          args.species_taxid, args.taxid, args.human_readable, args.refseq_category, args.metadata_table))
+            for genus in genus_list:
+                for taxid in taxid_list:
+                    for species_taxid in species_taxid_list:
+                        for format in formats:
+                            download_jobs.extend(
+                            _download(args.section, group, args.uri, args.output, format, args.assembly_level, genus,
+                            species_taxid, taxid, args.human_readable, args.refseq_category, args.metadata_table))
 
         pool = Pool(processes=args.parallel)
         jobs = pool.map_async(worker, download_jobs)
