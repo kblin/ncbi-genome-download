@@ -7,7 +7,7 @@ from requests.exceptions import ConnectionError
 
 from ncbi_genome_download import core
 from ncbi_genome_download.core import EDefaults as dflt
-
+from ncbi_genome_download.argument_parser import argument_parser
 
 def _get_file(fname):
     """Get a file from the test directory"""
@@ -32,15 +32,16 @@ def test_download_defaults(monkeypatch, mocker):
 def test_download_one(monkeypatch, mocker):
     download_mock = mocker.MagicMock()
     monkeypatch.setattr(core, 'download', download_mock)
-    kwargs = {'group': 'bacteria', 'output': '/tmp/fake'}
-    core.download(**kwargs)
-    download_mock.assert_called_with(**kwargs)
+    args = argument_parser().parse_args(["-o", "/tmp/fake", "bacteria"])
+    core.download(args)
+    download_mock.assert_called_with(args)
 
 
 def test_download_all(monkeypatch, mocker):
     _download_mock = mocker.MagicMock()
     monkeypatch.setattr(core, '_download', _download_mock)
-    core.download(group='all', output='/tmp/fake')
+    args=argument_parser().parse_args(["-o","/tmp/fake","all"])
+    core.download(args)
     assert _download_mock.call_count == len(core.SUPPORTED_TAXONOMIC_GROUPS)
 
 
@@ -57,7 +58,8 @@ def test_download(monkeypatch, mocker, req):
     mocker.spy(core, 'get_summary')
     mocker.spy(core, 'parse_summary')
     mocker.patch('ncbi_genome_download.core.download_entry')
-    core.download(group='bacteria', output='/tmp/fake')
+    args = argument_parser().parse_args(["-o", "/tmp/fake", "bacteria"])
+    core.download(args)
     assert core.get_summary.call_count == 1
     assert core.parse_summary.call_count == 1
     assert core.download_entry.call_count == 4
@@ -70,7 +72,8 @@ def test_download_complete(monkeypatch, mocker, req):
     mocker.spy(core, 'get_summary')
     mocker.spy(core, 'parse_summary')
     mocker.patch('ncbi_genome_download.core.download_entry')
-    core.download(group='bacteria', output='/tmp/fake', assembly_level='complete')
+    args = argument_parser().parse_args(["-o", "/tmp/fake","--assembly-level","complete", "bacteria"])
+    core.download(args)
     assert core.get_summary.call_count == 1
     assert core.parse_summary.call_count == 1
     assert core.download_entry.call_count == 1
@@ -85,7 +88,8 @@ def test_download_chromosome(monkeypatch, mocker, req):
     mocker.spy(core, 'get_summary')
     mocker.spy(core, 'parse_summary')
     mocker.patch('ncbi_genome_download.core.download_entry')
-    core.download(group='bacteria', output='/tmp/fake', assembly_level='chromosome')
+    args = argument_parser().parse_args(["-o", "/tmp/fake","--assembly-level","chromosome", "bacteria"])
+    core.download(args)
     assert core.get_summary.call_count == 1
     assert core.parse_summary.call_count == 1
     assert core.download_entry.call_count == 1
@@ -100,7 +104,8 @@ def test_download_scaffold(monkeypatch, mocker, req):
     mocker.spy(core, 'get_summary')
     mocker.spy(core, 'parse_summary')
     mocker.patch('ncbi_genome_download.core.download_entry')
-    core.download(group='bacteria', output='/tmp/fake', assembly_level='scaffold')
+    args = argument_parser().parse_args(["-o", "/tmp/fake","--assembly-level","scaffold", "bacteria"])
+    core.download(args)
     assert core.get_summary.call_count == 1
     assert core.parse_summary.call_count == 1
     assert core.download_entry.call_count == 1
@@ -115,7 +120,8 @@ def test_download_contig(monkeypatch, mocker, req):
     mocker.spy(core, 'get_summary')
     mocker.spy(core, 'parse_summary')
     mocker.patch('ncbi_genome_download.core.download_entry')
-    core.download(group='bacteria', output='/tmp/fake', assembly_level='contig')
+    args = argument_parser().parse_args(["-o", "/tmp/fake","--assembly-level","contig", "bacteria"])
+    core.download(args)
     assert core.get_summary.call_count == 1
     assert core.parse_summary.call_count == 1
     assert core.download_entry.call_count == 1
@@ -130,7 +136,8 @@ def test_download_genus(monkeypatch, mocker, req):
     mocker.spy(core, 'get_summary')
     mocker.spy(core, 'parse_summary')
     mocker.patch('ncbi_genome_download.core.download_entry')
-    core.download(group='bacteria', output='/tmp/fake', genus='Azorhizobium')
+    args = argument_parser().parse_args(["-o", "/tmp/fake","--genus","Azorhizobium", "bacteria"])
+    core.download(args)
     assert core.get_summary.call_count == 1
     assert core.parse_summary.call_count == 1
     assert core.download_entry.call_count == 1
@@ -146,7 +153,8 @@ def test_download_genus_lowercase(monkeypatch, mocker, req):
     mocker.spy(core, 'get_summary')
     mocker.spy(core, 'parse_summary')
     mocker.patch('ncbi_genome_download.core.download_entry')
-    core.download(group='bacteria', output='/tmp/fake', genus='azorhizobium')
+    args = argument_parser().parse_args(["-o", "/tmp/fake","--genus","azorhizobium", "bacteria"])
+    core.download(args)
     assert core.get_summary.call_count == 1
     assert core.parse_summary.call_count == 1
     assert core.download_entry.call_count == 1
@@ -162,7 +170,8 @@ def test_download_taxid(monkeypatch, mocker, req):
     mocker.spy(core, 'get_summary')
     mocker.spy(core, 'parse_summary')
     mocker.patch('ncbi_genome_download.core.download_entry')
-    core.download(group='bacteria', output='/tmp/fake', taxid='438753')
+    args = argument_parser().parse_args(["-o", "/tmp/fake","--taxid","438753", "bacteria"])
+    core.download(args)
     assert core.get_summary.call_count == 1
     assert core.parse_summary.call_count == 1
     assert core.download_entry.call_count == 1
@@ -178,7 +187,8 @@ def test_download_species_taxid(monkeypatch, mocker, req):
     mocker.spy(core, 'get_summary')
     mocker.spy(core, 'parse_summary')
     mocker.patch('ncbi_genome_download.core.download_entry')
-    core.download(group='bacteria', output='/tmp/fake', species_taxid='7')
+    args = argument_parser().parse_args(["-o", "/tmp/fake","--species-taxid","7", "bacteria"])
+    core.download(args)
     assert core.get_summary.call_count == 1
     assert core.parse_summary.call_count == 1
     assert core.download_entry.call_count == 1
@@ -194,7 +204,8 @@ def test_download_refseq_category(monkeypatch, mocker, req):
     mocker.spy(core, 'get_summary')
     mocker.spy(core, 'parse_summary')
     mocker.patch('ncbi_genome_download.core.download_entry')
-    core.download(group='bacteria', output='/tmp/fake', refseq_category='reference')
+    args = argument_parser().parse_args(["-o", "/tmp/fake","--refseq-category","reference", "bacteria"])
+    core.download(args)
     assert core.get_summary.call_count == 1
     assert core.parse_summary.call_count == 1
     assert core.download_entry.call_count == 1
@@ -265,13 +276,14 @@ def prepare_download_entry(req, tmpdir, format_map=core.EFormats, human_readable
 def test_download_entry_genbank(req, tmpdir):
     entry, outdir, joblist = prepare_download_entry(req, tmpdir)
     jobs = core.download_entry(entry, 'refseq', 'bacteria', str(outdir), 'genbank', None)
+    core.download_entry()
     expected = [j for j in joblist if j.local_file.endswith('_genomic.gbff.gz')]
     assert jobs == expected
 
 
 def test_download_entry_all(req, tmpdir):
     entry, outdir, expected = prepare_download_entry(req, tmpdir)
-    jobs = core.download_entry(entry, 'refseq', 'bacteria', str(outdir), 'all', None)
+    jobs = core.download_entry(entry, 'refseq', 'bacteria', str(outdir), core.EFormats.keys(), None)
     assert jobs == expected
 
 
@@ -279,13 +291,13 @@ def test_download_entry_missing(req, tmpdir):
     name_map_copy = dict(core.EFormats.items())
     del name_map_copy['genbank']
     entry, outdir, _ = prepare_download_entry(req, tmpdir, name_map_copy)
-    jobs = core.download_entry(entry, 'refseq', 'bacteria', str(outdir), 'genbank', None)
+    jobs = core.download_entry(entry, 'refseq', 'bacteria', str(outdir), ['genbank'], None)
     assert jobs == []
 
 
 def test_download_entry_human_readable(req, tmpdir):
     entry, outdir, joblist = prepare_download_entry(req, tmpdir, human_readable=True)
-    jobs = core.download_entry(entry, 'refseq', 'bacteria', str(outdir), 'genbank', True)
+    jobs = core.download_entry(entry, 'refseq', 'bacteria', str(outdir), ['genbank'], True)
     expected = [j for j in joblist if j.local_file.endswith('_genomic.gbff.gz')]
     assert jobs == expected
 
@@ -293,7 +305,7 @@ def test_download_entry_human_readable(req, tmpdir):
 def test_download_entry_symlink_only(req, tmpdir):
     entry, outdir, joblist = prepare_download_entry(req, tmpdir, human_readable=True,
                                                     create_local_file=True)
-    jobs = core.download_entry(entry, 'refseq', 'bacteria', str(outdir), 'genbank', True)
+    jobs = core.download_entry(entry, 'refseq', 'bacteria', str(outdir), ['genbank'], True)
     expected = [core.DownloadJob(None, j.local_file, None, j.symlink_path)
                 for j in joblist if j.local_file.endswith('_genomic.gbff.gz')]
     assert jobs == expected
