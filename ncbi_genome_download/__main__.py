@@ -23,7 +23,8 @@ def main():
     parser.add_argument('-F', '--format', dest='file_format',
                         #choices=dflt.FORMATS.choices, # Moved choice checking to method
                         default=dflt.FORMATS.default,
-                        help='Which format to download (default: %(default)s).'+
+                        help='Which format to download (default: %(default)s).' 
+                        'A comma-separated list of formats is also possible. For example: "fasta,assembly-report". '
                         'Choose from: {choices}'.format(choices=dflt.FORMATS.choices))
     parser.add_argument('-l', '--assembly-level', dest='assembly_level',
                         choices=dflt.ASSEMBLY_LEVELS.choices,
