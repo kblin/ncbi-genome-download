@@ -277,8 +277,8 @@ def _download(section, group, uri, output, file_formats, assembly_level, genera,
     file_formats
     assembly_level
     genus
-    species_taxid
-    taxid
+    species_taxids
+    taxids
     human_readable
     refseq_category
 
