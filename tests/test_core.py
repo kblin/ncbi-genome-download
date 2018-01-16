@@ -23,7 +23,8 @@ def req():
 def test_download_defaults(monkeypatch, mocker):
     _download_mock = mocker.MagicMock()
     monkeypatch.setattr(core, '_download', _download_mock)
-    core.download()
+    args=argument_parser().parse_args([dflt.TAXONOMIC_GROUPS.default])
+    core.download(args)
     assert _download_mock.call_count == len(core.SUPPORTED_TAXONOMIC_GROUPS)
 
 
@@ -48,7 +49,8 @@ def test_download_all(monkeypatch, mocker):
 def test_download_connection_err(monkeypatch, mocker):
     _download_mock = mocker.MagicMock(side_effect=ConnectionError)
     monkeypatch.setattr(core, '_download', _download_mock)
-    assert core.download() == 75
+    args=argument_parser().parse_args([dflt.TAXONOMIC_GROUPS.default])
+    assert core.download(args) == 75
 
 
 def test_download(monkeypatch, mocker, req):
