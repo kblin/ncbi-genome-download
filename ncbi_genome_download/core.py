@@ -155,7 +155,7 @@ DownloadJob = namedtuple('DownloadJob',
 
 # pylint and I disagree on code style here. Shut up, pylint.
 # pylint: disable=too-many-locals
-def download(**kwargs):
+def download(args):
     """
     Download data from NCBI
 
@@ -193,37 +193,23 @@ def download(**kwargs):
 
     """
     # Parse and pre-process keyword arguments
-    section = kwargs.pop('section', EDefaults.SECTIONS.default)
-    assert section in EDefaults.SECTIONS.choices, "Unsupported section: {}".format(section)
-    group = kwargs.pop('group', EDefaults.TAXONOMIC_GROUPS.default)
-    assert group in EDefaults.TAXONOMIC_GROUPS.choices, "Unsupported group: {}".format(group)
-    if group == 'all':
+    assert args.section in EDefaults.SECTIONS.choices, "Unsupported section: {}".format(args.section)
+    for group in args.group.split(','):
+        assert group in EDefaults.TAXONOMIC_GROUPS.choices, "Unsupported group: {}".format(group)
+    if 'all' in args.group.split(','):
         groups = SUPPORTED_TAXONOMIC_GROUPS
     else:
-        groups = [group, ]
-    uri = kwargs.pop('uri', EDefaults.URI.default)
-    output = kwargs.pop('output', EDefaults.OUTPUT.default)
-    file_format = kwargs.pop('file_format', EDefaults.FORMATS.default)
-    assert file_format in EDefaults.FORMATS.choices, \
-        "Unsupported file format: {}".format(file_format)
-    assembly_level = kwargs.pop('assembly_level', EDefaults.ASSEMBLY_LEVELS.default)
-    assert assembly_level in EDefaults.ASSEMBLY_LEVELS.choices, \
-        "Unsupported assembly level: {}".format(assembly_level)
-    refseq_category = kwargs.pop('refseq_category', EDefaults.REFSEQ_CATEGORIES.default)
-    assert refseq_category in EDefaults.REFSEQ_CATEGORIES.choices, \
-        "Unsupported refseq_category: {}".format(refseq_category)
-    genus = kwargs.pop('genus', EDefaults.GENUS.default)
-    species_taxid = kwargs.pop('species_taxid', EDefaults.SPECIES_TAXID.default)
-    taxid = kwargs.pop('taxid', EDefaults.TAXID.default)
-    human_readable = kwargs.pop('human_readable', False)
-    parallel = kwargs.pop('parallel', EDefaults.NB_PROCESSES.default)
-    table = kwargs.pop('metadata_table', EDefaults.TABLE.default)
-    # FIXME: improve error handling and feedback
-    assert len(kwargs) == 0, "Unrecognized option(s): {}".format(kwargs.keys())
+        groups = args.group.split(',')
+    assert args.file_format in EDefaults.FORMATS.choices, \
+        "Unsupported file format: {}".format(args.file_format)
+    assert args.assembly_level in EDefaults.ASSEMBLY_LEVELS.choices, \
+        "Unsupported assembly level: {}".format(args.assembly_level)
+    assert args.refseq_category in EDefaults.REFSEQ_CATEGORIES.choices, \
+        "Unsupported refseq_category: {}".format(args.refseq_category)
 
-    if table is not None:
-        logging.info('Creating metadata file: %r', table)
-        with open(table, 'wt') as metadata_table:
+    if args.metadata_table:
+        logging.info('Creating metadata file: %r', args.metadata_table)
+        with open(args.metadata_table, 'wt') as metadata_table:
             metadata_table.write(get_table_header())
 
     # Actual logic
@@ -231,10 +217,10 @@ def download(**kwargs):
         download_jobs = []
         for group in groups:
             download_jobs.extend(
-                _download(section, group, uri, output, file_format, assembly_level, genus,
-                          species_taxid, taxid, human_readable, refseq_category, table))
+                _download(args.section, group, args.uri, args.output, args.file_format, args.assembly_level, args.genus,
+                          args.species_taxid, args.taxid, args.human_readable, args.refseq_category, args.metadata_table))
 
-        pool = Pool(processes=parallel)
+        pool = Pool(processes=args.parallel)
         jobs = pool.map_async(worker, download_jobs)
         try:
             # 0xFFFF is just "a really long time"
