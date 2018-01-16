@@ -21,7 +21,8 @@ def main():
     parser.add_argument('-F', '--format', dest='file_format',
                         #choices=dflt.FORMATS.choices,
                         default=dflt.FORMATS.default,
-                        help='Which format to download (default: %(default)s)')
+                        help='Which format to download (default: %(default)s).'+
+                        'Choose from: {choices}'.format(choices=dflt.FORMATS.choices.))
     parser.add_argument('-l', '--assembly-level', dest='assembly_level',
                         choices=dflt.ASSEMBLY_LEVELS.choices,
                         default=dflt.ASSEMBLY_LEVELS.default,

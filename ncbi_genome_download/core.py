@@ -275,16 +275,16 @@ def _download(section, group, uri, output, file_format, assembly_level, genus, s
     entries = parse_summary(summary_file)
     download_jobs = []
     for entry in entries:
-        if genus is not None and not entry['organism_name'].startswith(
+        if genus and not entry['organism_name'].startswith(
                 genus.capitalize()):
             logging.debug('Organism name %r does not start with %r as requested, skipping',
                           entry['organism_name'], genus)
             continue
-        if species_taxid is not None and entry['species_taxid'] != species_taxid:
+        if species_taxid and entry['species_taxid'] != species_taxid:
             logging.debug('Species TaxID %r different from the one provided %r, skipping',
                           entry['species_taxid'], species_taxid)
             continue
-        if taxid is not None and entry['taxid'] != taxid:
+        if taxid and entry['taxid'] != taxid:
             logging.debug('Organism TaxID %r different from the one provided %r, skipping',
                           entry['taxid'], taxid)
             continue
