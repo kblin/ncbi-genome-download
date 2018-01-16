@@ -8,6 +8,7 @@ from collections import namedtuple
 from enum import Enum, unique
 from io import StringIO
 from multiprocessing import Pool
+from .__main__ import argument_parser
 
 import requests
 
@@ -153,7 +154,74 @@ DownloadJob = namedtuple('DownloadJob',
                          ['full_url', 'local_file', 'expected_checksum', 'symlink_path'])
 
 
-def download(args):
+def download(**kwargs):
+    """
+    Download data from NCBI
+    Parameters
+    ----------
+    section : str
+        NCBI directory
+    group : str
+        Taxonomic group
+    uri : str
+    output : str
+        directory in which to save the downloaded files
+    file_format : str
+        of the saved files
+    assembly_level : str
+        as defined by NCBI
+    refseq_category: str
+        as defined by NCBI
+    genus : str
+        "organism_name" in NCBI
+    species_taxid : str
+        as defined by NCBI
+    taxid : str
+        as defined by NCBI
+    human_readable : bool
+    parallel: int
+        to use multiprocessing for requests
+    table : str
+        file to store metadata
+    Returns
+    -------
+    int
+        success code
+    """
+    # Parse and pre-process keyword arguments
+    parser=argument_parser()
+    section = kwargs.pop('section', EDefaults.SECTIONS.default)
+    group = kwargs.pop('group', EDefaults.TAXONOMIC_GROUPS.default)
+    uri = kwargs.pop('uri', EDefaults.URI.default)
+    output = kwargs.pop('output', EDefaults.OUTPUT.default)
+    file_format = kwargs.pop('file_format', EDefaults.FORMATS.default)
+    assembly_level = kwargs.pop('assembly_level', EDefaults.ASSEMBLY_LEVELS.default)
+    refseq_category = kwargs.pop('refseq_category', EDefaults.REFSEQ_CATEGORIES.default)
+    genus = kwargs.pop('genus', EDefaults.GENUS.default)
+    species_taxid = kwargs.pop('species_taxid', EDefaults.SPECIES_TAXID.default)
+    taxid = kwargs.pop('taxid', EDefaults.TAXID.default)
+    human_readable = kwargs.pop('human_readable', False)
+    parallel = kwargs.pop('parallel', EDefaults.NB_PROCESSES.default)
+    table = kwargs.pop('metadata_table', EDefaults.TABLE.default)
+    assert len(kwargs) == 0, "Unrecognized option(s): {}".format(kwargs.keys())
+
+    args=parser.parse_args([group])
+    args.section=section
+    args.uri=uri
+    args.output=output
+    args.file_format=file_format
+    args.assembly_level=assembly_level
+    args.refseq_category=refseq_category
+    args.genus=genus
+    args.species_taxid=species_taxid
+    args.taxid=taxid
+    args.human_readable=human_readable
+    args.parallel=parallel
+    args.metadata_table=table
+
+    args_download(args)
+
+def args_download(args):
     """
     Download data from NCBI
 
