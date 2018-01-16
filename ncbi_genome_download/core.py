@@ -200,8 +200,12 @@ def download(args):
         groups = SUPPORTED_TAXONOMIC_GROUPS
     else:
         groups = args.group.split(',')
-    assert args.file_format in EDefaults.FORMATS.choices, \
-        "Unsupported file format: {}".format(args.file_format)
+
+    formats = args.file_format.split(',')
+    for format in formats:
+        assert format in EDefaults.FORMATS.choices, \
+            "Unsupported file format: {}".format(format)
+
     assert args.assembly_level in EDefaults.ASSEMBLY_LEVELS.choices, \
         "Unsupported assembly level: {}".format(args.assembly_level)
     assert args.refseq_category in EDefaults.REFSEQ_CATEGORIES.choices, \
@@ -216,8 +220,9 @@ def download(args):
     try:
         download_jobs = []
         for group in groups:
-            download_jobs.extend(
-                _download(args.section, group, args.uri, args.output, args.file_format, args.assembly_level, args.genus,
+            for format in formats:
+                download_jobs.extend(
+                    _download(args.section, group, args.uri, args.output, format, args.assembly_level, args.genus,
                           args.species_taxid, args.taxid, args.human_readable, args.refseq_category, args.metadata_table))
 
         pool = Pool(processes=args.parallel)
