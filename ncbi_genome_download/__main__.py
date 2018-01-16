@@ -1,6 +1,6 @@
 """Command line handling for ncbi-genome-download"""
 import logging
-from ncbi_genome_download import download
+from ncbi_genome_download import args_download
 from ncbi_genome_download.argument_parser import argument_parser
 
 def main():
@@ -19,13 +19,13 @@ def main():
 
     max_retries = args.retries
     attempts = 0
-    ret = download(args)
+    ret = args_download(args)
     while ret == 75 and attempts < max_retries:
         attempts += 1
         logging.error(
             'Downloading from NCBI failed due to a connection error, retrying. Retries so far: %s',
             attempts)
-        ret = download(args)
+        ret = args_download(args)
 
     return ret
 
