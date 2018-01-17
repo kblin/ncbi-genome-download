@@ -6,8 +6,8 @@ import requests_mock
 from requests.exceptions import ConnectionError
 
 from ncbi_genome_download import core
-from ncbi_genome_download.core import EDefaults as dflt
-from ncbi_genome_download.core import argument_parser
+from ncbi_genome_download import EDefaults as dflt
+from ncbi_genome_download import argument_parser
 
 
 def _get_file(fname):
@@ -48,8 +48,7 @@ def test_download_all(monkeypatch, mocker):
 def test_download_connection_err(monkeypatch, mocker):
     _download_mock = mocker.MagicMock(side_effect=ConnectionError)
     monkeypatch.setattr(core, '_download', _download_mock)
-    args=argument_parser().parse_args([dflt.TAXONOMIC_GROUPS.default])
-    assert core.args_download(args) == 75
+    assert core.download() == 75
 
 
 def test_download(monkeypatch, mocker, req):
