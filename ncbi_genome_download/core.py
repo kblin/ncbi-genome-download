@@ -158,7 +158,6 @@ def argument_parser(version=None):
     """Argument parser for ncbi-genome-download"""
     parser = argparse.ArgumentParser()
     parser.add_argument('group',
-                        #choices=EDefaults.TAXONOMIC_GROUPS.choices, # Moved choice checking to method
                         default=EDefaults.TAXONOMIC_GROUPS.default,
                         help='The NCBI taxonomic group to download (default: %(default)s). '
                         'A comma-separated list of taxonomic groups is also possible. For example: "bacteria,viral"'
@@ -168,9 +167,8 @@ def argument_parser(version=None):
                         default=EDefaults.SECTIONS.default,
                         help='NCBI section to download (default: %(default)s)')
     parser.add_argument('-F', '--format', dest='file_format',
-                        #choices=EDefaults.FORMATS.choices, # Moved choice checking to method
                         default=EDefaults.FORMATS.default,
-                        help='Which format to download (default: %(default)s).' 
+                        help='Which format to download (default: %(default)s).'
                         'A comma-separated list of formats is also possible. For example: "fasta,assembly-report". '
                         'Choose from: {choices}'.format(choices=EDefaults.FORMATS.choices))
     parser.add_argument('-l', '--assembly-level', dest='assembly_level',
@@ -258,9 +256,7 @@ def download(**kwargs):
         success code
     """
     # Parse and pre-process keyword arguments
-    parser=argument_parser()
-    group = kwargs.pop('group', EDefaults.TAXONOMIC_GROUPS.default)
-    args = parser.parse_args([group])
+    args = argparse.Namespace()
 
     args.section = kwargs.pop('section', EDefaults.SECTIONS.default)
     args.uri = kwargs.pop('uri', EDefaults.URI.default)
@@ -295,14 +291,15 @@ _
 
     """
     # Parse and pre-process keyword arguments
-    assert args.section in EDefaults.SECTIONS.choices, "Unsupported section: {}".format(args.section)
-    for group in args.group.split(','):
-        assert group in EDefaults.TAXONOMIC_GROUPS.choices, "Unsupported group: {}".format(group)
-    if 'all' in args.group.split(','):
-        groups = SUPPORTED_TAXONOMIC_GROUPS
-    else:
-        groups = args.group.split(',')
 
+    assert args.section in EDefaults.SECTIONS.choices, "Unsupported section: {}".format(args.section)
+
+    groups = args.group.split(',')
+
+    for group in groups:
+        assert group in EDefaults.TAXONOMIC_GROUPS.choices, "Unsupported group: {}".format(group)
+    if 'all' in groups:
+        groups = SUPPORTED_TAXONOMIC_GROUPS
 
     formats = args.file_format.split(',')
     for format in formats:
@@ -321,27 +318,27 @@ _
         with open(args.metadata_table, 'wt') as metadata_table:
             metadata_table.write(get_table_header())
 
-    if bool(args.taxid):
-        taxid_list=args.taxid.split(',')
+    if args.taxid:
+        taxid_list = args.taxid.split(',')
     else:
-        taxid_list=[]
+        taxid_list = []
     if args.species_taxid:
-        species_taxid_list=args.species_taxid.split(',')
+        species_taxid_list = args.species_taxid.split(',')
     else:
-        species_taxid_list=[]
+        species_taxid_list = []
 
     if args.genus:
-        genus_list=args.genus.split(',')
+        genus_list = args.genus.split(',')
     else:
-        genus_list=[]
+        genus_list = []
 
     # Actual logic
     try:
         download_jobs = []
         for group in groups:
             download_jobs.extend(
-            _download(args.section, group, args.uri, args.output, formats, args.assembly_level, genus_list,
-            species_taxid_list, taxid_list, args.human_readable, args.refseq_category, args.metadata_table))
+                _download(args.section, group, args.uri, args.output, formats, args.assembly_level, genus_list,
+                          species_taxid_list, taxid_list, args.human_readable, args.refseq_category, args.metadata_table))
 
         pool = Pool(processes=args.parallel)
         jobs = pool.map_async(worker, download_jobs)
