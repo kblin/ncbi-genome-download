@@ -1,4 +1,5 @@
 """Core functionality of ncbi-genome-download"""
+import argparse
 import errno
 import hashlib
 import logging
@@ -153,12 +154,75 @@ DownloadJob = namedtuple('DownloadJob',
                          ['full_url', 'local_file', 'expected_checksum', 'symlink_path'])
 
 
-# pylint and I disagree on code style here. Shut up, pylint.
-# pylint: disable=too-many-locals
+def argument_parser(version=None):
+    """Argument parser for ncbi-genome-download"""
+    parser = argparse.ArgumentParser()
+    parser.add_argument('group',
+                        default=EDefaults.TAXONOMIC_GROUPS.default,
+                        help='The NCBI taxonomic group to download (default: %(default)s). '
+                        'A comma-separated list of taxonomic groups is also possible. For example: "bacteria,viral"'
+                        'Choose from: {choices}'.format(choices=EDefaults.TAXONOMIC_GROUPS.choices))
+    parser.add_argument('-s', '--section', dest='section',
+                        choices=EDefaults.SECTIONS.choices,
+                        default=EDefaults.SECTIONS.default,
+                        help='NCBI section to download (default: %(default)s)')
+    parser.add_argument('-F', '--format', dest='file_format',
+                        default=EDefaults.FORMATS.default,
+                        help='Which format to download (default: %(default)s).'
+                        'A comma-separated list of formats is also possible. For example: "fasta,assembly-report". '
+                        'Choose from: {choices}'.format(choices=EDefaults.FORMATS.choices))
+    parser.add_argument('-l', '--assembly-level', dest='assembly_level',
+                        choices=EDefaults.ASSEMBLY_LEVELS.choices,
+                        default=EDefaults.ASSEMBLY_LEVELS.default,
+                        help='Assembly level of genomes to download (default: %(default)s)')
+    parser.add_argument('-g', '--genus', dest='genus',
+                        default=EDefaults.GENUS.default,
+                        help='Only download sequences of the provided genus. '
+                        'A comma-seperated list of genera is also possible. For example: "Streptomyces coelicolor,Escherichia coli".'
+                        '(default: %(default)s)')
+    parser.add_argument('-T', '--species-taxid', dest='species_taxid',
+                        default=EDefaults.SPECIES_TAXID.default,
+                        help='Only download sequences of the provided species NCBI taxonomy ID. '
+                             'A comma-separated list of species taxids is also possible. For example: "52342,12325". '
+                             '(default: %(default)s)')
+    parser.add_argument('-t', '--taxid', dest='taxid',
+                        default=EDefaults.TAXID.default,
+                        help='Only download sequences of the provided NCBI taxonomy ID. '
+                             'A comma-separated list of taxids is also possible. For example: "9606,9685". '
+                             '(default: %(default)s)')
+    parser.add_argument('-R', '--refseq-category', dest='refseq_category',
+                        choices=EDefaults.REFSEQ_CATEGORIES.choices,
+                        default=EDefaults.REFSEQ_CATEGORIES.default,
+                        help='Only download sequences of the provided refseq category (default: %(default)s)')
+    parser.add_argument('-o', '--output-folder', dest='output',
+                        default=EDefaults.OUTPUT.default,
+                        help='Create output hierarchy in specified folder (default: %(default)s)')
+    parser.add_argument('-H', '--human-readable', dest='human_readable', action='store_true',
+                        help='Create links in human-readable hierarchy (might fail on Windows)')
+    parser.add_argument('-u', '--uri', dest='uri',
+                        default=EDefaults.URI.default,
+                        help='NCBI base URI to use (default: %(default)s)')
+    parser.add_argument('-p', '--parallel', dest='parallel', type=int, metavar="N",
+                        default=EDefaults.NB_PROCESSES.default,
+                        help='Run %(metavar)s downloads in parallel (default: %(default)s)')
+    parser.add_argument('-r', '--retries', dest='retries', type=int, metavar="N",
+                        default=0,
+                        help='Retry download %(metavar)s times when connection to NCBI fails ('
+                             'default: %(default)s)')
+    parser.add_argument('-m', '--metadata-table', type=str,
+                        help='Save tab-delimited file with genome metadata')
+    parser.add_argument('-v', '--verbose', action='store_true',
+                        help='increase output verbosity')
+    parser.add_argument('-d', '--debug', action='store_true',
+                        help='print debugging information')
+    parser.add_argument('-V', '--version', action='version', version=version,
+                        help='print version information')
+    return parser
+
+
 def download(**kwargs):
     """
     Download data from NCBI
-
     Parameters
     ----------
     section : str
@@ -185,7 +249,41 @@ def download(**kwargs):
         to use multiprocessing for requests
     table : str
         file to store metadata
+    Returns
+    -------
+    int
+        success code
+    """
+    # Parse and pre-process keyword arguments
+    args = argparse.Namespace()
 
+    args.group = kwargs.pop('group', EDefaults.TAXONOMIC_GROUPS.default)
+    args.section = kwargs.pop('section', EDefaults.SECTIONS.default)
+    args.uri = kwargs.pop('uri', EDefaults.URI.default)
+    args.output = kwargs.pop('output', EDefaults.OUTPUT.default)
+    args.file_format = kwargs.pop('file_format', EDefaults.FORMATS.default)
+    args.assembly_level = kwargs.pop('assembly_level', EDefaults.ASSEMBLY_LEVELS.default)
+    args.refseq_category = kwargs.pop('refseq_category', EDefaults.REFSEQ_CATEGORIES.default)
+    args.genus = kwargs.pop('genus', EDefaults.GENUS.default)
+    args.species_taxid = kwargs.pop('species_taxid', EDefaults.SPECIES_TAXID.default)
+    args.taxid = kwargs.pop('taxid', EDefaults.TAXID.default)
+    args.human_readable = kwargs.pop('human_readable', False)
+    args.parallel = kwargs.pop('parallel', EDefaults.NB_PROCESSES.default)
+    args.metadata_table = kwargs.pop('metadata_table', EDefaults.TABLE.default)
+    assert len(kwargs) == 0, "Unrecognized option(s): {}".format(kwargs.keys())
+
+    return args_download(args)
+
+def args_download(args):
+    """
+    Download data from NCBI
+    Using the argument parser object.
+
+    Parameters
+    ----------
+    args: Namespace
+        Arguments from argument_parser
+_
     Returns
     -------
     int
@@ -193,48 +291,56 @@ def download(**kwargs):
 
     """
     # Parse and pre-process keyword arguments
-    section = kwargs.pop('section', EDefaults.SECTIONS.default)
-    assert section in EDefaults.SECTIONS.choices, "Unsupported section: {}".format(section)
-    group = kwargs.pop('group', EDefaults.TAXONOMIC_GROUPS.default)
-    assert group in EDefaults.TAXONOMIC_GROUPS.choices, "Unsupported group: {}".format(group)
-    if group == 'all':
-        groups = SUPPORTED_TAXONOMIC_GROUPS
-    else:
-        groups = [group, ]
-    uri = kwargs.pop('uri', EDefaults.URI.default)
-    output = kwargs.pop('output', EDefaults.OUTPUT.default)
-    file_format = kwargs.pop('file_format', EDefaults.FORMATS.default)
-    assert file_format in EDefaults.FORMATS.choices, \
-        "Unsupported file format: {}".format(file_format)
-    assembly_level = kwargs.pop('assembly_level', EDefaults.ASSEMBLY_LEVELS.default)
-    assert assembly_level in EDefaults.ASSEMBLY_LEVELS.choices, \
-        "Unsupported assembly level: {}".format(assembly_level)
-    refseq_category = kwargs.pop('refseq_category', EDefaults.REFSEQ_CATEGORIES.default)
-    assert refseq_category in EDefaults.REFSEQ_CATEGORIES.choices, \
-        "Unsupported refseq_category: {}".format(refseq_category)
-    genus = kwargs.pop('genus', EDefaults.GENUS.default)
-    species_taxid = kwargs.pop('species_taxid', EDefaults.SPECIES_TAXID.default)
-    taxid = kwargs.pop('taxid', EDefaults.TAXID.default)
-    human_readable = kwargs.pop('human_readable', False)
-    parallel = kwargs.pop('parallel', EDefaults.NB_PROCESSES.default)
-    table = kwargs.pop('metadata_table', EDefaults.TABLE.default)
-    # FIXME: improve error handling and feedback
-    assert len(kwargs) == 0, "Unrecognized option(s): {}".format(kwargs.keys())
 
-    if table is not None:
-        logging.info('Creating metadata file: %r', table)
-        with open(table, 'wt') as metadata_table:
+    assert args.section in EDefaults.SECTIONS.choices, "Unsupported section: {}".format(args.section)
+
+    groups = args.group.split(',')
+
+    for group in groups:
+        assert group in EDefaults.TAXONOMIC_GROUPS.choices, "Unsupported group: {}".format(group)
+    if 'all' in groups:
+        groups = SUPPORTED_TAXONOMIC_GROUPS
+
+    formats = args.file_format.split(',')
+    for format in formats:
+        assert format in EDefaults.FORMATS.choices, \
+            "Unsupported file format: {file_format}".format(file_format=format)
+    if 'all' in formats:
+        formats = EFormats.keys()
+
+    assert args.assembly_level in EDefaults.ASSEMBLY_LEVELS.choices, \
+        "Unsupported assembly level: {}".format(args.assembly_level)
+    assert args.refseq_category in EDefaults.REFSEQ_CATEGORIES.choices, \
+        "Unsupported refseq_category: {}".format(args.refseq_category)
+
+    if args.metadata_table:
+        logging.info('Creating metadata file: %r', args.metadata_table)
+        with open(args.metadata_table, 'wt') as metadata_table:
             metadata_table.write(get_table_header())
+
+    if args.taxid:
+        taxid_list = args.taxid.split(',')
+    else:
+        taxid_list = []
+    if args.species_taxid:
+        species_taxid_list = args.species_taxid.split(',')
+    else:
+        species_taxid_list = []
+
+    if args.genus:
+        genus_list = args.genus.split(',')
+    else:
+        genus_list = []
 
     # Actual logic
     try:
         download_jobs = []
         for group in groups:
             download_jobs.extend(
-                _download(section, group, uri, output, file_format, assembly_level, genus,
-                          species_taxid, taxid, human_readable, refseq_category, table))
+                _download(args.section, group, args.uri, args.output, formats, args.assembly_level, genus_list,
+                          species_taxid_list, taxid_list, args.human_readable, args.refseq_category, args.metadata_table))
 
-        pool = Pool(processes=parallel)
+        pool = Pool(processes=args.parallel)
         jobs = pool.map_async(worker, download_jobs)
         try:
             # 0xFFFF is just "a really long time"
@@ -250,13 +356,12 @@ def download(**kwargs):
         # Exit code 75 meas TEMPFAIL in C/C++, so let's stick with that for now.
         return 75
     return 0
-# pylint: enable=too-many-locals
 
 
 # pylint and I disagree on code style here. Shut up, pylint.
 # pylint: disable=too-many-arguments
-def _download(section, group, uri, output, file_format, assembly_level, genus, species_taxid,
-              taxid, human_readable, refseq_category, table):
+def _download(section, group, uri, output, file_formats, assembly_level, genera, species_taxids,
+              taxids, human_readable, refseq_category, table):
     """
     Sole purpose is to ease the tests, no argument checking is done here: they must be processed
     previously.
@@ -268,11 +373,11 @@ def _download(section, group, uri, output, file_format, assembly_level, genus, s
     group
     uri
     output
-    file_format
+    file_formats
     assembly_level
     genus
-    species_taxid
-    taxid
+    species_taxids
+    taxids
     human_readable
     refseq_category
 
@@ -284,19 +389,24 @@ def _download(section, group, uri, output, file_format, assembly_level, genus, s
     summary_file = get_summary(section, group, uri)
     entries = parse_summary(summary_file)
     download_jobs = []
+    def in_genus_list(species, genus_list):
+        for genus in genus_list:
+            if species.startswith(genus.capitalize()):
+                return True
+        return False
+
     for entry in entries:
-        if genus is not None and not entry['organism_name'].startswith(
-                genus.capitalize()):
-            logging.debug('Organism name %r does not start with %r as requested, skipping',
-                          entry['organism_name'], genus)
+        if genera and not in_genus_list(entry['organism_name'],genera):
+            logging.debug('Organism name %r does not start with any in %r, skipping',
+                          entry['organism_name'], genera)
             continue
-        if species_taxid is not None and entry['species_taxid'] != species_taxid:
-            logging.debug('Species TaxID %r different from the one provided %r, skipping',
-                          entry['species_taxid'], species_taxid)
+        if species_taxids and entry['species_taxid'] not in species_taxids:
+            logging.debug('Species TaxID %r does not match with any in %r, skipping',
+                          entry['species_taxid'], species_taxids)
             continue
-        if taxid is not None and entry['taxid'] != taxid:
-            logging.debug('Organism TaxID %r different from the one provided %r, skipping',
-                          entry['taxid'], taxid)
+        if taxids and entry['taxid'] not in taxids:
+            logging.debug('Organism TaxID %r does not match with any in %r, skipping',
+                          entry['taxid'], taxids)
             continue
         if assembly_level != 'all' \
                 and entry['assembly_level'] != EAssemblyLevels.get_content(assembly_level):
@@ -306,7 +416,7 @@ def _download(section, group, uri, output, file_format, assembly_level, genus, s
             logging.debug('Skipping entry with refseq_category %r, not %r', entry['refseq_category'], refseq_category)
             continue
         download_jobs.extend(
-            download_entry(entry, section, group, output, file_format, human_readable, table))
+            download_entry(entry, section, group, output, file_formats, human_readable, table))
     return download_jobs
 # pylint: enable=too-many-arguments
 
@@ -344,7 +454,7 @@ def parse_summary(summary_file):
 
 # pylint and I disagree on code style here. Shut up, pylint.
 # pylint: disable=too-many-arguments
-def download_entry(entry, section, domain, output, file_format, human_readable, table=None):
+def download_entry(entry, section, domain, output, file_formats, human_readable, table=None):
     """Download an entry from the summary file"""
     logging.info('Downloading record %r', entry['assembly_accession'])
     full_output_dir = create_dir(entry, section, domain, output)
@@ -361,13 +471,8 @@ def download_entry(entry, section, domain, output, file_format, human_readable, 
 
     parsed_checksums = parse_checksums(checksums)
 
-    if file_format == 'all':
-        formats = EFormats.keys()
-    else:
-        formats = [file_format]
-
     download_jobs = []
-    for fmt in formats:
+    for fmt in file_formats:
         try:
             if has_file_changed(full_output_dir, parsed_checksums, fmt):
                 download_jobs.append(

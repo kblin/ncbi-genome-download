@@ -48,6 +48,11 @@ To download all bacterial RefSeq genomes in GenBank format from NCBI, run the fo
 ncbi-genome-download bacteria
 ```
 
+Downloading multiple groups is also possible:
+```
+ncbi-genome-download bacteria,viral
+```
+
 If you're on a reasonably fast connection, you might want to try running multiple downloads in parallel:
 ```
 ncbi-genome-download bacteria --parallel 4
@@ -62,6 +67,12 @@ ncbi-genome-download --section genbank fungi
 To download all viral RefSeq genomes in FASTA format, run:
 ```
 ncbi-genome-download --format fasta viral
+```
+
+It is possible to download multiple formats by supplying a list of formats or simply download all formats:
+```
+ncbi-genome-download --format fasta,assembly-report viral
+ncbi-genome-download --format all viral
 ```
 
 To download only completed bacterial RefSeq genomes in GenBank format, run:
@@ -87,6 +98,11 @@ ncbi-genome-download --genus "Streptomyces coelicolor" bacteria
 **Note**: The quotes are important. Again, this is a simple string match on the organism
 name provided by the NCBI.
 
+Multiple genera is also possible:
+```
+ncbi-genome-download --genus "Streptomyces coelicolor,Escherichia coli" bacteria
+```
+
 To download bacterial RefSeq genomes based on their NCBI species taxonomy ID, run:
 ```
 ncbi-genome-download --species-taxid 562 bacteria
@@ -99,6 +115,11 @@ ncbi-genome-download --taxid 511145 bacteria
 ```
 **Note**: The above command will download the RefSeq genome belonging to _Escherichia coli str. K-12 substr. MG1655_.
 
+It is also possible to download multiple species taxids or taxids by supplying the numbers in a comma-separated list:
+```
+ncbi-genome-download --taxid 9606,9685 --assembly-level chromosome vertebrate_mammalian
+```
+**Note**: The above command will download the reference genomes for cat and human.
 
 It is possible to also create a human-readable directory structure in parallel to mirroring
 the layout used by NCBI:

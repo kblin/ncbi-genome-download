@@ -6,7 +6,8 @@ import requests_mock
 from requests.exceptions import ConnectionError
 
 from ncbi_genome_download import core
-from ncbi_genome_download.core import EDefaults as dflt
+from ncbi_genome_download import EDefaults as dflt
+from ncbi_genome_download import argument_parser
 
 
 def _get_file(fname):
@@ -43,6 +44,21 @@ def test_download_all(monkeypatch, mocker):
     core.download(group='all', output='/tmp/fake')
     assert _download_mock.call_count == len(core.SUPPORTED_TAXONOMIC_GROUPS)
 
+def test_download_all_formats(monkeypatch, mocker, req):
+    summary_contents = open(_get_file('assembly_status.txt'), 'r').read()
+    req.get('https://ftp.ncbi.nih.gov/genomes/refseq/bacteria/assembly_summary.txt',
+            text=summary_contents)
+    mocker.spy(core, 'get_summary')
+    mocker.spy(core, 'parse_summary')
+    mocker.patch('ncbi_genome_download.core.download_entry')
+    core.download(group='bacteria', output='/tmp/fake', assembly_level='complete',file_format="all")
+    assert core.get_summary.call_count == 1
+    assert core.parse_summary.call_count == 1
+    assert core.download_entry.call_count == 1
+    # Many nested tuples in call_args_list, no kidding.
+    assert core.download_entry.call_args_list[0][0][0]['assembly_level'] == 'Complete Genome'
+    print(core.download_entry.call_args_list)
+    assert core.download_entry.call_args_list[0][0][4] == core.EFormats.keys()
 
 def test_download_connection_err(monkeypatch, mocker):
     _download_mock = mocker.MagicMock(side_effect=ConnectionError)
@@ -264,14 +280,14 @@ def prepare_download_entry(req, tmpdir, format_map=core.EFormats, human_readable
 
 def test_download_entry_genbank(req, tmpdir):
     entry, outdir, joblist = prepare_download_entry(req, tmpdir)
-    jobs = core.download_entry(entry, 'refseq', 'bacteria', str(outdir), 'genbank', None)
+    jobs = core.download_entry(entry, 'refseq', 'bacteria', str(outdir), ['genbank'], None)
     expected = [j for j in joblist if j.local_file.endswith('_genomic.gbff.gz')]
     assert jobs == expected
 
 
 def test_download_entry_all(req, tmpdir):
     entry, outdir, expected = prepare_download_entry(req, tmpdir)
-    jobs = core.download_entry(entry, 'refseq', 'bacteria', str(outdir), 'all', None)
+    jobs = core.download_entry(entry, 'refseq', 'bacteria', str(outdir), core.EFormats.keys(), None)
     assert jobs == expected
 
 
@@ -279,13 +295,13 @@ def test_download_entry_missing(req, tmpdir):
     name_map_copy = dict(core.EFormats.items())
     del name_map_copy['genbank']
     entry, outdir, _ = prepare_download_entry(req, tmpdir, name_map_copy)
-    jobs = core.download_entry(entry, 'refseq', 'bacteria', str(outdir), 'genbank', None)
+    jobs = core.download_entry(entry, 'refseq', 'bacteria', str(outdir), ['genbank'], None)
     assert jobs == []
 
 
 def test_download_entry_human_readable(req, tmpdir):
     entry, outdir, joblist = prepare_download_entry(req, tmpdir, human_readable=True)
-    jobs = core.download_entry(entry, 'refseq', 'bacteria', str(outdir), 'genbank', True)
+    jobs = core.download_entry(entry, 'refseq', 'bacteria', str(outdir), ['genbank'], True)
     expected = [j for j in joblist if j.local_file.endswith('_genomic.gbff.gz')]
     assert jobs == expected
 
@@ -293,7 +309,7 @@ def test_download_entry_human_readable(req, tmpdir):
 def test_download_entry_symlink_only(req, tmpdir):
     entry, outdir, joblist = prepare_download_entry(req, tmpdir, human_readable=True,
                                                     create_local_file=True)
-    jobs = core.download_entry(entry, 'refseq', 'bacteria', str(outdir), 'genbank', True)
+    jobs = core.download_entry(entry, 'refseq', 'bacteria', str(outdir), ['genbank'], True)
     expected = [core.DownloadJob(None, j.local_file, None, j.symlink_path)
                 for j in joblist if j.local_file.endswith('_genomic.gbff.gz')]
     assert jobs == expected
