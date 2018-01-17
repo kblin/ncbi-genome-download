@@ -1,4 +1,5 @@
 """Core functionality of ncbi-genome-download"""
+import argparse
 import errno
 import hashlib
 import logging
@@ -8,7 +9,6 @@ from collections import namedtuple
 from enum import Enum, unique
 from io import StringIO
 from multiprocessing import Pool
-from .__main__ import argument_parser
 
 import requests
 
@@ -152,6 +152,75 @@ class EDefaults(Enum):
 
 DownloadJob = namedtuple('DownloadJob',
                          ['full_url', 'local_file', 'expected_checksum', 'symlink_path'])
+
+
+def argument_parser(version=None):
+    """Argument parser for ncbi-genome-download"""
+    parser = argparse.ArgumentParser()
+    parser.add_argument('group',
+                        #choices=EDefaults.TAXONOMIC_GROUPS.choices, # Moved choice checking to method
+                        default=EDefaults.TAXONOMIC_GROUPS.default,
+                        help='The NCBI taxonomic group to download (default: %(default)s). '
+                        'A comma-separated list of taxonomic groups is also possible. For example: "bacteria,viral"'
+                        'Choose from: {choices}'.format(choices=EDefaults.TAXONOMIC_GROUPS.choices))
+    parser.add_argument('-s', '--section', dest='section',
+                        choices=EDefaults.SECTIONS.choices,
+                        default=EDefaults.SECTIONS.default,
+                        help='NCBI section to download (default: %(default)s)')
+    parser.add_argument('-F', '--format', dest='file_format',
+                        #choices=EDefaults.FORMATS.choices, # Moved choice checking to method
+                        default=EDefaults.FORMATS.default,
+                        help='Which format to download (default: %(default)s).' 
+                        'A comma-separated list of formats is also possible. For example: "fasta,assembly-report". '
+                        'Choose from: {choices}'.format(choices=EDefaults.FORMATS.choices))
+    parser.add_argument('-l', '--assembly-level', dest='assembly_level',
+                        choices=EDefaults.ASSEMBLY_LEVELS.choices,
+                        default=EDefaults.ASSEMBLY_LEVELS.default,
+                        help='Assembly level of genomes to download (default: %(default)s)')
+    parser.add_argument('-g', '--genus', dest='genus',
+                        default=EDefaults.GENUS.default,
+                        help='Only download sequences of the provided genus. '
+                        'A comma-seperated list of genera is also possible. For example: "Streptomyces coelicolor,Escherichia coli".'
+                        '(default: %(default)s)')
+    parser.add_argument('-T', '--species-taxid', dest='species_taxid',
+                        default=EDefaults.SPECIES_TAXID.default,
+                        help='Only download sequences of the provided species NCBI taxonomy ID. '
+                            'A comma-separated list of species taxids is also possible. For example: "52342,12325". '
+                             '(default: %(default)s)'
+                            )
+    parser.add_argument('-t', '--taxid', dest='taxid',
+                        default=EDefaults.TAXID.default,
+                        help='Only download sequences of the provided NCBI taxonomy ID. '
+                             'A comma-separated list of taxids is also possible. For example: "9606,9685". '
+                             '(default: %(default)s)')
+    parser.add_argument('-R', '--refseq-category', dest='refseq_category',
+                        choices=EDefaults.REFSEQ_CATEGORIES.choices,
+                        default=EDefaults.REFSEQ_CATEGORIES.default,
+                        help='Only download sequences of the provided refseq category (default: %(default)s)')
+    parser.add_argument('-o', '--output-folder', dest='output',
+                        default=EDefaults.OUTPUT.default,
+                        help='Create output hierarchy in specified folder (default: %(default)s)')
+    parser.add_argument('-H', '--human-readable', dest='human_readable', action='store_true',
+                        help='Create links in human-readable hierarchy (might fail on Windows)')
+    parser.add_argument('-u', '--uri', dest='uri',
+                        default=EDefaults.URI.default,
+                        help='NCBI base URI to use (default: %(default)s)')
+    parser.add_argument('-p', '--parallel', dest='parallel', type=int, metavar="N",
+                        default=EDefaults.NB_PROCESSES.default,
+                        help='Run %(metavar)s downloads in parallel (default: %(default)s)')
+    parser.add_argument('-r', '--retries', dest='retries', type=int, metavar="N",
+                        default=0,
+                        help='Retry download %(metavar)s times when connection to NCBI fails ('
+                             'default: %(default)s)')
+    parser.add_argument('-m', '--metadata-table', type=str,
+                        help='Save tab-delimited file with genome metadata')
+    parser.add_argument('-v', '--verbose', action='store_true',
+                        help='increase output verbosity')
+    parser.add_argument('-d', '--debug', action='store_true',
+                        help='print debugging information')
+    parser.add_argument('-V', '--version', action='version', version=version,
+                        help='print version information')
+    return parser
 
 
 def download(**kwargs):

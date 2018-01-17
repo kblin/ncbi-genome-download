@@ -5,7 +5,8 @@ from .core import (
     SUPPORTED_TAXONOMIC_GROUPS,
     EFormats,
     EAssemblyLevels,
-    EDefaults
+    EDefaults,
+    argument_parser
 )
 
 __version__ = '0.2.5'
@@ -15,5 +16,6 @@ __all__ = [
     'SUPPORTED_TAXONOMIC_GROUPS',
     'EFormats',
     'EAssemblyLevels',
-    'EDefaults'
+    'EDefaults',
+    'argument_parser'
 ]
