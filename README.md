@@ -145,7 +145,6 @@ You can also use it as a method call. Pass the pythonised keyword arguments (`_`
  as described above or in the `--help`:
 ```
 import ncbi_genome_download as ngd
-ngd.
 ngd.download()
 ```
 **Note**: To specify a taxonomic group, like *bacteria*, use the `group` keyword.
