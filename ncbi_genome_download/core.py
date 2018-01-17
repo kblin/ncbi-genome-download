@@ -359,16 +359,16 @@ def args_download(args):
     if bool(args.taxid):
         taxid_list=args.taxid.split(',')
     else:
-        taxid_list=[None]
+        taxid_list=[]
     if args.species_taxid:
         species_taxid_list=args.species_taxid.split(',')
     else:
-        species_taxid_list=[None]
+        species_taxid_list=[]
 
     if args.genus:
         genus_list=args.genus.split(',')
     else:
-        genus_list=[None]
+        genus_list=[]
 
     # Actual logic
     try:
@@ -427,32 +427,34 @@ def _download(section, group, uri, output, file_formats, assembly_level, genera,
     summary_file = get_summary(section, group, uri)
     entries = parse_summary(summary_file)
     download_jobs = []
+    def in_genus_list(species,genus_list):
+        for genus in genus_list:
+            if species.startswith(genus.capitalize()):
+                return True
+        return False
+
     for entry in entries:
-        for genus in genera:
-            for taxid in taxids:
-                for species_taxid in species_taxids:
-                    if genus and not entry['organism_name'].startswith(
-                            genus.capitalize()):
-                        logging.debug('Organism name %r does not start with %r as requested, skipping',
-                                      entry['organism_name'], genus)
-                        continue
-                    if species_taxid and entry['species_taxid'] != species_taxid:
-                        logging.debug('Species TaxID %r different from the one provided %r, skipping',
-                                      entry['species_taxid'], species_taxid)
-                        continue
-                    if taxid and entry['taxid'] != taxid:
-                        logging.debug('Organism TaxID %r different from the one provided %r, skipping',
-                                      entry['taxid'], taxid)
-                        continue
-                    if assembly_level != 'all' \
-                            and entry['assembly_level'] != EAssemblyLevels.get_content(assembly_level):
-                        logging.debug('Skipping entry with assembly level %r', entry['assembly_level'])
-                        continue
-                    if refseq_category != 'all' and entry['refseq_category'] != ERefseqCategories.get_content(refseq_category):
-                        logging.debug('Skipping entry with refseq_category %r, not %r', entry['refseq_category'], refseq_category)
-                        continue
-                    download_jobs.extend(
-                        download_entry(entry, section, group, output, file_formats, human_readable, table))
+        if genera and not in_genus_list(entry['organism_name'],genera):
+            logging.debug('Organism name %r does not start with any in %r, skipping',
+                          entry['organism_name'], genera)
+            continue
+        if species_taxids and entry['species_taxid'] not in species_taxids:
+            logging.debug('Species TaxID %r does not match with any in %r, skipping',
+                          entry['species_taxid'], species_taxids)
+            continue
+        if taxids and entry['taxid'] not in taxids:
+            logging.debug('Organism TaxID %r does not match with any in %r, skipping',
+                          entry['taxid'], taxids)
+            continue
+        if assembly_level != 'all' \
+                and entry['assembly_level'] != EAssemblyLevels.get_content(assembly_level):
+            logging.debug('Skipping entry with assembly level %r', entry['assembly_level'])
+            continue
+        if refseq_category != 'all' and entry['refseq_category'] != ERefseqCategories.get_content(refseq_category):
+            logging.debug('Skipping entry with refseq_category %r, not %r', entry['refseq_category'], refseq_category)
+            continue
+        download_jobs.extend(
+            download_entry(entry, section, group, output, file_formats, human_readable, table))
     return download_jobs
 # pylint: enable=too-many-arguments
 
