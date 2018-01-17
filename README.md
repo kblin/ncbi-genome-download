@@ -141,7 +141,7 @@ ncbi-genome-download --help
 ```
 
 ### As a method
-You can also use it as a method call.
+You can also use it as a method call. Pass the pythonised keyword arguments (`_` instead of `-`)
  as described above or in the `--help`:
 ```
 import ncbi_genome_download as ngd
