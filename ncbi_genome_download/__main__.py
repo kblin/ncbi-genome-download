@@ -6,7 +6,7 @@ from ncbi_genome_download import __version__
 
 def main():
     """Build and parse command line"""
-    parser= argument_parser(version=__version__)
+    parser = argument_parser(version=__version__)
     args = parser.parse_args()
 
     if args.debug:
