@@ -257,6 +257,7 @@ def download(**kwargs):
     # Parse and pre-process keyword arguments
     args = argparse.Namespace()
 
+    args.group = kwargs.pop('group', EDefaults.TAXONOMIC_GROUPS.default)
     args.section = kwargs.pop('section', EDefaults.SECTIONS.default)
     args.uri = kwargs.pop('uri', EDefaults.URI.default)
     args.output = kwargs.pop('output', EDefaults.OUTPUT.default)
