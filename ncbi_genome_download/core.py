@@ -183,9 +183,8 @@ def argument_parser(version=None):
     parser.add_argument('-T', '--species-taxid', dest='species_taxid',
                         default=EDefaults.SPECIES_TAXID.default,
                         help='Only download sequences of the provided species NCBI taxonomy ID. '
-                            'A comma-separated list of species taxids is also possible. For example: "52342,12325". '
-                             '(default: %(default)s)'
-                            )
+                             'A comma-separated list of species taxids is also possible. For example: "52342,12325". '
+                             '(default: %(default)s)')
     parser.add_argument('-t', '--taxid', dest='taxid',
                         default=EDefaults.TAXID.default,
                         help='Only download sequences of the provided NCBI taxonomy ID. '
@@ -389,7 +388,7 @@ def _download(section, group, uri, output, file_formats, assembly_level, genera,
     summary_file = get_summary(section, group, uri)
     entries = parse_summary(summary_file)
     download_jobs = []
-    def in_genus_list(species,genus_list):
+    def in_genus_list(species, genus_list):
         for genus in genus_list:
             if species.startswith(genus.capitalize()):
                 return True
