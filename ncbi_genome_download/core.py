@@ -334,11 +334,20 @@ _
 
     # Actual logic
     try:
-        download_jobs = []
-        for group in groups:
-            download_jobs.extend(
-                _download(args.section, group, args.uri, args.output, formats, args.assembly_level, genus_list,
-                          species_taxid_list, taxid_list, args.human_readable, args.refseq_category, args.metadata_table))
+        download_jobs = \
+            _download(args.section,
+                      groups,
+                      args.uri,
+                      args.output,
+                      formats,
+                      args.assembly_level,
+                      genus_list,
+                      species_taxid_list,
+                      taxid_list,
+                      args.human_readable,
+                      args.refseq_category,
+                      args.metadata_table)
+
 
         pool = Pool(processes=args.parallel)
         jobs = pool.map_async(worker, download_jobs)
@@ -360,7 +369,7 @@ _
 
 # pylint and I disagree on code style here. Shut up, pylint.
 # pylint: disable=too-many-arguments
-def _download(section, group, uri, output, file_formats, assembly_level, genera, species_taxids,
+def _download(section, groups, uri, output, file_formats, assembly_level, genera, species_taxids,
               taxids, human_readable, refseq_category, table):
     """
     Sole purpose is to ease the tests, no argument checking is done here: they must be processed
@@ -370,7 +379,7 @@ def _download(section, group, uri, output, file_formats, assembly_level, genera,
     Parameters
     ----------
     section
-    group
+    groups
     uri
     output
     file_formats
@@ -386,37 +395,51 @@ def _download(section, group, uri, output, file_formats, assembly_level, genera,
     list of DownloadJob
 
     """
-    summary_file = get_summary(section, group, uri)
-    entries = parse_summary(summary_file)
-    download_jobs = []
+
+
     def in_genus_list(species, genus_list):
+        """Checks if a species is in the genus list."""
         for genus in genus_list:
             if species.startswith(genus.capitalize()):
                 return True
         return False
 
-    for entry in entries:
-        if genera and not in_genus_list(entry['organism_name'],genera):
-            logging.debug('Organism name %r does not start with any in %r, skipping',
-                          entry['organism_name'], genera)
-            continue
-        if species_taxids and entry['species_taxid'] not in species_taxids:
-            logging.debug('Species TaxID %r does not match with any in %r, skipping',
-                          entry['species_taxid'], species_taxids)
-            continue
-        if taxids and entry['taxid'] not in taxids:
-            logging.debug('Organism TaxID %r does not match with any in %r, skipping',
-                          entry['taxid'], taxids)
-            continue
-        if assembly_level != 'all' \
-                and entry['assembly_level'] != EAssemblyLevels.get_content(assembly_level):
-            logging.debug('Skipping entry with assembly level %r', entry['assembly_level'])
-            continue
-        if refseq_category != 'all' and entry['refseq_category'] != ERefseqCategories.get_content(refseq_category):
-            logging.debug('Skipping entry with refseq_category %r, not %r', entry['refseq_category'], refseq_category)
-            continue
-        download_jobs.extend(
-            download_entry(entry, section, group, output, file_formats, human_readable, table))
+    # Download all the summaries sequentially.
+    # Each group, summary combination is represented as a tuple
+    # in the summmary_list.
+    summary_list = []
+    for group in groups:
+        summary_file = get_summary(section, group, uri)
+        parsed_summary = parse_summary(summary_file)
+        summary_list.append((group, parsed_summary))
+
+    download_jobs = []
+
+    # Use the information from the summaries to initiate the download_jobs
+    for group, summary in summary_list:
+        for entry in summary:
+            if genera and not in_genus_list(entry['organism_name'], genera):
+                logging.debug('Organism name %r does not start with any in %r, skipping',
+                              entry['organism_name'], genera)
+                continue
+            if species_taxids and entry['species_taxid'] not in species_taxids:
+                logging.debug('Species TaxID %r does not match with any in %r, skipping',
+                              entry['species_taxid'], species_taxids)
+                continue
+            if taxids and entry['taxid'] not in taxids:
+                logging.debug('Organism TaxID %r does not match with any in %r, skipping',
+                              entry['taxid'], taxids)
+                continue
+            if assembly_level != 'all' \
+                    and entry['assembly_level'] != EAssemblyLevels.get_content(assembly_level):
+                logging.debug('Skipping entry with assembly level %r', entry['assembly_level'])
+                continue
+            if refseq_category != 'all' and entry['refseq_category'] != ERefseqCategories.get_content(refseq_category):
+                logging.debug('Skipping entry with refseq_category %r, not %r', entry['refseq_category'], refseq_category)
+                continue
+            download_jobs.extend(
+                download_entry(entry, section, group, output, file_formats, human_readable, table))
+
     return download_jobs
 # pylint: enable=too-many-arguments
 
