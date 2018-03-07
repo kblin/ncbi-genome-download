@@ -26,7 +26,7 @@ if sys.version_info < (2, 7, 9):  # pragma: no cover
     pyopenssl.inject_into_urllib3()
 
 
-def argument_parser(version=None):
+def argument_parser(version=None):  # pragma: no cover
     """Argument parser for ncbi-genome-download"""
     parser = argparse.ArgumentParser()
     parser.add_argument('group',
