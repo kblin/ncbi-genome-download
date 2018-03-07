@@ -189,7 +189,8 @@ _
     assert args.refseq_category in EDefaults.REFSEQ_CATEGORIES.choices, \
         "Unsupported refseq_category: {}".format(args.refseq_category)
 
-    if args.metadata_table:
+    # TODO: This needs refactoring
+    if args.metadata_table:  # pragma: no cover
         logging.info('Creating metadata file: %r', args.metadata_table)
         with open(args.metadata_table, 'wt') as metadata_table:
             metadata_table.write(get_table_header())
@@ -514,7 +515,8 @@ def download_file_job(entry, directory, checksums, filetype='genbank', symlink_p
     if symlink_path is not None:
         full_symlink = os.path.join(symlink_path, filename)
 
-    if table is not None:
+    # TODO: This needs refactoring
+    if table is not None:  # pragma: no cover
         write_table_line(entry, table, local_file)
 
     return DownloadJob(full_url, local_file, expected_checksum, full_symlink)
@@ -602,7 +604,8 @@ def get_strain_label(entry, viral=False):
     return cleanup(get_strain(entry))
 
 
-def get_table_header():
+# TODO: This needs refactoring
+def get_table_header():  # pragma: no cover
     header_parts = ['assembly_accession',
                     'bioproject',
                     'biosample',
@@ -629,7 +632,8 @@ def get_table_header():
     return '\t'.join(header_parts) + '\n'
 
 
-def get_table_line(entry, genome_filename):
+# TODO: This needs refactoring
+def get_table_line(entry, genome_filename):  # pragma: no cover
     line_parts = [entry.get('assembly_accession', ''),
                   entry.get('bioproject', ''),
                   entry.get('biosample', ''),
@@ -656,7 +660,8 @@ def get_table_line(entry, genome_filename):
     return '\t'.join(line_parts) + '\n'
 
 
-def write_table_line(entry, table_filename, genome_filename):
+# TODO: This needs refactoring
+def write_table_line(entry, table_filename, genome_filename):  # pragma: no cover
     with open(table_filename, 'at') as metadata_table:
         table_line = get_table_line(entry, genome_filename)
         try:
