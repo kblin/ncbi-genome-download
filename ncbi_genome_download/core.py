@@ -220,16 +220,20 @@ _
             logging.error("No downloads matched your filter. Please check your options.")
             return 1
 
-        pool = Pool(processes=args.parallel)
-        jobs = pool.map_async(worker, download_jobs)
-        try:
-            # 0xFFFF is just "a really long time"
-            jobs.get(0xFFFF)
-        except KeyboardInterrupt:  # pragma: no cover
-            # TODO: Actually test this once I figure out how to do this in py.test
-            logging.error("Interrupted by user")
-            return 1
-
+        if args.parallel == 1:
+            for dl_job in download_jobs:
+                worker(dl_job)
+        else:  # pragma: no cover
+            # Testing multiprocessing code is annoying
+            pool = Pool(processes=args.parallel)
+            jobs = pool.map_async(worker, download_jobs)
+            try:
+                # 0xFFFF is just "a really long time"
+                jobs.get(0xFFFF)
+            except KeyboardInterrupt:
+                # TODO: Actually test this once I figure out how to do this in py.test
+                logging.error("Interrupted by user")
+                return 1
 
     except requests.exceptions.ConnectionError as err:
         logging.error('Download from NCBI failed: %r', err)
