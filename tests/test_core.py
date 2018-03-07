@@ -22,10 +22,20 @@ def req():
 
 
 def test_download_defaults(monkeypatch, mocker):
-    _download_mock = mocker.MagicMock()
+    """Test _download is called an appropriate number of times."""
+    worker_mock = mocker.MagicMock()
+    _download_mock = mocker.MagicMock(return_value=[core.DownloadJob(None, None, None, None)])
     monkeypatch.setattr(core, '_download', _download_mock)
-    core.download()
+    monkeypatch.setattr(core, 'worker', worker_mock)
+    assert core.download() == 0
     assert _download_mock.call_count == len(core.SUPPORTED_TAXONOMIC_GROUPS)
+
+
+def test_download_defaults_nomatch(monkeypatch, mocker):
+    """Test download bails with a 1 return code if no entries match."""
+    _download_mock = mocker.MagicMock(return_value=[])
+    monkeypatch.setattr(core, '_download', _download_mock)
+    assert core.download() == 1
 
 
 # TODO: test unrecognized arguments, invalid formats and out of choices values

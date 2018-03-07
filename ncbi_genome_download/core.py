@@ -216,6 +216,10 @@ _
                 _download(args.section, group, args.uri, args.output, formats, args.assembly_level, genus_list,
                           species_taxid_list, taxid_list, args.human_readable, args.refseq_category, args.metadata_table))
 
+        if len(download_jobs) < 1:
+            logging.error("No downloads matched your filter. Please check your options.")
+            return 1
+
         pool = Pool(processes=args.parallel)
         jobs = pool.map_async(worker, download_jobs)
         try:
