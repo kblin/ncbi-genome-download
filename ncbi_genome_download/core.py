@@ -1,4 +1,4 @@
-"""Core functionality of ncbi-genome-download"""
+"""Core functionality of ncbi-genome-download."""
 import argparse
 import errno
 import hashlib
@@ -27,7 +27,7 @@ if sys.version_info < (2, 7, 9):  # pragma: no cover
 
 
 def argument_parser(version=None):  # pragma: no cover
-    """Argument parser for ncbi-genome-download"""
+    """Create the argument parser for ncbi-genome-download."""
     parser = argparse.ArgumentParser()
     parser.add_argument('group',
                         default=EDefaults.TAXONOMIC_GROUPS.default,
@@ -93,8 +93,7 @@ def argument_parser(version=None):  # pragma: no cover
 
 
 def download(**kwargs):
-    """
-    Download data from NCBI
+    """Download data from NCBI.
 
     Parameters
     ----------
@@ -122,10 +121,12 @@ def download(**kwargs):
         to use multiprocessing for requests
     table : str
         file to store metadata
+
     Returns
     -------
     int
         success code
+
     """
     # Parse and pre-process keyword arguments
     args = argparse.Namespace()
@@ -151,15 +152,13 @@ def download(**kwargs):
 # pylint and I disagree on code style here. Shut up, pylint.
 # pylint: disable=too-many-locals
 def args_download(args):
-    """
-    Download data from NCBI
-    Using the argument parser object.
+    """Download data from NCBI using the argument parser object.
 
     Parameters
     ----------
     args: Namespace
         Arguments from argument_parser
-_
+
     Returns
     -------
     int
@@ -248,7 +247,8 @@ _
 # pylint: disable=too-many-arguments,too-many-locals
 def _download(section, group, uri, output, file_formats, assembly_level, genera, species_taxids,
               taxids, human_readable, refseq_category, table):
-    """
+    """Generate download jobs, internal version.
+
     Sole purpose is to ease the tests, no argument checking is done here: they must be processed
     previously.
     You *SHALL NOT* call this directly, but always call download()!
@@ -275,6 +275,7 @@ def _download(section, group, uri, output, file_formats, assembly_level, genera,
     summary_file = get_summary(section, group, uri)
     entries = parse_summary(summary_file)
     download_jobs = []
+
     def in_genus_list(species, genus_list):
         for genus in genus_list:
             if species.startswith(genus.capitalize()):
@@ -282,7 +283,7 @@ def _download(section, group, uri, output, file_formats, assembly_level, genera,
         return False
 
     for entry in entries:
-        if genera and not in_genus_list(entry['organism_name'],genera):
+        if genera and not in_genus_list(entry['organism_name'], genera):
             logging.debug('Organism name %r does not start with any in %r, skipping',
                           entry['organism_name'], genera)
             continue
@@ -308,7 +309,7 @@ def _download(section, group, uri, output, file_formats, assembly_level, genera,
 
 
 def worker(job):
-    """Run a single download job"""
+    """Run a single download job."""
     ret = False
     try:
         if job.full_url is not None:
@@ -325,7 +326,7 @@ def worker(job):
 
 
 def get_summary(section, domain, uri):
-    """Get the assembly_summary.txt file from NCBI and return a StringIO object for it"""
+    """Get the assembly_summary.txt file from NCBI and return a StringIO object for it."""
     logging.debug('Downloading summary for %r/%r uri: %r', section, domain, uri)
     url = '{uri}/{section}/{domain}/assembly_summary.txt'.format(
         section=section, domain=domain, uri=uri)
@@ -334,14 +335,14 @@ def get_summary(section, domain, uri):
 
 
 def parse_summary(summary_file):
-    """Parse the summary file from TSV format to a csv DictReader"""
+    """Parse the summary file from TSV format to a csv DictReader-like object."""
     return SummaryReader(summary_file)
 
 
 # pylint and I disagree on code style here. Shut up, pylint.
 # pylint: disable=too-many-arguments,too-many-locals
 def download_entry(entry, section, domain, output, file_formats, human_readable, table=None):
-    """Download an entry from the summary file"""
+    """Create download jobs for all file formats from a summary file entry."""
     logging.info('Downloading record %r', entry['assembly_accession'])
     full_output_dir = create_dir(entry, section, domain, output)
 
@@ -374,7 +375,7 @@ def download_entry(entry, section, domain, output, file_formats, human_readable,
 
 
 def create_dir(entry, section, domain, output):
-    """Create the output directory for the entry if needed"""
+    """Create the output directory for the entry if needed."""
     full_output_dir = os.path.join(output, section, domain, entry['assembly_accession'])
     try:
         os.makedirs(full_output_dir)
@@ -388,7 +389,7 @@ def create_dir(entry, section, domain, output):
 
 
 def create_readable_dir(entry, section, domain, output):
-    """Create the a human-readable directory to link the entry to if needed"""
+    """Create the a human-readable directory to link the entry to if needed."""
     if domain != 'viral':
         full_output_dir = os.path.join(output, 'human_readable', section, domain,
                                        get_genus_label(entry),
@@ -411,7 +412,7 @@ def create_readable_dir(entry, section, domain, output):
 
 
 def grab_checksums_file(entry):
-    """Grab the checksum file for a given entry"""
+    """Grab the checksum file for a given entry."""
     http_url = convert_ftp_url(entry['ftp_path'])
     full_url = '{}/md5checksums.txt'.format(http_url)
     req = requests.get(full_url)
@@ -419,12 +420,12 @@ def grab_checksums_file(entry):
 
 
 def convert_ftp_url(url):
-    """Convert FTP to HTTPS URLs"""
+    """Convert FTP to HTTPS URLs."""
     return url.replace('ftp://', 'https://', 1)
 
 
 def parse_checksums(checksums_string):
-    """Parse a file containing checksums and filenames"""
+    """Parse a file containing checksums and filenames."""
     checksums_list = []
     for line in checksums_string.split('\n'):
         try:
@@ -445,7 +446,7 @@ def parse_checksums(checksums_string):
 
 
 def has_file_changed(directory, checksums, filetype='genbank'):
-    """Check if the checksum of a given file has changed"""
+    """Check if the checksum of a given file has changed."""
     pattern = EFormats.get_content(filetype)
     filename, expected_checksum = get_name_and_checksum(checksums, pattern)
     full_filename = os.path.join(directory, filename)
@@ -458,7 +459,7 @@ def has_file_changed(directory, checksums, filetype='genbank'):
 
 
 def need_to_create_symlink(directory, checksums, filetype, symlink_path):
-    """Check if we need to create a symlink for an existing file"""
+    """Check if we need to create a symlink for an existing file."""
     # If we don't have a symlink path, we don't need to create a symlink
     if symlink_path is None:
         return False
@@ -477,7 +478,7 @@ def need_to_create_symlink(directory, checksums, filetype, symlink_path):
 
 
 def get_name_and_checksum(checksums, end):
-    """Extract a full filename and checksum from the checksums list for a file ending in given end"""
+    """Extract a full filename and checksum from the checksums list for a file ending in given end."""
     for entry in checksums:
         if not entry['file'].endswith(end):
             # wrong file
@@ -494,7 +495,7 @@ def get_name_and_checksum(checksums, end):
 
 
 def md5sum(filename):
-    """Calculate the md5sum of a file and return the hexdigest"""
+    """Calculate the md5sum of a file and return the hexdigest."""
     hash_md5 = hashlib.md5()
     with open(filename, 'rb') as handle:
         for chunk in iter(lambda: handle.read(4096), b''):
@@ -505,7 +506,7 @@ def md5sum(filename):
 # pylint and I disagree on code style here. Shut up, pylint.
 # pylint: disable=too-many-arguments
 def download_file_job(entry, directory, checksums, filetype='genbank', symlink_path=None, table=None):
-    """Download and verirfy a given file"""
+    """Generate a DownloadJob that actually triggers a file download."""
     pattern = EFormats.get_content(filetype)
     filename, expected_checksum = get_name_and_checksum(checksums, pattern)
     base_url = convert_ftp_url(entry['ftp_path'])
@@ -524,7 +525,7 @@ def download_file_job(entry, directory, checksums, filetype='genbank', symlink_p
 
 
 def create_symlink_job(directory, checksums, filetype, symlink_path):
-    """Create a symlink for an already downloaded file"""
+    """Create a symlink-creating DownloadJob for an already downloaded file."""
     pattern = EFormats.get_content(filetype)
     filename, _ = get_name_and_checksum(checksums, pattern)
     local_file = os.path.join(directory, filename)
@@ -533,8 +534,7 @@ def create_symlink_job(directory, checksums, filetype, symlink_path):
 
 
 def save_and_check(response, local_file, expected_checksum):
-    """Save the content of an http response and verify the checksum matches"""
-
+    """Save the content of an http response and verify the checksum matches."""
     with open(local_file, 'wb') as handle:
         for chunk in response.iter_content(4096):
             handle.write(chunk)
@@ -549,7 +549,7 @@ def save_and_check(response, local_file, expected_checksum):
 
 
 def create_symlink(local_file, symlink_path):
-    """Create a symlink if symlink path is given"""
+    """Create a symlink if symlink path is given."""
     if symlink_path is not None:
         if os.path.exists(symlink_path) or os.path.lexists(symlink_path):
             os.unlink(symlink_path)
@@ -560,23 +560,22 @@ def create_symlink(local_file, symlink_path):
 
 
 def get_genus_label(entry):
-    """Get the genus name of an assembly summary entry"""
+    """Get the genus name of an assembly summary entry."""
     return entry['organism_name'].split(' ')[0]
 
 
 def get_species_label(entry):
-    """Get the species name of an assembly summary entry"""
+    """Get the species name of an assembly summary entry."""
     return entry['organism_name'].split(' ')[1]
 
 
 def get_strain_label(entry, viral=False):
-    """Try to extract a strain from an assemly summary entry
+    """Try to extract a strain from an assemly summary entry.
 
     First this checks 'infraspecific_name', then 'isolate', then
     it tries to get it from 'organism_name'. If all fails, it
     falls back to just returning the assembly accesion number.
     """
-
     def get_strain(entry):
         strain = entry['infraspecific_name']
         if strain != '':
