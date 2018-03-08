@@ -1,11 +1,12 @@
-"""Command line handling for ncbi-genome-download"""
+"""Command line handling for ncbi-genome-download."""
 import logging
 from ncbi_genome_download import args_download
 from ncbi_genome_download import argument_parser
 from ncbi_genome_download import __version__
 
+
 def main():
-    """Build and parse command line"""
+    """Build and parse command line."""
     parser = argument_parser(version=__version__)
     args = parser.parse_args()
 

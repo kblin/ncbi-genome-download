@@ -50,8 +50,8 @@ def argument_parser(version=None):  # pragma: no cover
     parser.add_argument('-g', '--genus', dest='genus',
                         default=EDefaults.GENUS.default,
                         help='Only download sequences of the provided genus. '
-                        'A comma-seperated list of genera is also possible. For example: "Streptomyces coelicolor,Escherichia coli".'
-                        '(default: %(default)s)')
+                        'A comma-seperated list of genera is also possible. For example: '
+                        '"Streptomyces coelicolor,Escherichia coli". (default: %(default)s)')
     parser.add_argument('-T', '--species-taxid', dest='species_taxid',
                         default=EDefaults.SPECIES_TAXID.default,
                         help='Only download sequences of the provided species NCBI taxonomy ID. '
@@ -214,7 +214,8 @@ def args_download(args):
         for group in groups:
             download_jobs.extend(
                 _download(args.section, group, args.uri, args.output, formats, args.assembly_level, genus_list,
-                          species_taxid_list, taxid_list, args.human_readable, args.refseq_category, args.metadata_table))
+                          species_taxid_list, taxid_list, args.human_readable, args.refseq_category,
+                          args.metadata_table))
 
         if len(download_jobs) < 1:
             logging.error("No downloads matched your filter. Please check your options.")
