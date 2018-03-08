@@ -60,15 +60,15 @@ def test_download_all_formats(monkeypatch, mocker, req):
             text=summary_contents)
     mocker.spy(core, 'get_summary')
     mocker.spy(core, 'parse_summary')
-    mocker.patch('ncbi_genome_download.core.download_entry')
+    mocker.patch('ncbi_genome_download.core.create_downloadjob')
     core.download(group='bacteria', output='/tmp/fake', assembly_level='complete',file_format="all")
     assert core.get_summary.call_count == 1
     assert core.parse_summary.call_count == 1
-    assert core.download_entry.call_count == 1
+    assert core.create_downloadjob.call_count == 1
     # Many nested tuples in call_args_list, no kidding.
-    assert core.download_entry.call_args_list[0][0][0]['assembly_level'] == 'Complete Genome'
-    print(core.download_entry.call_args_list)
-    assert core.download_entry.call_args_list[0][0][4] == core.EFormats.keys()
+    assert core.create_downloadjob.call_args_list[0][0][0]['assembly_level'] == 'Complete Genome'
+    print(core.create_downloadjob.call_args_list)
+    assert core.create_downloadjob.call_args_list[0][0][4] == core.EFormats.keys()
 
 def test_download_connection_err(monkeypatch, mocker):
     _download_mock = mocker.MagicMock(side_effect=ConnectionError)
@@ -82,11 +82,11 @@ def test_download(monkeypatch, mocker, req):
             text=summary_contents)
     mocker.spy(core, 'get_summary')
     mocker.spy(core, 'parse_summary')
-    mocker.patch('ncbi_genome_download.core.download_entry')
+    mocker.patch('ncbi_genome_download.core.create_downloadjob')
     core.download(group='bacteria', output='/tmp/fake')
     assert core.get_summary.call_count == 1
     assert core.parse_summary.call_count == 1
-    assert core.download_entry.call_count == 4
+    assert core.create_downloadjob.call_count == 4
 
 
 def test_download_complete(monkeypatch, mocker, req):
@@ -95,13 +95,13 @@ def test_download_complete(monkeypatch, mocker, req):
             text=summary_contents)
     mocker.spy(core, 'get_summary')
     mocker.spy(core, 'parse_summary')
-    mocker.patch('ncbi_genome_download.core.download_entry')
+    mocker.patch('ncbi_genome_download.core.create_downloadjob')
     core.download(group='bacteria', output='/tmp/fake', assembly_level='complete')
     assert core.get_summary.call_count == 1
     assert core.parse_summary.call_count == 1
-    assert core.download_entry.call_count == 1
+    assert core.create_downloadjob.call_count == 1
     # Many nested tuples in call_args_list, no kidding.
-    assert core.download_entry.call_args_list[0][0][0]['assembly_level'] == 'Complete Genome'
+    assert core.create_downloadjob.call_args_list[0][0][0]['assembly_level'] == 'Complete Genome'
 
 
 def test_download_chromosome(monkeypatch, mocker, req):
@@ -110,13 +110,13 @@ def test_download_chromosome(monkeypatch, mocker, req):
             text=summary_contents)
     mocker.spy(core, 'get_summary')
     mocker.spy(core, 'parse_summary')
-    mocker.patch('ncbi_genome_download.core.download_entry')
+    mocker.patch('ncbi_genome_download.core.create_downloadjob')
     core.download(group='bacteria', output='/tmp/fake', assembly_level='chromosome')
     assert core.get_summary.call_count == 1
     assert core.parse_summary.call_count == 1
-    assert core.download_entry.call_count == 1
+    assert core.create_downloadjob.call_count == 1
     # Many nested tuples in call_args_list, no kidding.
-    assert core.download_entry.call_args_list[0][0][0]['assembly_level'] == 'Chromosome'
+    assert core.create_downloadjob.call_args_list[0][0][0]['assembly_level'] == 'Chromosome'
 
 
 def test_download_scaffold(monkeypatch, mocker, req):
@@ -125,13 +125,13 @@ def test_download_scaffold(monkeypatch, mocker, req):
             text=summary_contents)
     mocker.spy(core, 'get_summary')
     mocker.spy(core, 'parse_summary')
-    mocker.patch('ncbi_genome_download.core.download_entry')
+    mocker.patch('ncbi_genome_download.core.create_downloadjob')
     core.download(group='bacteria', output='/tmp/fake', assembly_level='scaffold')
     assert core.get_summary.call_count == 1
     assert core.parse_summary.call_count == 1
-    assert core.download_entry.call_count == 1
+    assert core.create_downloadjob.call_count == 1
     # Many nested tuples in call_args_list, no kidding.
-    assert core.download_entry.call_args_list[0][0][0]['assembly_level'] == 'Scaffold'
+    assert core.create_downloadjob.call_args_list[0][0][0]['assembly_level'] == 'Scaffold'
 
 
 def test_download_contig(monkeypatch, mocker, req):
@@ -140,13 +140,13 @@ def test_download_contig(monkeypatch, mocker, req):
             text=summary_contents)
     mocker.spy(core, 'get_summary')
     mocker.spy(core, 'parse_summary')
-    mocker.patch('ncbi_genome_download.core.download_entry')
+    mocker.patch('ncbi_genome_download.core.create_downloadjob')
     core.download(group='bacteria', output='/tmp/fake', assembly_level='contig')
     assert core.get_summary.call_count == 1
     assert core.parse_summary.call_count == 1
-    assert core.download_entry.call_count == 1
+    assert core.create_downloadjob.call_count == 1
     # Many nested tuples in call_args_list, no kidding.
-    assert core.download_entry.call_args_list[0][0][0]['assembly_level'] == 'Contig'
+    assert core.create_downloadjob.call_args_list[0][0][0]['assembly_level'] == 'Contig'
 
 
 def test_download_genus(monkeypatch, mocker, req):
@@ -155,13 +155,13 @@ def test_download_genus(monkeypatch, mocker, req):
             text=summary_contents)
     mocker.spy(core, 'get_summary')
     mocker.spy(core, 'parse_summary')
-    mocker.patch('ncbi_genome_download.core.download_entry')
+    mocker.patch('ncbi_genome_download.core.create_downloadjob')
     core.download(group='bacteria', output='/tmp/fake', genus='Azorhizobium')
     assert core.get_summary.call_count == 1
     assert core.parse_summary.call_count == 1
-    assert core.download_entry.call_count == 1
+    assert core.create_downloadjob.call_count == 1
     # Many nested tuples in call_args_list, no kidding.
-    assert core.download_entry.call_args_list[0][0][0][
+    assert core.create_downloadjob.call_args_list[0][0][0][
                'organism_name'] == 'Azorhizobium caulinodans ORS 571'
 
 
@@ -171,13 +171,13 @@ def test_download_genus_lowercase(monkeypatch, mocker, req):
             text=summary_contents)
     mocker.spy(core, 'get_summary')
     mocker.spy(core, 'parse_summary')
-    mocker.patch('ncbi_genome_download.core.download_entry')
+    mocker.patch('ncbi_genome_download.core.create_downloadjob')
     core.download(group='bacteria', output='/tmp/fake', genus='azorhizobium')
     assert core.get_summary.call_count == 1
     assert core.parse_summary.call_count == 1
-    assert core.download_entry.call_count == 1
+    assert core.create_downloadjob.call_count == 1
     # Many nested tuples in call_args_list, no kidding.
-    assert core.download_entry.call_args_list[0][0][0][
+    assert core.create_downloadjob.call_args_list[0][0][0][
                'organism_name'] == 'Azorhizobium caulinodans ORS 571'
 
 
@@ -187,13 +187,13 @@ def test_download_taxid(monkeypatch, mocker, req):
             text=summary_contents)
     mocker.spy(core, 'get_summary')
     mocker.spy(core, 'parse_summary')
-    mocker.patch('ncbi_genome_download.core.download_entry')
+    mocker.patch('ncbi_genome_download.core.create_downloadjob')
     core.download(group='bacteria', output='/tmp/fake', taxid='438753')
     assert core.get_summary.call_count == 1
     assert core.parse_summary.call_count == 1
-    assert core.download_entry.call_count == 1
+    assert core.create_downloadjob.call_count == 1
     # Many nested tuples in call_args_list, no kidding.
-    assert core.download_entry.call_args_list[0][0][0][
+    assert core.create_downloadjob.call_args_list[0][0][0][
                'organism_name'] == 'Azorhizobium caulinodans ORS 571'
 
 
@@ -203,13 +203,13 @@ def test_download_species_taxid(monkeypatch, mocker, req):
             text=summary_contents)
     mocker.spy(core, 'get_summary')
     mocker.spy(core, 'parse_summary')
-    mocker.patch('ncbi_genome_download.core.download_entry')
+    mocker.patch('ncbi_genome_download.core.create_downloadjob')
     core.download(group='bacteria', output='/tmp/fake', species_taxid='7')
     assert core.get_summary.call_count == 1
     assert core.parse_summary.call_count == 1
-    assert core.download_entry.call_count == 1
+    assert core.create_downloadjob.call_count == 1
     # Many nested tuples in call_args_list, no kidding.
-    assert core.download_entry.call_args_list[0][0][0][
+    assert core.create_downloadjob.call_args_list[0][0][0][
                'organism_name'] == 'Azorhizobium caulinodans ORS 571'
 
 
@@ -219,13 +219,13 @@ def test_download_refseq_category(monkeypatch, mocker, req):
             text=summary_contents)
     mocker.spy(core, 'get_summary')
     mocker.spy(core, 'parse_summary')
-    mocker.patch('ncbi_genome_download.core.download_entry')
+    mocker.patch('ncbi_genome_download.core.create_downloadjob')
     core.download(group='bacteria', output='/tmp/fake', refseq_category='reference')
     assert core.get_summary.call_count == 1
     assert core.parse_summary.call_count == 1
-    assert core.download_entry.call_count == 1
+    assert core.create_downloadjob.call_count == 1
     # Many nested tuples in call_args_list, no kidding.
-    assert core.download_entry.call_args_list[0][0][0][
+    assert core.create_downloadjob.call_args_list[0][0][0][
                'organism_name'] == 'Streptomyces coelicolor A3(2)'
 
 
@@ -248,7 +248,7 @@ def test_parse_summary():
         assert 'assembly_accession' in first
 
 
-def prepare_download_entry(req, tmpdir, format_map=core.EFormats, human_readable=False,
+def prepare_create_downloadjob(req, tmpdir, format_map=core.EFormats, human_readable=False,
                            create_local_file=False):
     # Set up test env
     entry = {
@@ -288,38 +288,38 @@ def prepare_download_entry(req, tmpdir, format_map=core.EFormats, human_readable
     return entry, outdir, download_jobs
 
 
-def test_download_entry_genbank(req, tmpdir):
-    entry, outdir, joblist = prepare_download_entry(req, tmpdir)
-    jobs = core.download_entry(entry, 'refseq', 'bacteria', str(outdir), ['genbank'], None)
+def test_create_downloadjob_genbank(req, tmpdir):
+    entry, outdir, joblist = prepare_create_downloadjob(req, tmpdir)
+    jobs = core.create_downloadjob(entry, 'refseq', 'bacteria', str(outdir), ['genbank'], None)
     expected = [j for j in joblist if j.local_file.endswith('_genomic.gbff.gz')]
     assert jobs == expected
 
 
-def test_download_entry_all(req, tmpdir):
-    entry, outdir, expected = prepare_download_entry(req, tmpdir)
-    jobs = core.download_entry(entry, 'refseq', 'bacteria', str(outdir), core.EFormats.keys(), None)
+def test_create_downloadjob_all(req, tmpdir):
+    entry, outdir, expected = prepare_create_downloadjob(req, tmpdir)
+    jobs = core.create_downloadjob(entry, 'refseq', 'bacteria', str(outdir), core.EFormats.keys(), None)
     assert jobs == expected
 
 
-def test_download_entry_missing(req, tmpdir):
+def test_create_downloadjob_missing(req, tmpdir):
     name_map_copy = dict(core.EFormats.items())
     del name_map_copy['genbank']
-    entry, outdir, _ = prepare_download_entry(req, tmpdir, name_map_copy)
-    jobs = core.download_entry(entry, 'refseq', 'bacteria', str(outdir), ['genbank'], None)
+    entry, outdir, _ = prepare_create_downloadjob(req, tmpdir, name_map_copy)
+    jobs = core.create_downloadjob(entry, 'refseq', 'bacteria', str(outdir), ['genbank'], None)
     assert jobs == []
 
 
-def test_download_entry_human_readable(req, tmpdir):
-    entry, outdir, joblist = prepare_download_entry(req, tmpdir, human_readable=True)
-    jobs = core.download_entry(entry, 'refseq', 'bacteria', str(outdir), ['genbank'], True)
+def test_create_downloadjob_human_readable(req, tmpdir):
+    entry, outdir, joblist = prepare_create_downloadjob(req, tmpdir, human_readable=True)
+    jobs = core.create_downloadjob(entry, 'refseq', 'bacteria', str(outdir), ['genbank'], True)
     expected = [j for j in joblist if j.local_file.endswith('_genomic.gbff.gz')]
     assert jobs == expected
 
 
-def test_download_entry_symlink_only(req, tmpdir):
-    entry, outdir, joblist = prepare_download_entry(req, tmpdir, human_readable=True,
+def test_create_downloadjob_symlink_only(req, tmpdir):
+    entry, outdir, joblist = prepare_create_downloadjob(req, tmpdir, human_readable=True,
                                                     create_local_file=True)
-    jobs = core.download_entry(entry, 'refseq', 'bacteria', str(outdir), ['genbank'], True)
+    jobs = core.create_downloadjob(entry, 'refseq', 'bacteria', str(outdir), ['genbank'], True)
     expected = [core.DownloadJob(None, j.local_file, None, j.symlink_path)
                 for j in joblist if j.local_file.endswith('_genomic.gbff.gz')]
     assert jobs == expected

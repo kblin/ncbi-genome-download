@@ -304,7 +304,7 @@ def _download(section, group, uri, output, file_formats, assembly_level, genera,
             logging.debug('Skipping entry with refseq_category %r, not %r', entry['refseq_category'], refseq_category)
             continue
         download_jobs.extend(
-            download_entry(entry, section, group, output, file_formats, human_readable, table))
+            create_downloadjob(entry, section, group, output, file_formats, human_readable, table))
     return download_jobs
 # pylint: enable=too-many-arguments,too-many-locals
 
@@ -342,7 +342,7 @@ def parse_summary(summary_file):
 
 # pylint and I disagree on code style here. Shut up, pylint.
 # pylint: disable=too-many-arguments,too-many-locals
-def download_entry(entry, section, domain, output, file_formats, human_readable, table=None):
+def create_downloadjob(entry, section, domain, output, file_formats, human_readable, table=None):
     """Create download jobs for all file formats from a summary file entry."""
     logging.info('Downloading record %r', entry['assembly_accession'])
     full_output_dir = create_dir(entry, section, domain, output)
