@@ -6,6 +6,8 @@ htmlcov/*
 .cache/*
 dist/*
 
+**/.ropeproject/*
+
 # Pycharm
 .idea/*
 
