@@ -18,6 +18,7 @@ from .config import (
     ERefseqCategories,
 )
 from .jobs import DownloadJob
+from . import metadata
 from .summary import SummaryReader
 
 # Python < 2.7.9 hack: fix ssl support
@@ -188,12 +189,6 @@ def args_download(args):
     assert args.refseq_category in EDefaults.REFSEQ_CATEGORIES.choices, \
         "Unsupported refseq_category: {}".format(args.refseq_category)
 
-    # TODO: This needs refactoring
-    if args.metadata_table:  # pragma: no cover
-        logging.info('Creating metadata file: %r', args.metadata_table)
-        with open(args.metadata_table, 'wt') as metadata_table:
-            metadata_table.write(get_table_header())
-
     if args.taxid:
         taxid_list = args.taxid.split(',')
     else:
@@ -214,8 +209,7 @@ def args_download(args):
         for group in groups:
             download_jobs.extend(
                 _download(args.section, group, args.uri, args.output, formats, args.assembly_level, genus_list,
-                          species_taxid_list, taxid_list, args.human_readable, args.refseq_category,
-                          args.metadata_table))
+                          species_taxid_list, taxid_list, args.human_readable, args.refseq_category))
 
         if len(download_jobs) < 1:
             logging.error("No downloads matched your filter. Please check your options.")
@@ -236,6 +230,11 @@ def args_download(args):
                 logging.error("Interrupted by user")
                 return 1
 
+        if args.metadata_table:
+            with open(args.metadata_table, 'wt') as handle:
+                table = metadata.get()
+                table.write(handle)
+
     except requests.exceptions.ConnectionError as err:
         logging.error('Download from NCBI failed: %r', err)
         # Exit code 75 meas TEMPFAIL in C/C++, so let's stick with that for now.
@@ -247,7 +246,7 @@ def args_download(args):
 # pylint and I disagree on code style here. Shut up, pylint.
 # pylint: disable=too-many-arguments,too-many-locals
 def _download(section, group, uri, output, file_formats, assembly_level, genera, species_taxids,
-              taxids, human_readable, refseq_category, table):
+              taxids, human_readable, refseq_category):
     """Generate download jobs, internal version.
 
     Sole purpose is to ease the tests, no argument checking is done here: they must be processed
@@ -304,7 +303,7 @@ def _download(section, group, uri, output, file_formats, assembly_level, genera,
             logging.debug('Skipping entry with refseq_category %r, not %r', entry['refseq_category'], refseq_category)
             continue
         download_jobs.extend(
-            create_downloadjob(entry, section, group, output, file_formats, human_readable, table))
+            create_downloadjob(entry, section, group, output, file_formats, human_readable))
     return download_jobs
 # pylint: enable=too-many-arguments,too-many-locals
 
@@ -342,7 +341,7 @@ def parse_summary(summary_file):
 
 # pylint and I disagree on code style here. Shut up, pylint.
 # pylint: disable=too-many-arguments,too-many-locals
-def create_downloadjob(entry, section, domain, output, file_formats, human_readable, table=None):
+def create_downloadjob(entry, section, domain, output, file_formats, human_readable):
     """Create download jobs for all file formats from a summary file entry."""
     logging.info('Downloading record %r', entry['assembly_accession'])
     full_output_dir = create_dir(entry, section, domain, output)
@@ -364,7 +363,7 @@ def create_downloadjob(entry, section, domain, output, file_formats, human_reada
         try:
             if has_file_changed(full_output_dir, parsed_checksums, fmt):
                 download_jobs.append(
-                    download_file_job(entry, full_output_dir, parsed_checksums, fmt, symlink_path, table))
+                    download_file_job(entry, full_output_dir, parsed_checksums, fmt, symlink_path))
             elif need_to_create_symlink(full_output_dir, parsed_checksums, fmt, symlink_path):
                 download_jobs.append(
                     create_symlink_job(full_output_dir, parsed_checksums, fmt, symlink_path))
@@ -506,7 +505,7 @@ def md5sum(filename):
 
 # pylint and I disagree on code style here. Shut up, pylint.
 # pylint: disable=too-many-arguments
-def download_file_job(entry, directory, checksums, filetype='genbank', symlink_path=None, table=None):
+def download_file_job(entry, directory, checksums, filetype='genbank', symlink_path=None):
     """Generate a DownloadJob that actually triggers a file download."""
     pattern = EFormats.get_content(filetype)
     filename, expected_checksum = get_name_and_checksum(checksums, pattern)
@@ -517,9 +516,9 @@ def download_file_job(entry, directory, checksums, filetype='genbank', symlink_p
     if symlink_path is not None:
         full_symlink = os.path.join(symlink_path, filename)
 
-    # TODO: This needs refactoring
-    if table is not None:  # pragma: no cover
-        write_table_line(entry, table, local_file)
+    # Keep metadata around
+    mtable = metadata.get()
+    mtable.add(entry, local_file)
 
     return DownloadJob(full_url, local_file, expected_checksum, full_symlink)
 # pylint: enable=too-many-arguments,too-many-locals
@@ -602,70 +601,3 @@ def get_strain_label(entry, viral=False):
         return strain
 
     return cleanup(get_strain(entry))
-
-
-# TODO: This needs refactoring
-def get_table_header():  # pragma: no cover
-    header_parts = ['assembly_accession',
-                    'bioproject',
-                    'biosample',
-                    'wgs_master',
-                    'excluded_from_refseq',
-                    'refseq_category',
-                    'relation_to_type_material',
-                    'taxid',
-                    'species_taxid',
-                    'organism_name',
-                    'infraspecific_name',
-                    'isolate',
-                    'version_status',
-                    'assembly_level',
-                    'release_type',
-                    'genome_rep',
-                    'seq_rel_date',
-                    'asm_name',
-                    'submitter',
-                    'gbrs_paired_asm',
-                    'paired_asm_comp',
-                    'ftp_path',
-                    'local_filename']
-    return '\t'.join(header_parts) + '\n'
-
-
-# TODO: This needs refactoring
-def get_table_line(entry, genome_filename):  # pragma: no cover
-    line_parts = [entry.get('assembly_accession', ''),
-                  entry.get('bioproject', ''),
-                  entry.get('biosample', ''),
-                  entry.get('wgs_master', ''),
-                  entry.get('excluded_from_refseq', ''),
-                  entry.get('refseq_category', ''),
-                  entry.get('relation_to_type_material', ''),
-                  entry.get('taxid', ''),
-                  entry.get('species_taxid', ''),
-                  entry.get('organism_name', ''),
-                  entry.get('infraspecific_name', ''),
-                  entry.get('isolate', ''),
-                  entry.get('version_status', ''),
-                  entry.get('assembly_level', ''),
-                  entry.get('release_type', ''),
-                  entry.get('genome_rep', ''),
-                  entry.get('seq_rel_date', ''),
-                  entry.get('asm_name', ''),
-                  entry.get('submitter', ''),
-                  entry.get('gbrs_paired_asm', ''),
-                  entry.get('paired_asm_comp', ''),
-                  entry.get('ftp_path', ''),
-                  './' + os.path.relpath(genome_filename)]
-    return '\t'.join(line_parts) + '\n'
-
-
-# TODO: This needs refactoring
-def write_table_line(entry, table_filename, genome_filename):  # pragma: no cover
-    with open(table_filename, 'at') as metadata_table:
-        table_line = get_table_line(entry, genome_filename)
-        try:
-            metadata_table.write(table_line)
-        except UnicodeEncodeError:
-            ascii_table_line = ''.join([i if ord(i) < 128 else '?' for i in table_line])
-            metadata_table.write(ascii_table_line)

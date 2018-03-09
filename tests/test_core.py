@@ -89,6 +89,22 @@ def test_download(monkeypatch, mocker, req):
     assert core.create_downloadjob.call_count == 4
 
 
+def test_download_metadata(monkeypatch, mocker, req, tmpdir):
+    """Test creating the metadata file works."""
+    metadata_file = tmpdir.join('metadata.tsv')
+    summary_contents = open(_get_file('partial_summary.txt'), 'r').read()
+    req.get('https://ftp.ncbi.nih.gov/genomes/refseq/bacteria/assembly_summary.txt',
+            text=summary_contents)
+    mocker.spy(core, 'get_summary')
+    mocker.spy(core, 'parse_summary')
+    mocker.patch('ncbi_genome_download.core.create_downloadjob', return_value=[core.DownloadJob(None, None, None, None)])
+    core.download(group='bacteria', output='/tmp/fake', metadata_table=str(metadata_file))
+    assert core.get_summary.call_count == 1
+    assert core.parse_summary.call_count == 1
+    assert core.create_downloadjob.call_count == 4
+    assert metadata_file.check()
+
+
 def test_download_complete(monkeypatch, mocker, req):
     summary_contents = open(_get_file('assembly_status.txt'), 'r').read()
     req.get('https://ftp.ncbi.nih.gov/genomes/refseq/bacteria/assembly_summary.txt',
