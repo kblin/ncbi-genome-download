@@ -29,6 +29,7 @@ def test_download_defaults(monkeypatch, mocker):
     monkeypatch.setattr(core, 'worker', worker_mock)
     assert core.download() == 0
     assert _download_mock.call_count == len(core.SUPPORTED_TAXONOMIC_GROUPS)
+    assert worker_mock.call_count == len(core.SUPPORTED_TAXONOMIC_GROUPS)
 
 
 def test_download_defaults_nomatch(monkeypatch, mocker):
@@ -36,6 +37,18 @@ def test_download_defaults_nomatch(monkeypatch, mocker):
     _download_mock = mocker.MagicMock(return_value=[])
     monkeypatch.setattr(core, '_download', _download_mock)
     assert core.download() == 1
+
+
+def test_download_dry_run(monkeypatch, mocker):
+    """Test _download is not called for a dry run."""
+    worker_mock = mocker.MagicMock()
+    # need local_file filled out.
+    _download_mock = mocker.MagicMock(return_value=[core.DownloadJob(None, 'foo.gbff.gz', None, None)])
+    monkeypatch.setattr(core, '_download', _download_mock)
+    monkeypatch.setattr(core, 'worker', worker_mock)
+    assert core.download(dry_run=True) == 0
+    assert _download_mock.call_count == len(core.SUPPORTED_TAXONOMIC_GROUPS)
+    assert worker_mock.call_count == 0
 
 
 # TODO: test unrecognized arguments, invalid formats and out of choices values

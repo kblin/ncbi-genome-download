@@ -135,6 +135,14 @@ In this case, `ncbi-genome-download` will not download any new genome files, and
 human-readable directory structure. Note that if any files have been changed on the NCBI side,
 a file download will be triggered.
 
+There is a "dry-run" option to show which accessions would be downloaded, given your filters:
+```
+ncbi-genome-download --dry-run bacteria
+```
+
+Note that this still needs to fetch the assembly summary and checksum files, so it will still
+run quite a while.
+
 To get an overview of all options, run
 ```
 ncbi-genome-download --help

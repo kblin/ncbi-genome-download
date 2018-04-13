@@ -84,6 +84,8 @@ def argument_parser(version=None):  # pragma: no cover
                              'default: %(default)s)')
     parser.add_argument('-m', '--metadata-table', type=str,
                         help='Save tab-delimited file with genome metadata')
+    parser.add_argument('-n', '--dry-run', dest='dry_run', action='store_true',
+                        help="Only check which files to download, don't download genome files.")
     parser.add_argument('-v', '--verbose', action='store_true',
                         help='increase output verbosity')
     parser.add_argument('-d', '--debug', action='store_true',
@@ -143,6 +145,7 @@ def download(**kwargs):
     args.species_taxid = kwargs.pop('species_taxid', EDefaults.SPECIES_TAXID.default)
     args.taxid = kwargs.pop('taxid', EDefaults.TAXID.default)
     args.human_readable = kwargs.pop('human_readable', False)
+    args.dry_run = kwargs.pop('dry_run', False)
     args.parallel = kwargs.pop('parallel', EDefaults.NB_PROCESSES.default)
     args.metadata_table = kwargs.pop('metadata_table', EDefaults.TABLE.default)
     assert len(kwargs) == 0, "Unrecognized option(s): {}".format(kwargs.keys())
@@ -214,6 +217,14 @@ def args_download(args):
         if len(download_jobs) < 1:
             logging.error("No downloads matched your filter. Please check your options.")
             return 1
+
+        if args.dry_run:
+            print("Would download the following files:")
+            for dl_job in download_jobs:
+                if dl_job.local_file:
+                    print(os.path.basename(dl_job.local_file))
+
+            return 0
 
         if args.parallel == 1:
             for dl_job in download_jobs:
