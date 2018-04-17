@@ -1,4 +1,6 @@
 """Core functionality of ncbi-genome-download."""
+from __future__ import print_function
+
 from appdirs import user_cache_dir
 import argparse
 import codecs
