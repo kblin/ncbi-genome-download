@@ -1,9 +1,7 @@
 """Download genome files from the NCBI"""
 from .config import (
     SUPPORTED_TAXONOMIC_GROUPS,
-    EFormats,
-    EAssemblyLevels,
-    EDefaults,
+    NgdConfig
 )
 from .core import (
     args_download,
@@ -16,8 +14,6 @@ __all__ = [
     'download',
     'args_download',
     'SUPPORTED_TAXONOMIC_GROUPS',
-    'EFormats',
-    'EAssemblyLevels',
-    'EDefaults',
+    'NgdConfig',
     'argument_parser'
 ]

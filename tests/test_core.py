@@ -1,3 +1,7 @@
+"""Core module tests."""
+
+from argparse import Namespace
+from collections import OrderedDict
 import os
 from os import path
 
@@ -6,17 +10,17 @@ import requests_mock
 from requests.exceptions import ConnectionError
 
 from ncbi_genome_download import core
-from ncbi_genome_download import EDefaults as dflt
-from ncbi_genome_download import argument_parser
+from ncbi_genome_download import NgdConfig
 
 
 def _get_file(fname):
-    """Get a file from the test directory"""
+    """Get a file from the test directory."""
     return path.join(path.dirname(__file__), fname)
 
 
 @pytest.yield_fixture
 def req():
+    """Fake requests object."""
     with requests_mock.mock() as req:
         yield req
 
@@ -28,6 +32,17 @@ def test_download_defaults(monkeypatch, mocker):
     monkeypatch.setattr(core, '_download', _download_mock)
     monkeypatch.setattr(core, 'worker', worker_mock)
     assert core.download() == 0
+    assert _download_mock.call_count == len(core.SUPPORTED_TAXONOMIC_GROUPS)
+    assert worker_mock.call_count == len(core.SUPPORTED_TAXONOMIC_GROUPS)
+
+
+def test_args_download_defaults(monkeypatch, mocker):
+    """Test args_download does the correct thing."""
+    worker_mock = mocker.MagicMock()
+    _download_mock = mocker.MagicMock(return_value=[core.DownloadJob(None, None, None, None)])
+    monkeypatch.setattr(core, '_download', _download_mock)
+    monkeypatch.setattr(core, 'worker', worker_mock)
+    assert core.args_download(Namespace()) == 0
     assert _download_mock.call_count == len(core.SUPPORTED_TAXONOMIC_GROUPS)
     assert worker_mock.call_count == len(core.SUPPORTED_TAXONOMIC_GROUPS)
 
@@ -74,14 +89,14 @@ def test_download_all_formats(monkeypatch, mocker, req):
     mocker.spy(core, 'get_summary')
     mocker.spy(core, 'parse_summary')
     mocker.patch('ncbi_genome_download.core.create_downloadjob')
-    core.download(group='bacteria', output='/tmp/fake', assembly_level='complete',file_format="all")
+    core.download(group='bacteria', output='/tmp/fake', assembly_level='complete', file_format="all")
     assert core.get_summary.call_count == 1
     assert core.parse_summary.call_count == 1
     assert core.create_downloadjob.call_count == 1
     # Many nested tuples in call_args_list, no kidding.
     assert core.create_downloadjob.call_args_list[0][0][0]['assembly_level'] == 'Complete Genome'
     print(core.create_downloadjob.call_args_list)
-    assert core.create_downloadjob.call_args_list[0][0][4] == core.EFormats.keys()
+    assert core.create_downloadjob.call_args_list[0][0][4] == list(NgdConfig._FORMATS)
 
 def test_download_connection_err(monkeypatch, mocker):
     _download_mock = mocker.MagicMock(side_effect=ConnectionError)
@@ -265,16 +280,16 @@ def test_get_summary(monkeypatch, req, tmpdir):
     cache_file = cache_dir.join('refseq_bacteria_assembly_summary.txt')
     req.get('https://ftp.ncbi.nih.gov/genomes/refseq/bacteria/assembly_summary.txt', text='test')
 
-    ret = core.get_summary('refseq', 'bacteria', dflt.URI.default, False)
+    ret = core.get_summary('refseq', 'bacteria', NgdConfig.get_default('uri'), False)
     assert ret.read() == 'test'
     assert not cache_file.check()
 
-    ret = core.get_summary('refseq', 'bacteria', dflt.URI.default, True)
+    ret = core.get_summary('refseq', 'bacteria', NgdConfig.get_default('uri'), True)
     assert ret.read() == 'test'
     assert cache_file.check()
 
     req.get('https://ftp.ncbi.nih.gov/genomes/refseq/bacteria/assembly_summary.txt', text='never read')
-    ret = core.get_summary('refseq', 'bacteria', dflt.URI.default, True)
+    ret = core.get_summary('refseq', 'bacteria', NgdConfig.get_default('uri'), True)
     assert ret.read() == 'test'
 
 
@@ -291,8 +306,8 @@ def test_parse_summary():
         assert 'assembly_accession' in first
 
 
-def prepare_create_downloadjob(req, tmpdir, format_map=core.EFormats, human_readable=False,
-                           create_local_file=False):
+def prepare_create_downloadjob(req, tmpdir, format_map=NgdConfig._FORMATS, human_readable=False,
+                               create_local_file=False):
     # Set up test env
     entry = {
         'assembly_accession': 'FAKE0.1',
@@ -340,12 +355,12 @@ def test_create_downloadjob_genbank(req, tmpdir):
 
 def test_create_downloadjob_all(req, tmpdir):
     entry, outdir, expected = prepare_create_downloadjob(req, tmpdir)
-    jobs = core.create_downloadjob(entry, 'refseq', 'bacteria', str(outdir), core.EFormats.keys(), None)
+    jobs = core.create_downloadjob(entry, 'refseq', 'bacteria', str(outdir), list(NgdConfig._FORMATS), None)
     assert jobs == expected
 
 
 def test_create_downloadjob_missing(req, tmpdir):
-    name_map_copy = dict(core.EFormats.items())
+    name_map_copy = OrderedDict(NgdConfig._FORMATS)
     del name_map_copy['genbank']
     entry, outdir, _ = prepare_create_downloadjob(req, tmpdir, name_map_copy)
     jobs = core.create_downloadjob(entry, 'refseq', 'bacteria', str(outdir), ['genbank'], None)
@@ -361,7 +376,7 @@ def test_create_downloadjob_human_readable(req, tmpdir):
 
 def test_create_downloadjob_symlink_only(req, tmpdir):
     entry, outdir, joblist = prepare_create_downloadjob(req, tmpdir, human_readable=True,
-                                                    create_local_file=True)
+                                                        create_local_file=True)
     jobs = core.create_downloadjob(entry, 'refseq', 'bacteria', str(outdir), ['genbank'], True)
     expected = [core.DownloadJob(None, j.local_file, None, j.symlink_path)
                 for j in joblist if j.local_file.endswith('_genomic.gbff.gz')]

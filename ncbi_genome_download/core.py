@@ -14,10 +14,7 @@ import requests
 
 from .config import (
     SUPPORTED_TAXONOMIC_GROUPS,
-    EDefaults,
-    EAssemblyLevels,
-    EFormats,
-    ERefseqCategories,
+    NgdConfig,
 )
 from .jobs import DownloadJob
 from . import metadata
@@ -37,52 +34,52 @@ def argument_parser(version=None):  # pragma: no cover
     """Create the argument parser for ncbi-genome-download."""
     parser = argparse.ArgumentParser()
     parser.add_argument('group',
-                        default=EDefaults.TAXONOMIC_GROUPS.default,
+                        default=NgdConfig.get_default('group'),
                         help='The NCBI taxonomic group to download (default: %(default)s). '
                         'A comma-separated list of taxonomic groups is also possible. For example: "bacteria,viral"'
-                        'Choose from: {choices}'.format(choices=EDefaults.TAXONOMIC_GROUPS.choices))
+                        'Choose from: {choices}'.format(choices=NgdConfig.get_choices('group')))
     parser.add_argument('-s', '--section', dest='section',
-                        choices=EDefaults.SECTIONS.choices,
-                        default=EDefaults.SECTIONS.default,
+                        choices=NgdConfig.get_choices('section'),
+                        default=NgdConfig.get_default('section'),
                         help='NCBI section to download (default: %(default)s)')
     parser.add_argument('-F', '--format', dest='file_format',
-                        default=EDefaults.FORMATS.default,
+                        default=NgdConfig.get_default('file_format'),
                         help='Which format to download (default: %(default)s).'
                         'A comma-separated list of formats is also possible. For example: "fasta,assembly-report". '
-                        'Choose from: {choices}'.format(choices=EDefaults.FORMATS.choices))
+                        'Choose from: {choices}'.format(choices=NgdConfig.get_choices('file_format')))
     parser.add_argument('-l', '--assembly-level', dest='assembly_level',
-                        choices=EDefaults.ASSEMBLY_LEVELS.choices,
-                        default=EDefaults.ASSEMBLY_LEVELS.default,
+                        choices=NgdConfig.get_choices('assembly_level'),
+                        default=NgdConfig.get_default('assembly_level'),
                         help='Assembly level of genomes to download (default: %(default)s)')
     parser.add_argument('-g', '--genus', dest='genus',
-                        default=EDefaults.GENUS.default,
+                        default=NgdConfig.get_default('genus'),
                         help='Only download sequences of the provided genus. '
                         'A comma-seperated list of genera is also possible. For example: '
                         '"Streptomyces coelicolor,Escherichia coli". (default: %(default)s)')
     parser.add_argument('-T', '--species-taxid', dest='species_taxid',
-                        default=EDefaults.SPECIES_TAXID.default,
+                        default=NgdConfig.get_default('species_taxid'),
                         help='Only download sequences of the provided species NCBI taxonomy ID. '
                              'A comma-separated list of species taxids is also possible. For example: "52342,12325". '
                              '(default: %(default)s)')
     parser.add_argument('-t', '--taxid', dest='taxid',
-                        default=EDefaults.TAXID.default,
+                        default=NgdConfig.get_default('taxid'),
                         help='Only download sequences of the provided NCBI taxonomy ID. '
                              'A comma-separated list of taxids is also possible. For example: "9606,9685". '
                              '(default: %(default)s)')
     parser.add_argument('-R', '--refseq-category', dest='refseq_category',
-                        choices=EDefaults.REFSEQ_CATEGORIES.choices,
-                        default=EDefaults.REFSEQ_CATEGORIES.default,
+                        choices=NgdConfig.get_choices('refseq_category'),
+                        default=NgdConfig.get_default('refseq_category'),
                         help='Only download sequences of the provided refseq category (default: %(default)s)')
     parser.add_argument('-o', '--output-folder', dest='output',
-                        default=EDefaults.OUTPUT.default,
+                        default=NgdConfig.get_default('output'),
                         help='Create output hierarchy in specified folder (default: %(default)s)')
     parser.add_argument('-H', '--human-readable', dest='human_readable', action='store_true',
                         help='Create links in human-readable hierarchy (might fail on Windows)')
     parser.add_argument('-u', '--uri', dest='uri',
-                        default=EDefaults.URI.default,
+                        default=NgdConfig.get_default('uri'),
                         help='NCBI base URI to use (default: %(default)s)')
     parser.add_argument('-p', '--parallel', dest='parallel', type=int, metavar="N",
-                        default=EDefaults.NB_PROCESSES.default,
+                        default=NgdConfig.get_default('parallel'),
                         help='Run %(metavar)s downloads in parallel (default: %(default)s)')
     parser.add_argument('-r', '--retries', dest='retries', type=int, metavar="N",
                         default=0,
@@ -104,34 +101,12 @@ def argument_parser(version=None):  # pragma: no cover
 
 
 def download(**kwargs):
-    """Download data from NCBI.
+    """Download data from NCBI using parameters passed as kwargs.
 
     Parameters
     ----------
-    section : str
-        NCBI directory
-    group : str
-        Taxonomic group
-    uri : str
-    output : str
-        directory in which to save the downloaded files
-    file_format : str
-        of the saved files
-    assembly_level : str
-        as defined by NCBI
-    refseq_category: str
-        as defined by NCBI
-    genus : str
-        "organism_name" in NCBI
-    species_taxid : str
-        as defined by NCBI
-    taxid : str
-        as defined by NCBI
-    human_readable : bool
-    parallel: int
-        to use multiprocessing for requests
-    table : str
-        file to store metadata
+    kwargs
+        dictionary of parameters to pass to NgdConfig
 
     Returns
     -------
@@ -139,33 +114,12 @@ def download(**kwargs):
         success code
 
     """
-    # Parse and pre-process keyword arguments
-    args = argparse.Namespace()
-
-    args.group = kwargs.pop('group', EDefaults.TAXONOMIC_GROUPS.default)
-    args.section = kwargs.pop('section', EDefaults.SECTIONS.default)
-    args.uri = kwargs.pop('uri', EDefaults.URI.default)
-    args.output = kwargs.pop('output', EDefaults.OUTPUT.default)
-    args.file_format = kwargs.pop('file_format', EDefaults.FORMATS.default)
-    args.assembly_level = kwargs.pop('assembly_level', EDefaults.ASSEMBLY_LEVELS.default)
-    args.refseq_category = kwargs.pop('refseq_category', EDefaults.REFSEQ_CATEGORIES.default)
-    args.genus = kwargs.pop('genus', EDefaults.GENUS.default)
-    args.species_taxid = kwargs.pop('species_taxid', EDefaults.SPECIES_TAXID.default)
-    args.taxid = kwargs.pop('taxid', EDefaults.TAXID.default)
-    args.human_readable = kwargs.pop('human_readable', False)
-    args.dry_run = kwargs.pop('dry_run', False)
-    args.use_cache = kwargs.pop('use_cache', False)
-    args.parallel = kwargs.pop('parallel', EDefaults.NB_PROCESSES.default)
-    args.metadata_table = kwargs.pop('metadata_table', EDefaults.TABLE.default)
-    assert len(kwargs) == 0, "Unrecognized option(s): {}".format(kwargs.keys())
-
-    return args_download(args)
+    config = NgdConfig.from_kwargs(**kwargs)
+    return config_download(config)
 
 
-# pylint and I disagree on code style here. Shut up, pylint.
-# pylint: disable=too-many-locals
 def args_download(args):
-    """Download data from NCBI using the argument parser object.
+    """Download data from NCBI using parameters passed as argparse.Namespace object.
 
     Parameters
     ----------
@@ -178,56 +132,37 @@ def args_download(args):
         success code
 
     """
-    # Parse and pre-process keyword arguments
+    config = NgdConfig.from_namespace(args)
+    return config_download(config)
 
-    assert args.section in EDefaults.SECTIONS.choices, "Unsupported section: {}".format(args.section)
 
-    groups = args.group.split(',')
+def config_download(config):
+    """Run the actual download from NCBI with parameters in a config object.
 
-    for group in groups:
-        assert group in EDefaults.TAXONOMIC_GROUPS.choices, "Unsupported group: {}".format(group)
-    if 'all' in groups:
-        groups = SUPPORTED_TAXONOMIC_GROUPS
+    Parameters
+    ----------
+        config: NgdConfig
+            A configuration object with the download settings
 
-    formats = args.file_format.split(',')
-    for format in formats:
-        assert format in EDefaults.FORMATS.choices, \
-            "Unsupported file format: {file_format}".format(file_format=format)
-    if 'all' in formats:
-        formats = EFormats.keys()
+    Returns
+    -------
+    int
+        success code
 
-    assert args.assembly_level in EDefaults.ASSEMBLY_LEVELS.choices, \
-        "Unsupported assembly level: {}".format(args.assembly_level)
-    assert args.refseq_category in EDefaults.REFSEQ_CATEGORIES.choices, \
-        "Unsupported refseq_category: {}".format(args.refseq_category)
-
-    if args.taxid:
-        taxid_list = args.taxid.split(',')
-    else:
-        taxid_list = []
-    if args.species_taxid:
-        species_taxid_list = args.species_taxid.split(',')
-    else:
-        species_taxid_list = []
-
-    if args.genus:
-        genus_list = args.genus.split(',')
-    else:
-        genus_list = []
-
-    # Actual logic
+    """
     try:
         download_jobs = []
-        for group in groups:
+        for group in config.group:
             download_jobs.extend(
-                _download(args.section, group, args.uri, args.output, formats, args.assembly_level, genus_list,
-                          species_taxid_list, taxid_list, args.human_readable, args.refseq_category, args.use_cache))
+                _download(config.section, group, config.uri, config.output, config.file_format, config.assembly_level,
+                          config.genus, config.species_taxid, config.taxid, config.human_readable,
+                          config.refseq_category, config.use_cache))
 
         if len(download_jobs) < 1:
             logging.error("No downloads matched your filter. Please check your options.")
             return 1
 
-        if args.dry_run:
+        if config.dry_run:
             print("Would download the following files:")
             for dl_job in download_jobs:
                 if dl_job.local_file:
@@ -235,12 +170,12 @@ def args_download(args):
 
             return 0
 
-        if args.parallel == 1:
+        if config.parallel == 1:
             for dl_job in download_jobs:
                 worker(dl_job)
         else:  # pragma: no cover
             # Testing multiprocessing code is annoying
-            pool = Pool(processes=args.parallel)
+            pool = Pool(processes=config.parallel)
             jobs = pool.map_async(worker, download_jobs)
             try:
                 # 0xFFFF is just "a really long time"
@@ -250,8 +185,8 @@ def args_download(args):
                 logging.error("Interrupted by user")
                 return 1
 
-        if args.metadata_table:
-            with open(args.metadata_table, 'wt') as handle:
+        if config.metadata_table:
+            with open(config.metadata_table, 'wt') as handle:
                 table = metadata.get()
                 table.write(handle)
 
@@ -260,7 +195,6 @@ def args_download(args):
         # Exit code 75 meas TEMPFAIL in C/C++, so let's stick with that for now.
         return 75
     return 0
-# pylint: enable=too-many-locals
 
 
 # pylint and I disagree on code style here. Shut up, pylint.
@@ -316,10 +250,10 @@ def _download(section, group, uri, output, file_formats, assembly_level, genera,
                           entry['taxid'], taxids)
             continue
         if assembly_level != 'all' \
-                and entry['assembly_level'] != EAssemblyLevels.get_content(assembly_level):
+                and entry['assembly_level'] != NgdConfig.get_assembly_level_string(assembly_level):
             logging.debug('Skipping entry with assembly level %r', entry['assembly_level'])
             continue
-        if refseq_category != 'all' and entry['refseq_category'] != ERefseqCategories.get_content(refseq_category):
+        if refseq_category != 'all' and entry['refseq_category'] != NgdConfig.get_refseq_category_string(refseq_category):
             logging.debug('Skipping entry with refseq_category %r, not %r', entry['refseq_category'], refseq_category)
             continue
         download_jobs.extend(
@@ -483,7 +417,7 @@ def parse_checksums(checksums_string):
 
 def has_file_changed(directory, checksums, filetype='genbank'):
     """Check if the checksum of a given file has changed."""
-    pattern = EFormats.get_content(filetype)
+    pattern = NgdConfig.get_fileending(filetype)
     filename, expected_checksum = get_name_and_checksum(checksums, pattern)
     full_filename = os.path.join(directory, filename)
     # if file doesn't exist, it has changed
@@ -500,7 +434,7 @@ def need_to_create_symlink(directory, checksums, filetype, symlink_path):
     if symlink_path is None:
         return False
 
-    pattern = EFormats.get_content(filetype)
+    pattern = NgdConfig.get_fileending(filetype)
     filename, _ = get_name_and_checksum(checksums, pattern)
     full_filename = os.path.join(directory, filename)
     symlink_name = os.path.join(symlink_path, filename)
@@ -543,7 +477,7 @@ def md5sum(filename):
 # pylint: disable=too-many-arguments
 def download_file_job(entry, directory, checksums, filetype='genbank', symlink_path=None):
     """Generate a DownloadJob that actually triggers a file download."""
-    pattern = EFormats.get_content(filetype)
+    pattern = NgdConfig.get_fileending(filetype)
     filename, expected_checksum = get_name_and_checksum(checksums, pattern)
     base_url = convert_ftp_url(entry['ftp_path'])
     full_url = '{}/{}'.format(base_url, filename)
@@ -562,7 +496,7 @@ def download_file_job(entry, directory, checksums, filetype='genbank', symlink_p
 
 def create_symlink_job(directory, checksums, filetype, symlink_path):
     """Create a symlink-creating DownloadJob for an already downloaded file."""
-    pattern = EFormats.get_content(filetype)
+    pattern = NgdConfig.get_fileending(filetype)
     filename, _ = get_name_and_checksum(checksums, pattern)
     local_file = os.path.join(directory, filename)
     full_symlink = os.path.join(symlink_path, filename)

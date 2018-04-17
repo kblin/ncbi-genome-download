@@ -1,134 +1,263 @@
-"""Configuration for the downloader"""
+"""Configuration for the downloader."""
 
-from enum import Enum, unique
+from collections import OrderedDict
 import os
 
 SUPPORTED_TAXONOMIC_GROUPS = ['archaea', 'bacteria', 'fungi', 'invertebrate', 'plant', 'protozoa',
                               'vertebrate_mammalian', 'vertebrate_other', 'viral']
 
 
-@unique
-class EMap(Enum):
-    """
-    Enumeration of (`key`, `content`) pairs. The name `content` is used, because `value` is
-     already an attribute of the Enum instances.
-     We use an enumeration to ensure the immutability of the elements.
-    """
+class NgdConfig(object):
+    """Configuration object for ncbi-genome-download."""
 
-    def __init__(self, key, content):
-        """
+    _FORMATS = OrderedDict([
+        ('genbank', '_genomic.gbff.gz'),
+        ('fasta', '_genomic.fna.gz'),
+        ('features', '_feature_table.txt.gz'),
+        ('gff', '_genomic.gff.gz'),
+        ('protein-fasta', '_protein.faa.gz'),
+        ('genpept', '_protein.gpff.gz'),
+        ('wgs', '_wgsmaster.gbff.gz'),
+        ('cds-fasta', '_cds_from_genomic.fna.gz'),
+        ('rna-fasta', '_rna_from_genomic.fna.gz'),
+        ('assembly-report', '_assembly_report.txt'),
+        ('assembly-stats', '_assembly_stats.txt'),
+    ])
 
-        Parameters
-        ----------
-        key : str
-        content : object
-        """
-        self.key = key
-        self.content = content
+    _LEVELS = OrderedDict([
+        ('complete', 'Complete Genome'),
+        ('chromosome', 'Chromosome'),
+        ('scaffold', 'Scaffold'),
+        ('contig', 'Contig'),
+    ])
 
-    @classmethod
-    def keys(cls):
-        """
-        Simulate dict.keys() on this enumeration map
+    _REFSEQ_CATEGORIES = OrderedDict([
+        ('reference', 'reference genome'),
+        ('representative', 'representative genome'),
+    ])
 
-        Returns
-        -------
-        list
-            containing all the keys of this map enumeration
-        """
-        if not hasattr(cls, '_keys'):
-            keys = []
-            for _, member in cls.__members__.items():
-                keys.append(member.key)
-            cls._keys = keys
-        return cls._keys
+    _DEFAULTS = {
+        'group': ['all'] + SUPPORTED_TAXONOMIC_GROUPS,
+        'section': ['refseq', 'genbank'],
+        'file_format': list(_FORMATS) + ['all'],
+        'assembly_level': ['all'] + list(_LEVELS),
+        'refseq_category': ['all'] + list(_REFSEQ_CATEGORIES),
+        'genus': [],
+        'species_taxid': [],
+        'taxid': [],
+        'output': os.getcwd(),
+        'uri': 'https://ftp.ncbi.nih.gov/genomes',
+        'parallel': 1,
+        'human_readable': False,
+        'metadata_table': None,
+        'dry_run': False,
+        'use_cache': False,
+    }
 
-    @classmethod
-    def items(cls):
-        """
-        Simulate dict.items() on this enumeration map
+    _LIST_TYPES = set([
+        'group',
+        'file_format',
+        'genus',
+        'species_taxid',
+        'taxid',
+    ])
 
-        Returns
-        -------
-        list of tuple
-        """
-        if not hasattr(cls, '_items'):
-            items = []
-            for _, member in cls.__members__.items():
-                items.append((member.key, member.content))
-            cls._items = items
-        return cls._items
+    __slots__ = (
+        '_group',
+        '_section',
+        '_file_format',
+        '_assembly_level',
+        '_refseq_category',
+        '_genus',
+        '_species_taxid',
+        '_taxid',
+        'output',
+        'uri',
+        'parallel',
+        'human_readable',
+        'metadata_table',
+        'dry_run',
+        'use_cache',
+    )
 
-    @classmethod
-    def get_content(cls, key):
-        """
-        Shortcut to get the content value for the enumeration map item with the given `key`.
-
-        Parameters
-        ----------
-        key : str
-
-        Returns
-        -------
-        type(content)
-
-        """
-        if not hasattr(cls, '_as_dict'):
-            as_dict = {}
-            for emap in list(cls):
-                as_dict.update({emap.key: emap.content})
-            cls._as_dict = as_dict
-        return cls._as_dict[key]
-
-
-class EFormats(EMap):
-    # only needed in Python 2
-    __order__ = 'GENBANK FASTA FEATURES GFF PROTFASTA GENREPT WGS CDSFASTA RNAFASTA ASSEMBLYREPORT ASSEMBLYSTATS'
-    GENBANK = ('genbank', '_genomic.gbff.gz')
-    FASTA = ('fasta', '_genomic.fna.gz')
-    FEATURES = ('features', '_feature_table.txt.gz')
-    GFF = ('gff', '_genomic.gff.gz')
-    PROTFASTA = ('protein-fasta', '_protein.faa.gz')
-    GENREPT = ('genpept', '_protein.gpff.gz')
-    WGS = ('wgs', '_wgsmaster.gbff.gz')
-    CDSFASTA = ('cds-fasta', '_cds_from_genomic.fna.gz')
-    RNAFASTA = ('rna-fasta', '_rna_from_genomic.fna.gz')
-    ASSEMBLYREPORT = ('assembly-report', '_assembly_report.txt')
-    ASSEMBLYSTATS = ('assembly-stats', '_assembly_stats.txt')
-
-
-class EAssemblyLevels(EMap):
-    __order__ = 'COMPLETE CHROMOSOME SCAFFOLD CONTIG'  # only needed in Python 2
-    COMPLETE = ('complete', 'Complete Genome')
-    CHROMOSOME = ('chromosome', 'Chromosome')
-    SCAFFOLD = ('scaffold', 'Scaffold')
-    CONTIG = ('contig', 'Contig')
-
-
-class ERefseqCategories(EMap):
-    __order__ = 'REFERENCE REPRESENTATIVE'
-    REFERENCE = ('reference', 'reference genome')
-    REPRESENTATIVE = ('representative', 'representative genome')
-
-
-class EDefaults(Enum):
-    TAXONOMIC_GROUPS = ['all'] + SUPPORTED_TAXONOMIC_GROUPS
-    SECTIONS = ['refseq', 'genbank']
-    FORMATS = list(EFormats.keys()) + ['all']
-    ASSEMBLY_LEVELS = ['all'] + list(EAssemblyLevels.keys())
-    REFSEQ_CATEGORIES = ['all'] + list(ERefseqCategories.keys())
-    GENUS = None
-    SPECIES_TAXID = None
-    TAXID = None
-    OUTPUT = os.getcwd()
-    URI = 'https://ftp.ncbi.nih.gov/genomes'
-    NB_PROCESSES = 1
-    TABLE = None
+    def __init__(self):
+        """Set up a config object with all default values."""
+        for slot in self.__slots__:
+            if slot.startswith('_'):
+                slot = slot[1:]
+            setattr(self, slot, self.get_default(slot))
 
     @property
-    def default(self):
-        return self.value[0] if isinstance(self.value, list) else self.value
+    def section(self):
+        """Access the section."""
+        return self._section
+
+    @section.setter
+    def section(self, value):
+        if value not in self._DEFAULTS['section']:
+            raise ValueError("Unsupported section {}".format(value))
+        self._section = value
+
+    # TODO: Rename this to 'groups' once we do the next API bump
+    @property
+    def group(self):
+        """Access the taxonomic groups."""
+        return self._group
+
+    @group.setter
+    def group(self, value):
+        if isinstance(value, list):
+            groups = value
+        else:
+            groups = value.split(',')
+
+        available_groups = set(self._DEFAULTS['group'])
+        for group in groups:
+            if group not in available_groups:
+                raise ValueError("Unsupported group: {}".format(group))
+
+        if 'all' in groups:
+            groups = SUPPORTED_TAXONOMIC_GROUPS
+
+        self._group = groups
+
+    # TODO: Rename this to 'file_formats' once we do the next API bump
+    @property
+    def file_format(self):
+        """Get the file format to downoad."""
+        return self._file_format
+
+    @file_format.setter
+    def file_format(self, value):
+        if isinstance(value, list):
+            formats = value
+        else:
+            formats = value.split(',')
+
+        available_formats = set(self._DEFAULTS['file_format'])
+        for file_format in formats:
+            if file_format not in available_formats:
+                raise ValueError("Unsupported file format: {}".format(file_format))
+        if 'all' in formats:
+            formats = list(self._FORMATS)
+
+        self._file_format = formats
 
     @property
-    def choices(self):
-        return self.value if isinstance(self.value, list) else None
+    def assembly_level(self):
+        """Get the assembly level."""
+        return self._assembly_level
+
+    @assembly_level.setter
+    def assembly_level(self, value):
+        if value not in self._DEFAULTS['assembly_level']:
+            raise ValueError("Unsupported assembly level: {}".format(value))
+        self._assembly_level = value
+
+    @property
+    def refseq_category(self):
+        """Get the refseq_category."""
+        return self._refseq_category
+
+    @refseq_category.setter
+    def refseq_category(self, value):
+        if value not in self._DEFAULTS['refseq_category']:
+            raise ValueError("Unsupported refseq_category: {}".format(value))
+        self._refseq_category = value
+
+    # TODO: Rename to 'taxids' once we do the next API bump
+    @property
+    def taxid(self):
+        """Get the taxid."""
+        return self._taxid
+
+    @taxid.setter
+    def taxid(self, value):
+        if isinstance(value, list):
+            self._taxid = value
+        else:
+            self._taxid = value.split(',')
+
+    # TODO: Rename to 'species_taxids' once we do the next API bump
+    @property
+    def species_taxid(self):
+        """Get the species_taxids."""
+        return self._species_taxid
+
+    @species_taxid.setter
+    def species_taxid(self, value):
+        if isinstance(value, list):
+            self._species_taxid = value
+        else:
+            self._species_taxid = value.split(',')
+
+    # TODO: Rename to 'genera' once we do the next API bump
+    @property
+    def genus(self):
+        """Get the genera."""
+        return self._genus
+
+    @genus.setter
+    def genus(self, value):
+        if isinstance(value, list):
+            self._genus = value
+        else:
+            self._genus = value.split(',')
+
+    @classmethod
+    def from_kwargs(cls, **kwargs):
+        """Initialise configuration from kwargs."""
+        config = cls()
+        for slot in cls.__slots__:
+
+            if slot.startswith('_'):
+                slot = slot[1:]
+            setattr(config, slot, kwargs.pop(slot, cls.get_default(slot)))
+
+        if kwargs:
+            raise ValueError("Unrecognized option(s): {}".format(kwargs.keys()))
+        return config
+
+    @classmethod
+    def from_namespace(cls, namespace):
+        """Initialise from argparser Namespace object."""
+        config = cls()
+        for slot in cls.__slots__:
+            if slot.startswith('_'):
+                slot = slot[1:]
+            if not hasattr(namespace, slot):
+                continue
+            setattr(config, slot, getattr(namespace, slot))
+
+        return config
+
+    @classmethod
+    def get_default(cls, category):
+        """Get the default value of a given category."""
+        value = cls._DEFAULTS[category]
+        if not value or not isinstance(value, list):
+            return value
+        return value[0]
+
+    @classmethod
+    def get_choices(cls, category):
+        """Get all available options for a category."""
+        value = cls._DEFAULTS[category]
+        if not isinstance(value, list):
+            raise ValueError("{} does not offer choices".format(category))
+        return value
+
+    @classmethod
+    def get_fileending(cls, file_format):
+        """Get the fileending for a given file format."""
+        return cls._FORMATS[file_format]
+
+    @classmethod
+    def get_assembly_level_string(cls, assembly_level):
+        """Get the NCBI string for an assembly level."""
+        return cls._LEVELS[assembly_level]
+
+    @classmethod
+    def get_refseq_category_string(cls, category):
+        """Get the NCBI string for a refseq category."""
+        return cls._REFSEQ_CATEGORIES[category]
