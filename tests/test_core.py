@@ -95,7 +95,6 @@ def test_download_all_formats(monkeypatch, mocker, req):
     assert core.create_downloadjob.call_count == 1
     # Many nested tuples in call_args_list, no kidding.
     assert core.create_downloadjob.call_args_list[0][0][0]['assembly_level'] == 'Complete Genome'
-    print(core.create_downloadjob.call_args_list)
     assert core.create_downloadjob.call_args_list[0][0][4] == list(NgdConfig._FORMATS)
 
 def test_download_connection_err(monkeypatch, mocker):
