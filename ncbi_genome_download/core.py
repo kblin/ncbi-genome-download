@@ -1,6 +1,7 @@
 """Core functionality of ncbi-genome-download."""
 from appdirs import user_cache_dir
 import argparse
+import codecs
 from datetime import datetime, timedelta
 import errno
 import hashlib
@@ -288,7 +289,7 @@ def get_summary(section, domain, uri, use_cache):
     if use_cache and os.path.exists(full_cachefile) and \
        datetime.utcnow() - datetime.fromtimestamp(os.path.getmtime(full_cachefile)) < timedelta(days=1):
         logging.info('Using cached summary.')
-        with open(full_cachefile, 'r') as fh:
+        with codecs.open(full_cachefile, 'r', encoding='utf-8') as fh:
             return StringIO(fh.read())
 
     logging.debug('Downloading summary for %r/%r uri: %r', section, domain, uri)
@@ -297,8 +298,14 @@ def get_summary(section, domain, uri, use_cache):
     req = requests.get(url)
 
     if use_cache:
-        os.makedirs(CACHE_DIR, exist_ok=True)
-        with open(full_cachefile, 'w') as fh:
+        try:
+            os.makedirs(CACHE_DIR)
+        except OSError as err:
+            # Errno 17 is "file exists", ignore that, otherwise re-raise
+            if err.errno != 17:
+                raise
+
+        with codecs.open(full_cachefile, 'w', encoding='utf-8') as fh:
             fh.write(req.text)
 
     return StringIO(req.text)
