@@ -140,8 +140,10 @@ There is a "dry-run" option to show which accessions would be downloaded, given 
 ncbi-genome-download --dry-run bacteria
 ```
 
-Note that this still needs to fetch the assembly summary and checksum files, so it will still
-run quite a while.
+By default, ncbi-genome-download caches the assembly summary files for the respective taxonomic
+groups for one day. You can skip using the cache file by using the `--no-cache` option.
+The output of `--help` also shows the cache directory, should you want to remove any of the cached
+files.
 
 To get an overview of all options, run
 ```

@@ -258,9 +258,23 @@ def test_download_refseq_category(monkeypatch, mocker, req):
                'organism_name'] == 'Streptomyces coelicolor A3(2)'
 
 
-def test_get_summary(req):
+def test_get_summary(monkeypatch, req, tmpdir):
+    """Test getting the assembly summary file."""
+    cache_dir = tmpdir.mkdir('cache')
+    monkeypatch.setattr(core, 'CACHE_DIR', str(cache_dir))
+    cache_file = cache_dir.join('refseq_bacteria_assembly_summary.txt')
     req.get('https://ftp.ncbi.nih.gov/genomes/refseq/bacteria/assembly_summary.txt', text='test')
-    ret = core.get_summary('refseq', 'bacteria', dflt.URI.default)
+
+    ret = core.get_summary('refseq', 'bacteria', dflt.URI.default, False)
+    assert ret.read() == 'test'
+    assert not cache_file.check()
+
+    ret = core.get_summary('refseq', 'bacteria', dflt.URI.default, True)
+    assert ret.read() == 'test'
+    assert cache_file.check()
+
+    req.get('https://ftp.ncbi.nih.gov/genomes/refseq/bacteria/assembly_summary.txt', text='never read')
+    ret = core.get_summary('refseq', 'bacteria', dflt.URI.default, True)
     assert ret.read() == 'test'
 
 

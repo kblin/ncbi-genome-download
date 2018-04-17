@@ -1,5 +1,7 @@
 """Core functionality of ncbi-genome-download."""
+from appdirs import user_cache_dir
 import argparse
+from datetime import datetime, timedelta
 import errno
 import hashlib
 import logging
@@ -25,6 +27,10 @@ from .summary import SummaryReader
 if sys.version_info < (2, 7, 9):  # pragma: no cover
     from requests.packages.urllib3.contrib import pyopenssl
     pyopenssl.inject_into_urllib3()
+
+
+# Get the user's cache dir in a system-independent manner
+CACHE_DIR = user_cache_dir(appname="ncbi-genome-download", appauthor="kblin")
 
 
 def argument_parser(version=None):  # pragma: no cover
@@ -86,6 +92,8 @@ def argument_parser(version=None):  # pragma: no cover
                         help='Save tab-delimited file with genome metadata')
     parser.add_argument('-n', '--dry-run', dest='dry_run', action='store_true',
                         help="Only check which files to download, don't download genome files.")
+    parser.add_argument('-N', '--no-cache', dest='use_cache', action='store_false',
+                        help="Don't cache the assembly summary file in %s." % CACHE_DIR)
     parser.add_argument('-v', '--verbose', action='store_true',
                         help='increase output verbosity')
     parser.add_argument('-d', '--debug', action='store_true',
@@ -146,6 +154,7 @@ def download(**kwargs):
     args.taxid = kwargs.pop('taxid', EDefaults.TAXID.default)
     args.human_readable = kwargs.pop('human_readable', False)
     args.dry_run = kwargs.pop('dry_run', False)
+    args.use_cache = kwargs.pop('use_cache', False)
     args.parallel = kwargs.pop('parallel', EDefaults.NB_PROCESSES.default)
     args.metadata_table = kwargs.pop('metadata_table', EDefaults.TABLE.default)
     assert len(kwargs) == 0, "Unrecognized option(s): {}".format(kwargs.keys())
@@ -212,7 +221,7 @@ def args_download(args):
         for group in groups:
             download_jobs.extend(
                 _download(args.section, group, args.uri, args.output, formats, args.assembly_level, genus_list,
-                          species_taxid_list, taxid_list, args.human_readable, args.refseq_category))
+                          species_taxid_list, taxid_list, args.human_readable, args.refseq_category, args.use_cache))
 
         if len(download_jobs) < 1:
             logging.error("No downloads matched your filter. Please check your options.")
@@ -257,7 +266,7 @@ def args_download(args):
 # pylint and I disagree on code style here. Shut up, pylint.
 # pylint: disable=too-many-arguments,too-many-locals
 def _download(section, group, uri, output, file_formats, assembly_level, genera, species_taxids,
-              taxids, human_readable, refseq_category):
+              taxids, human_readable, refseq_category, use_cache):
     """Generate download jobs, internal version.
 
     Sole purpose is to ease the tests, no argument checking is done here: they must be processed
@@ -283,7 +292,7 @@ def _download(section, group, uri, output, file_formats, assembly_level, genera,
     list of DownloadJob
 
     """
-    summary_file = get_summary(section, group, uri)
+    summary_file = get_summary(section, group, uri, use_cache)
     entries = parse_summary(summary_file)
     download_jobs = []
 
@@ -336,12 +345,28 @@ def worker(job):
     return ret
 
 
-def get_summary(section, domain, uri):
+def get_summary(section, domain, uri, use_cache):
     """Get the assembly_summary.txt file from NCBI and return a StringIO object for it."""
+    logging.debug('Checking for a cached summary file')
+
+    cachefile = "{section}_{domain}_assembly_summary.txt".format(section=section, domain=domain)
+    full_cachefile = os.path.join(CACHE_DIR, cachefile)
+    if use_cache and os.path.exists(full_cachefile) and \
+       datetime.utcnow() - datetime.fromtimestamp(os.path.getmtime(full_cachefile)) < timedelta(days=1):
+        logging.info('Using cached summary.')
+        with open(full_cachefile, 'r') as fh:
+            return StringIO(fh.read())
+
     logging.debug('Downloading summary for %r/%r uri: %r', section, domain, uri)
     url = '{uri}/{section}/{domain}/assembly_summary.txt'.format(
         section=section, domain=domain, uri=uri)
     req = requests.get(url)
+
+    if use_cache:
+        os.makedirs(CACHE_DIR, exist_ok=True)
+        with open(full_cachefile, 'w') as fh:
+            fh.write(req.text)
+
     return StringIO(req.text)
 
 
