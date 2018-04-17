@@ -10,7 +10,7 @@ import requests_mock
 from requests.exceptions import ConnectionError
 
 from ncbi_genome_download import core
-from ncbi_genome_download import NgdConfig
+from ncbi_genome_download import NgdConfig, SUPPORTED_TAXONOMIC_GROUPS
 
 
 def _get_file(fname):
@@ -32,8 +32,8 @@ def test_download_defaults(monkeypatch, mocker):
     monkeypatch.setattr(core, '_download', _download_mock)
     monkeypatch.setattr(core, 'worker', worker_mock)
     assert core.download() == 0
-    assert _download_mock.call_count == len(core.SUPPORTED_TAXONOMIC_GROUPS)
-    assert worker_mock.call_count == len(core.SUPPORTED_TAXONOMIC_GROUPS)
+    assert _download_mock.call_count == len(SUPPORTED_TAXONOMIC_GROUPS)
+    assert worker_mock.call_count == len(SUPPORTED_TAXONOMIC_GROUPS)
 
 
 def test_args_download_defaults(monkeypatch, mocker):
@@ -43,8 +43,8 @@ def test_args_download_defaults(monkeypatch, mocker):
     monkeypatch.setattr(core, '_download', _download_mock)
     monkeypatch.setattr(core, 'worker', worker_mock)
     assert core.args_download(Namespace()) == 0
-    assert _download_mock.call_count == len(core.SUPPORTED_TAXONOMIC_GROUPS)
-    assert worker_mock.call_count == len(core.SUPPORTED_TAXONOMIC_GROUPS)
+    assert _download_mock.call_count == len(SUPPORTED_TAXONOMIC_GROUPS)
+    assert worker_mock.call_count == len(SUPPORTED_TAXONOMIC_GROUPS)
 
 
 def test_download_defaults_nomatch(monkeypatch, mocker):
@@ -62,7 +62,7 @@ def test_download_dry_run(monkeypatch, mocker):
     monkeypatch.setattr(core, '_download', _download_mock)
     monkeypatch.setattr(core, 'worker', worker_mock)
     assert core.download(dry_run=True) == 0
-    assert _download_mock.call_count == len(core.SUPPORTED_TAXONOMIC_GROUPS)
+    assert _download_mock.call_count == len(SUPPORTED_TAXONOMIC_GROUPS)
     assert worker_mock.call_count == 0
 
 
@@ -80,7 +80,7 @@ def test_download_all(monkeypatch, mocker):
     _download_mock = mocker.MagicMock()
     monkeypatch.setattr(core, '_download', _download_mock)
     core.download(group='all', output='/tmp/fake')
-    assert _download_mock.call_count == len(core.SUPPORTED_TAXONOMIC_GROUPS)
+    assert _download_mock.call_count == len(SUPPORTED_TAXONOMIC_GROUPS)
 
 def test_download_all_formats(monkeypatch, mocker, req):
     summary_contents = open(_get_file('assembly_status.txt'), 'r').read()

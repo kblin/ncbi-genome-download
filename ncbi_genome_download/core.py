@@ -14,7 +14,6 @@ from multiprocessing import Pool
 import requests
 
 from .config import (
-    SUPPORTED_TAXONOMIC_GROUPS,
     NgdConfig,
 )
 from .jobs import DownloadJob
