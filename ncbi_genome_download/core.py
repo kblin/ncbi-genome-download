@@ -232,12 +232,22 @@ def _download(section, group, uri, output, file_formats, assembly_level, genera,
     entries = parse_summary(summary_file)
     download_jobs = []
 
+    for entry in filter_entries(entries, genera, species_taxids, taxids, assembly_level, refseq_category):
+        download_jobs.extend(
+            create_downloadjob(entry, section, group, output, file_formats, human_readable))
+    return download_jobs
+# pylint: enable=too-many-arguments,too-many-locals
+
+
+def filter_entries(entries, genera, species_taxids, taxids, assembly_level, refseq_category):
+    """Narrrow down which entries to download."""
     def in_genus_list(species, genus_list):
         for genus in genus_list:
             if species.startswith(genus.capitalize()):
                 return True
         return False
 
+    new_entries = []
     for entry in entries:
         if genera and not in_genus_list(entry['organism_name'], genera):
             logging.debug('Organism name %r does not start with any in %r, skipping',
@@ -255,13 +265,13 @@ def _download(section, group, uri, output, file_formats, assembly_level, genera,
                 and entry['assembly_level'] != NgdConfig.get_assembly_level_string(assembly_level):
             logging.debug('Skipping entry with assembly level %r', entry['assembly_level'])
             continue
-        if refseq_category != 'all' and entry['refseq_category'] != NgdConfig.get_refseq_category_string(refseq_category):
+        if refseq_category != 'all' \
+                and entry['refseq_category'] != NgdConfig.get_refseq_category_string(refseq_category):
             logging.debug('Skipping entry with refseq_category %r, not %r', entry['refseq_category'], refseq_category)
             continue
-        download_jobs.extend(
-            create_downloadjob(entry, section, group, output, file_formats, human_readable))
-    return download_jobs
-# pylint: enable=too-many-arguments,too-many-locals
+        new_entries.append(entry)
+
+    return new_entries
 
 
 def worker(job):
