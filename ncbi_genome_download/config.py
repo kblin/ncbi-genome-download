@@ -176,7 +176,7 @@ class NgdConfig(object):
 
     @taxid.setter
     def taxid(self, value):
-        self._taxid = _create_list(value)
+        self._taxid = _create_list(value, allow_filename=True)
 
     # TODO: Rename to 'species_taxids' once we do the next API bump
     @property
@@ -186,7 +186,7 @@ class NgdConfig(object):
 
     @species_taxid.setter
     def species_taxid(self, value):
-        self._species_taxid = _create_list(value)
+        self._species_taxid = _create_list(value, allow_filename=True)
 
     # TODO: Rename to 'genera' once we do the next API bump
     @property
@@ -196,7 +196,7 @@ class NgdConfig(object):
 
     @genus.setter
     def genus(self, value):
-        self._genus = _create_list(value)
+        self._genus = _create_list(value, allow_filename=True)
 
     @classmethod
     def from_kwargs(cls, **kwargs):

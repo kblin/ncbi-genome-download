@@ -103,6 +103,18 @@ Multiple genera is also possible:
 ncbi-genome-download --genus "Streptomyces coelicolor,Escherichia coli" bacteria
 ```
 
+You can also put genus names into a file, one organism per line, e.g.:
+```
+Streptomyces
+Amycolatopsis
+```
+
+Then, pass the path to that file (e.g. `my_genera.txt`) to the `--genus` option, like so:
+```
+ncbi-genome-download --genus my_genera.txt bacteria
+```
+**Note**: The above command will download all _Streptomyces_ and _Amycolatopsis_ genomes from RefSeq.
+
 To download bacterial RefSeq genomes based on their NCBI species taxonomy ID, run:
 ```
 ncbi-genome-download --species-taxid 562 bacteria
@@ -120,6 +132,19 @@ It is also possible to download multiple species taxids or taxids by supplying t
 ncbi-genome-download --taxid 9606,9685 --assembly-level chromosome vertebrate_mammalian
 ```
 **Note**: The above command will download the reference genomes for cat and human.
+
+In addition, you can put multiple species taxids or taxids into a file, one per line
+and pass that filename to the `--species-taxid` or `--taxid` parameters, respectively.
+
+Assuming you had a file `my_taxids.txt` with the following contents:
+```
+9606
+9685
+```
+You could download the reference genomes for cat and human like this:
+```
+ncbi-genome-download --taxid my_taxids.txt --assembly-level chromosome vertebrate_mammalian
+```
 
 It is possible to also create a human-readable directory structure in parallel to mirroring
 the layout used by NCBI:
