@@ -82,6 +82,7 @@ def test_download_all(monkeypatch, mocker):
     core.download(group='all', output='/tmp/fake')
     assert _download_mock.call_count == len(SUPPORTED_TAXONOMIC_GROUPS)
 
+
 def test_download_all_formats(monkeypatch, mocker, req):
     summary_contents = open(_get_file('assembly_status.txt'), 'r').read()
     req.get('https://ftp.ncbi.nih.gov/genomes/refseq/bacteria/assembly_summary.txt',
@@ -290,6 +291,18 @@ def test_get_summary(monkeypatch, req, tmpdir):
     req.get('https://ftp.ncbi.nih.gov/genomes/refseq/bacteria/assembly_summary.txt', text='never read')
     ret = core.get_summary('refseq', 'bacteria', NgdConfig.get_default('uri'), True)
     assert ret.read() == 'test'
+
+
+def test_get_summary_error_handling(monkeypatch, mocker, req, tmpdir):
+    """Test get_summary error handling."""
+    cache_dir = tmpdir.join('cache')
+    monkeypatch.setattr(core, 'CACHE_DIR', str(cache_dir))
+    req.get('https://ftp.ncbi.nih.gov/genomes/refseq/bacteria/assembly_summary.txt', text='test')
+
+    fake_makedirs = mocker.MagicMock(side_effect=OSError(13, "Permission denied"))
+    monkeypatch.setattr(os, 'makedirs', fake_makedirs)
+    with pytest.raises(OSError):
+        core.get_summary('refseq', 'bacteria', NgdConfig.get_default('uri'), True)
 
 
 def test_parse_summary():
