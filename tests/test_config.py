@@ -102,7 +102,8 @@ def test_get_choices():
     with pytest.raises(ValueError):
         NgdConfig.get_choices('uri')
 
-def test_create_list():
+
+def test_create_list(tmpdir):
     """Test creating lists from different inputs works as expected."""
     expected = ["foo", "bar", "baz"]
 
@@ -110,6 +111,11 @@ def test_create_list():
     assert ret == expected
 
     ret = _create_list("foo,bar,baz")
+    assert ret == expected
+
+    listfile = tmpdir.join('listfile.txt')
+    listfile.write("foo\nbar\nbaz")
+    ret = _create_list(str(listfile), allow_filename=True)
     assert ret == expected
 
     with pytest.raises(ValueError):

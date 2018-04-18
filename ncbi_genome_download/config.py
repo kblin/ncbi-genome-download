@@ -1,5 +1,6 @@
 """Configuration for the downloader."""
 
+import codecs
 from collections import OrderedDict
 import os
 import sys
@@ -256,7 +257,7 @@ class NgdConfig(object):
         return cls._REFSEQ_CATEGORIES[category]
 
 
-def _create_list(value):
+def _create_list(value, allow_filename=False):
     """Create a list from the input value.
 
     If the input is a list already, return it.
@@ -266,6 +267,9 @@ def _create_list(value):
     if isinstance(value, list):
         return value
     elif isinstance(value, string_type):
+        if allow_filename and os.path.isfile(value):
+            with codecs.open(value, 'r', encoding="utf-8") as handle:
+                return handle.read().splitlines()
         return value.split(',')
     else:
         raise ValueError("Can't create list for input {}".format(value))
