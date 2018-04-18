@@ -2,9 +2,17 @@
 
 from collections import OrderedDict
 import os
+import sys
 
 SUPPORTED_TAXONOMIC_GROUPS = ['archaea', 'bacteria', 'fungi', 'invertebrate', 'plant', 'protozoa',
                               'vertebrate_mammalian', 'vertebrate_other', 'viral']
+
+
+# TODO: Remove this once we drop py2 support
+if sys.version_info[0] == 2:  # pragma: no cover
+    string_type = basestring
+else:
+    string_type = str
 
 
 class NgdConfig(object):
@@ -106,10 +114,7 @@ class NgdConfig(object):
 
     @group.setter
     def group(self, value):
-        if isinstance(value, list):
-            groups = value
-        else:
-            groups = value.split(',')
+        groups = _create_list(value)
 
         available_groups = set(self._DEFAULTS['group'])
         for group in groups:
@@ -129,10 +134,7 @@ class NgdConfig(object):
 
     @file_format.setter
     def file_format(self, value):
-        if isinstance(value, list):
-            formats = value
-        else:
-            formats = value.split(',')
+        formats = _create_list(value)
 
         available_formats = set(self._DEFAULTS['file_format'])
         for file_format in formats:
@@ -173,10 +175,7 @@ class NgdConfig(object):
 
     @taxid.setter
     def taxid(self, value):
-        if isinstance(value, list):
-            self._taxid = value
-        else:
-            self._taxid = value.split(',')
+        self._taxid = _create_list(value)
 
     # TODO: Rename to 'species_taxids' once we do the next API bump
     @property
@@ -186,10 +185,7 @@ class NgdConfig(object):
 
     @species_taxid.setter
     def species_taxid(self, value):
-        if isinstance(value, list):
-            self._species_taxid = value
-        else:
-            self._species_taxid = value.split(',')
+        self._species_taxid = _create_list(value)
 
     # TODO: Rename to 'genera' once we do the next API bump
     @property
@@ -199,10 +195,7 @@ class NgdConfig(object):
 
     @genus.setter
     def genus(self, value):
-        if isinstance(value, list):
-            self._genus = value
-        else:
-            self._genus = value.split(',')
+        self._genus = _create_list(value)
 
     @classmethod
     def from_kwargs(cls, **kwargs):
@@ -261,3 +254,18 @@ class NgdConfig(object):
     def get_refseq_category_string(cls, category):
         """Get the NCBI string for a refseq category."""
         return cls._REFSEQ_CATEGORIES[category]
+
+
+def _create_list(value):
+    """Create a list from the input value.
+
+    If the input is a list already, return it.
+    If the input is a comma-separated string, split it.
+
+    """
+    if isinstance(value, list):
+        return value
+    elif isinstance(value, string_type):
+        return value.split(',')
+    else:
+        raise ValueError("Can't create list for input {}".format(value))

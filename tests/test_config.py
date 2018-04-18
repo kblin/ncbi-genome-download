@@ -3,7 +3,7 @@
 from argparse import Namespace
 import pytest
 
-from ncbi_genome_download.config import NgdConfig, SUPPORTED_TAXONOMIC_GROUPS
+from ncbi_genome_download.config import NgdConfig, SUPPORTED_TAXONOMIC_GROUPS, _create_list
 
 
 def test_init():
@@ -101,3 +101,16 @@ def test_get_choices():
 
     with pytest.raises(ValueError):
         NgdConfig.get_choices('uri')
+
+def test_create_list():
+    """Test creating lists from different inputs works as expected."""
+    expected = ["foo", "bar", "baz"]
+
+    ret = _create_list(["foo", "bar", "baz"])
+    assert ret == expected
+
+    ret = _create_list("foo,bar,baz")
+    assert ret == expected
+
+    with pytest.raises(ValueError):
+        _create_list(123)
