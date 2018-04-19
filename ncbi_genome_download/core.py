@@ -153,12 +153,7 @@ def config_download(config):
 
     """
     try:
-        download_jobs = []
-        for group in config.group:
-            download_jobs.extend(
-                _download(config.section, group, config.uri, config.output, config.file_format, config.assembly_level,
-                          config.genus, config.species_taxid, config.taxid, config.human_readable,
-                          config.refseq_category, config.use_cache))
+        download_jobs = _download(config)
 
         if len(download_jobs) < 1:
             logging.error("No downloads matched your filter. Please check your options.")
@@ -199,47 +194,33 @@ def config_download(config):
     return 0
 
 
-# pylint and I disagree on code style here. Shut up, pylint.
-# pylint: disable=too-many-arguments,too-many-locals
-def _download(section, group, uri, output, file_formats, assembly_level, genera, species_taxids,
-              taxids, human_readable, refseq_category, use_cache):
+def _download(config):
     """Generate download jobs, internal version.
-
-    Sole purpose is to ease the tests, no argument checking is done here: they must be processed
-    previously.
-    You *SHALL NOT* call this directly, but always call download()!
 
     Parameters
     ----------
-    section
-    group
-    uri
-    output
-    file_formats
-    assembly_level
-    genus
-    species_taxids
-    taxids
-    human_readable
-    refseq_category
+    config: NgdConfig
+        Runtime configuration object
 
     Returns
     -------
     list of DownloadJob
 
     """
-    summary_file = get_summary(section, group, uri, use_cache)
-    entries = parse_summary(summary_file)
     download_jobs = []
 
-    for entry in filter_entries(entries, genera, species_taxids, taxids, assembly_level, refseq_category):
-        download_jobs.extend(
-            create_downloadjob(entry, section, group, output, file_formats, human_readable))
+    for group in config.group:
+        summary_file = get_summary(config.section, group, config.uri, config.use_cache)
+        entries = parse_summary(summary_file)
+
+        for entry in filter_entries(entries, config):
+            download_jobs.extend(
+                create_downloadjob(entry, config.section, group, config.output, config.file_format,
+                                   config.human_readable))
     return download_jobs
-# pylint: enable=too-many-arguments,too-many-locals
 
 
-def filter_entries(entries, genera, species_taxids, taxids, assembly_level, refseq_category):
+def filter_entries(entries, config):
     """Narrrow down which entries to download."""
     def in_genus_list(species, genus_list):
         for genus in genus_list:
@@ -249,25 +230,26 @@ def filter_entries(entries, genera, species_taxids, taxids, assembly_level, refs
 
     new_entries = []
     for entry in entries:
-        if genera and not in_genus_list(entry['organism_name'], genera):
+        if config.genus and not in_genus_list(entry['organism_name'], config.genus):
             logging.debug('Organism name %r does not start with any in %r, skipping',
-                          entry['organism_name'], genera)
+                          entry['organism_name'], config.genus)
             continue
-        if species_taxids and entry['species_taxid'] not in species_taxids:
+        if config.species_taxid and entry['species_taxid'] not in config.species_taxid:
             logging.debug('Species TaxID %r does not match with any in %r, skipping',
-                          entry['species_taxid'], species_taxids)
+                          entry['species_taxid'], config.species_taxid)
             continue
-        if taxids and entry['taxid'] not in taxids:
+        if config.taxid and entry['taxid'] not in config.taxid:
             logging.debug('Organism TaxID %r does not match with any in %r, skipping',
-                          entry['taxid'], taxids)
+                          entry['taxid'], config.taxid)
             continue
-        if assembly_level != 'all' \
-                and entry['assembly_level'] != NgdConfig.get_assembly_level_string(assembly_level):
+        if config.assembly_level != 'all' \
+                and entry['assembly_level'] != config.get_assembly_level_string(config.assembly_level):
             logging.debug('Skipping entry with assembly level %r', entry['assembly_level'])
             continue
-        if refseq_category != 'all' \
-                and entry['refseq_category'] != NgdConfig.get_refseq_category_string(refseq_category):
-            logging.debug('Skipping entry with refseq_category %r, not %r', entry['refseq_category'], refseq_category)
+        if config.refseq_category != 'all' \
+                and entry['refseq_category'] != config.get_refseq_category_string(config.refseq_category):
+            logging.debug('Skipping entry with refseq_category %r, not %r', entry['refseq_category'],
+                          config.refseq_category)
             continue
         new_entries.append(entry)
 

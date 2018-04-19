@@ -26,14 +26,13 @@ def req():
 
 
 def test_download_defaults(monkeypatch, mocker):
-    """Test _download is called an appropriate number of times."""
+    """Test download does the right thing."""
     worker_mock = mocker.MagicMock()
     _download_mock = mocker.MagicMock(return_value=[core.DownloadJob(None, None, None, None)])
     monkeypatch.setattr(core, '_download', _download_mock)
     monkeypatch.setattr(core, 'worker', worker_mock)
     assert core.download() == 0
-    assert _download_mock.call_count == len(SUPPORTED_TAXONOMIC_GROUPS)
-    assert worker_mock.call_count == len(SUPPORTED_TAXONOMIC_GROUPS)
+    assert _download_mock.call_args_list[0][0][0].group == SUPPORTED_TAXONOMIC_GROUPS
 
 
 def test_args_download_defaults(monkeypatch, mocker):
@@ -43,8 +42,7 @@ def test_args_download_defaults(monkeypatch, mocker):
     monkeypatch.setattr(core, '_download', _download_mock)
     monkeypatch.setattr(core, 'worker', worker_mock)
     assert core.args_download(Namespace()) == 0
-    assert _download_mock.call_count == len(SUPPORTED_TAXONOMIC_GROUPS)
-    assert worker_mock.call_count == len(SUPPORTED_TAXONOMIC_GROUPS)
+    assert _download_mock.call_args_list[0][0][0].group == SUPPORTED_TAXONOMIC_GROUPS
 
 
 def test_download_defaults_nomatch(monkeypatch, mocker):
@@ -62,7 +60,7 @@ def test_download_dry_run(monkeypatch, mocker):
     monkeypatch.setattr(core, '_download', _download_mock)
     monkeypatch.setattr(core, 'worker', worker_mock)
     assert core.download(dry_run=True) == 0
-    assert _download_mock.call_count == len(SUPPORTED_TAXONOMIC_GROUPS)
+    assert _download_mock.call_count == 1
     assert worker_mock.call_count == 0
 
 
@@ -80,7 +78,7 @@ def test_download_all(monkeypatch, mocker):
     _download_mock = mocker.MagicMock()
     monkeypatch.setattr(core, '_download', _download_mock)
     core.download(group='all', output='/tmp/fake')
-    assert _download_mock.call_count == len(SUPPORTED_TAXONOMIC_GROUPS)
+    assert _download_mock.call_args_list[0][0][0].group == SUPPORTED_TAXONOMIC_GROUPS
 
 
 def test_download_all_formats(monkeypatch, mocker, req):
