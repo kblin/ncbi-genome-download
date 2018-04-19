@@ -153,19 +153,22 @@ def config_download(config):
 
     """
     try:
-        download_jobs = _download(config)
+        download_candidates = select_candidates(config)
 
-        if len(download_jobs) < 1:
+        if len(download_candidates) < 1:
             logging.error("No downloads matched your filter. Please check your options.")
             return 1
 
         if config.dry_run:
-            print("Would download the following files:")
-            for dl_job in download_jobs:
-                if dl_job.local_file:
-                    print(os.path.basename(dl_job.local_file))
+            print("Considering the following {} assemblies for download:".format(len(download_candidates)))
+            for entry, _ in download_candidates:
+                print(entry['assembly_accession'], entry['organism_name'], sep="\t")
 
             return 0
+
+        download_jobs = []
+        for entry, group in download_candidates:
+            download_jobs.extend(create_downloadjob(entry, group, config))
 
         if config.parallel == 1:
             for dl_job in download_jobs:
@@ -194,8 +197,8 @@ def config_download(config):
     return 0
 
 
-def _download(config):
-    """Generate download jobs, internal version.
+def select_candidates(config):
+    """Select candidates to download.
 
     Parameters
     ----------
@@ -204,20 +207,19 @@ def _download(config):
 
     Returns
     -------
-    list of DownloadJob
+    list of (<candidate entry>, <taxonomic group>)
 
     """
-    download_jobs = []
+    download_candidates = []
 
     for group in config.group:
         summary_file = get_summary(config.section, group, config.uri, config.use_cache)
         entries = parse_summary(summary_file)
 
         for entry in filter_entries(entries, config):
-            download_jobs.extend(
-                create_downloadjob(entry, config.section, group, config.output, config.file_format,
-                                   config.human_readable))
-    return download_jobs
+            download_candidates.append((entry, group))
+
+    return download_candidates
 
 
 def filter_entries(entries, config):
@@ -309,16 +311,14 @@ def parse_summary(summary_file):
     return SummaryReader(summary_file)
 
 
-# pylint and I disagree on code style here. Shut up, pylint.
-# pylint: disable=too-many-arguments,too-many-locals
-def create_downloadjob(entry, section, domain, output, file_formats, human_readable):
+def create_downloadjob(entry, domain, config):
     """Create download jobs for all file formats from a summary file entry."""
-    logging.info('Downloading record %r', entry['assembly_accession'])
-    full_output_dir = create_dir(entry, section, domain, output)
+    logging.info('Checking record %r', entry['assembly_accession'])
+    full_output_dir = create_dir(entry, config.section, domain, config.output)
 
     symlink_path = None
-    if human_readable:
-        symlink_path = create_readable_dir(entry, section, domain, output)
+    if config.human_readable:
+        symlink_path = create_readable_dir(entry, config.section, domain, config.output)
 
     checksums = grab_checksums_file(entry)
 
@@ -329,7 +329,7 @@ def create_downloadjob(entry, section, domain, output, file_formats, human_reada
     parsed_checksums = parse_checksums(checksums)
 
     download_jobs = []
-    for fmt in file_formats:
+    for fmt in config.file_format:
         try:
             if has_file_changed(full_output_dir, parsed_checksums, fmt):
                 download_jobs.append(
@@ -341,7 +341,6 @@ def create_downloadjob(entry, section, domain, output, file_formats, human_reada
             logging.error(err)
 
     return download_jobs
-# pylint: enable=too-many-arguments,too-many-locals
 
 
 def create_dir(entry, section, domain, output):

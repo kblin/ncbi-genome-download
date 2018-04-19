@@ -59,6 +59,9 @@ def test_group():
     config.group = ['bacteria', 'fungi']
     assert config.group == ['bacteria', 'fungi']
 
+    config.group = "all"
+    assert config.group == SUPPORTED_TAXONOMIC_GROUPS
+
     with pytest.raises(ValueError):
         config.group = "garbage"
 
@@ -71,6 +74,9 @@ def test_file_format():
 
     config.file_format = ['genbank', 'fasta']
     assert config.file_format == ['genbank', 'fasta']
+
+    config.file_format = "all"
+    assert config.file_format == list(NgdConfig._FORMATS)
 
     with pytest.raises(ValueError):
         config.file_format = "garbage"

@@ -27,40 +27,66 @@ def req():
 
 def test_download_defaults(monkeypatch, mocker):
     """Test download does the right thing."""
+    entry = {
+        'assembly_accession': 'FAKE0.1',
+        'organism_name': 'Example species',
+        'infraspecific_name': 'strain=ABC 1234',
+        'ftp_path': 'https://fake/genomes/FAKE0.1'
+    }
     worker_mock = mocker.MagicMock()
-    _download_mock = mocker.MagicMock(return_value=[core.DownloadJob(None, None, None, None)])
-    monkeypatch.setattr(core, '_download', _download_mock)
+    select_candidates_mock = mocker.MagicMock(return_value=[(entry, 'bacteria')])
+    create_downloadjob_mock = mocker.MagicMock(return_value=[core.DownloadJob(None, None, None, None)])
+    monkeypatch.setattr(core, 'select_candidates', select_candidates_mock)
+    monkeypatch.setattr(core, 'create_downloadjob', create_downloadjob_mock)
     monkeypatch.setattr(core, 'worker', worker_mock)
     assert core.download() == 0
-    assert _download_mock.call_args_list[0][0][0].group == SUPPORTED_TAXONOMIC_GROUPS
+    assert select_candidates_mock.call_args_list[0][0][0].group == SUPPORTED_TAXONOMIC_GROUPS
+    assert create_downloadjob_mock.call_args_list[0][0][0] == entry
 
 
 def test_args_download_defaults(monkeypatch, mocker):
     """Test args_download does the correct thing."""
+    entry = {
+        'assembly_accession': 'FAKE0.1',
+        'organism_name': 'Example species',
+        'infraspecific_name': 'strain=ABC 1234',
+        'ftp_path': 'https://fake/genomes/FAKE0.1'
+    }
     worker_mock = mocker.MagicMock()
-    _download_mock = mocker.MagicMock(return_value=[core.DownloadJob(None, None, None, None)])
-    monkeypatch.setattr(core, '_download', _download_mock)
+    select_candidates_mock = mocker.MagicMock(return_value=[(entry, 'bacteria')])
+    create_downloadjob_mock = mocker.MagicMock(return_value=[core.DownloadJob(None, None, None, None)])
+    monkeypatch.setattr(core, 'select_candidates', select_candidates_mock)
+    monkeypatch.setattr(core, 'create_downloadjob', create_downloadjob_mock)
     monkeypatch.setattr(core, 'worker', worker_mock)
     assert core.args_download(Namespace()) == 0
-    assert _download_mock.call_args_list[0][0][0].group == SUPPORTED_TAXONOMIC_GROUPS
+    assert select_candidates_mock.call_args_list[0][0][0].group == SUPPORTED_TAXONOMIC_GROUPS
+    assert create_downloadjob_mock.call_args_list[0][0][0] == entry
 
 
 def test_download_defaults_nomatch(monkeypatch, mocker):
     """Test download bails with a 1 return code if no entries match."""
-    _download_mock = mocker.MagicMock(return_value=[])
-    monkeypatch.setattr(core, '_download', _download_mock)
+    select_candidates_mock = mocker.MagicMock(return_value=[])
+    monkeypatch.setattr(core, 'select_candidates', select_candidates_mock)
     assert core.download() == 1
 
 
 def test_download_dry_run(monkeypatch, mocker):
     """Test _download is not called for a dry run."""
+    entry = {
+        'assembly_accession': 'FAKE0.1',
+        'organism_name': 'Example species',
+        'infraspecific_name': 'strain=ABC 1234',
+        'ftp_path': 'https://fake/genomes/FAKE0.1'
+    }
     worker_mock = mocker.MagicMock()
-    # need local_file filled out.
-    _download_mock = mocker.MagicMock(return_value=[core.DownloadJob(None, 'foo.gbff.gz', None, None)])
-    monkeypatch.setattr(core, '_download', _download_mock)
+    select_candidates_mock = mocker.MagicMock(return_value=[(entry, 'bacteria')])
+    create_downloadjob_mock = mocker.MagicMock(return_value=[core.DownloadJob(None, None, None, None)])
+    monkeypatch.setattr(core, 'select_candidates', select_candidates_mock)
+    monkeypatch.setattr(core, 'create_downloadjob', create_downloadjob_mock)
     monkeypatch.setattr(core, 'worker', worker_mock)
     assert core.download(dry_run=True) == 0
-    assert _download_mock.call_count == 1
+    assert select_candidates_mock.call_count == 1
+    assert create_downloadjob_mock.call_count == 0
     assert worker_mock.call_count == 0
 
 
@@ -74,31 +100,9 @@ def test_download_one(monkeypatch, mocker):
     download_mock.assert_called_with(**kwargs)
 
 
-def test_download_all(monkeypatch, mocker):
-    _download_mock = mocker.MagicMock()
-    monkeypatch.setattr(core, '_download', _download_mock)
-    core.download(group='all', output='/tmp/fake')
-    assert _download_mock.call_args_list[0][0][0].group == SUPPORTED_TAXONOMIC_GROUPS
-
-
-def test_download_all_formats(monkeypatch, mocker, req):
-    summary_contents = open(_get_file('assembly_status.txt'), 'r').read()
-    req.get('https://ftp.ncbi.nih.gov/genomes/refseq/bacteria/assembly_summary.txt',
-            text=summary_contents)
-    mocker.spy(core, 'get_summary')
-    mocker.spy(core, 'parse_summary')
-    mocker.patch('ncbi_genome_download.core.create_downloadjob')
-    core.download(group='bacteria', output='/tmp/fake', assembly_level='complete', file_format="all")
-    assert core.get_summary.call_count == 1
-    assert core.parse_summary.call_count == 1
-    assert core.create_downloadjob.call_count == 1
-    # Many nested tuples in call_args_list, no kidding.
-    assert core.create_downloadjob.call_args_list[0][0][0]['assembly_level'] == 'Complete Genome'
-    assert core.create_downloadjob.call_args_list[0][0][4] == list(NgdConfig._FORMATS)
-
 def test_download_connection_err(monkeypatch, mocker):
-    _download_mock = mocker.MagicMock(side_effect=ConnectionError)
-    monkeypatch.setattr(core, '_download', _download_mock)
+    select_candidates_mock = mocker.MagicMock(side_effect=ConnectionError)
+    monkeypatch.setattr(core, 'select_candidates', select_candidates_mock)
     assert core.download() == 75
 
 
@@ -326,8 +330,12 @@ def prepare_create_downloadjob(req, tmpdir, format_map=NgdConfig._FORMATS, human
         'ftp_path': 'https://fake/genomes/FAKE0.1'
     }
 
+    config = NgdConfig()
+
     outdir = tmpdir.mkdir('output')
     download_jobs = []
+    config.output = str(outdir)
+    config.human_readable = human_readable
 
     checksum_file_content = ''
     for key, val in format_map.items():
@@ -353,41 +361,42 @@ def prepare_create_downloadjob(req, tmpdir, format_map=NgdConfig._FORMATS, human
 
     req.get('https://fake/genomes/FAKE0.1/md5checksums.txt', text=checksum_file_content)
 
-    return entry, outdir, download_jobs
+    return entry, config, download_jobs
 
 
 def test_create_downloadjob_genbank(req, tmpdir):
-    entry, outdir, joblist = prepare_create_downloadjob(req, tmpdir)
-    jobs = core.create_downloadjob(entry, 'refseq', 'bacteria', str(outdir), ['genbank'], None)
+    entry, config, joblist = prepare_create_downloadjob(req, tmpdir)
+    jobs = core.create_downloadjob(entry, 'bacteria', config)
     expected = [j for j in joblist if j.local_file.endswith('_genomic.gbff.gz')]
     assert jobs == expected
 
 
 def test_create_downloadjob_all(req, tmpdir):
-    entry, outdir, expected = prepare_create_downloadjob(req, tmpdir)
-    jobs = core.create_downloadjob(entry, 'refseq', 'bacteria', str(outdir), list(NgdConfig._FORMATS), None)
+    entry, config, expected = prepare_create_downloadjob(req, tmpdir)
+    config.file_format = "all"
+    jobs = core.create_downloadjob(entry, 'bacteria', config)
     assert jobs == expected
 
 
 def test_create_downloadjob_missing(req, tmpdir):
     name_map_copy = OrderedDict(NgdConfig._FORMATS)
     del name_map_copy['genbank']
-    entry, outdir, _ = prepare_create_downloadjob(req, tmpdir, name_map_copy)
-    jobs = core.create_downloadjob(entry, 'refseq', 'bacteria', str(outdir), ['genbank'], None)
+    entry, config, _ = prepare_create_downloadjob(req, tmpdir, name_map_copy)
+    jobs = core.create_downloadjob(entry, 'bacteria', config)
     assert jobs == []
 
 
 def test_create_downloadjob_human_readable(req, tmpdir):
-    entry, outdir, joblist = prepare_create_downloadjob(req, tmpdir, human_readable=True)
-    jobs = core.create_downloadjob(entry, 'refseq', 'bacteria', str(outdir), ['genbank'], True)
+    entry, config, joblist = prepare_create_downloadjob(req, tmpdir, human_readable=True)
+    jobs = core.create_downloadjob(entry, 'bacteria', config)
     expected = [j for j in joblist if j.local_file.endswith('_genomic.gbff.gz')]
     assert jobs == expected
 
 
 def test_create_downloadjob_symlink_only(req, tmpdir):
-    entry, outdir, joblist = prepare_create_downloadjob(req, tmpdir, human_readable=True,
+    entry, config, joblist = prepare_create_downloadjob(req, tmpdir, human_readable=True,
                                                         create_local_file=True)
-    jobs = core.create_downloadjob(entry, 'refseq', 'bacteria', str(outdir), ['genbank'], True)
+    jobs = core.create_downloadjob(entry, 'bacteria', config)
     expected = [core.DownloadJob(None, j.local_file, None, j.symlink_path)
                 for j in joblist if j.local_file.endswith('_genomic.gbff.gz')]
     assert jobs == expected
