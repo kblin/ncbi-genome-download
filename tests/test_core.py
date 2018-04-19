@@ -90,8 +90,6 @@ def test_download_dry_run(monkeypatch, mocker):
     assert worker_mock.call_count == 0
 
 
-# TODO: test unrecognized arguments, invalid formats and out of choices values
-
 def test_download_one(monkeypatch, mocker):
     download_mock = mocker.MagicMock()
     monkeypatch.setattr(core, 'download', download_mock)
