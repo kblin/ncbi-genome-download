@@ -32,7 +32,7 @@ if sys.version_info < (2, 7, 9):  # pragma: no cover
 CACHE_DIR = user_cache_dir(appname="ncbi-genome-download", appauthor="kblin")
 
 
-def argument_parser(version=None):  # pragma: no cover
+def argument_parser(version=None):
     """Create the argument parser for ncbi-genome-download."""
     parser = argparse.ArgumentParser()
     parser.add_argument('group',
@@ -50,9 +50,10 @@ def argument_parser(version=None):  # pragma: no cover
                         'A comma-separated list of formats is also possible. For example: "fasta,assembly-report". '
                         'Choose from: {choices}'.format(choices=NgdConfig.get_choices('file_format')))
     parser.add_argument('-l', '--assembly-level', dest='assembly_level',
-                        choices=NgdConfig.get_choices('assembly_level'),
                         default=NgdConfig.get_default('assembly_level'),
-                        help='Assembly level of genomes to download (default: %(default)s)')
+                        help='Assembly level of genomes to download (default: %(default)s). '
+                        'A comma-separated list of assembly levels is also possible. For example: "complete,chromosome". '
+                        'Coose from: {choices}'.format(choices=NgdConfig.get_choices('assembly_level')))
     parser.add_argument('-g', '--genus', dest='genus',
                         default=NgdConfig.get_default('genus'),
                         help='Only download sequences of the provided genus. '
@@ -244,8 +245,7 @@ def filter_entries(entries, config):
             logging.debug('Organism TaxID %r does not match with any in %r, skipping',
                           entry['taxid'], config.taxid)
             continue
-        if config.assembly_level != 'all' \
-                and entry['assembly_level'] != config.get_assembly_level_string(config.assembly_level):
+        if not config.is_compatible_assembly_level(entry['assembly_level']):
             logging.debug('Skipping entry with assembly level %r', entry['assembly_level'])
             continue
         if config.refseq_category != 'all' \

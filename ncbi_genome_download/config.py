@@ -64,6 +64,7 @@ class NgdConfig(object):
     }
 
     _LIST_TYPES = set([
+        'assembly_level',
         'group',
         'file_format',
         'genus',
@@ -153,9 +154,14 @@ class NgdConfig(object):
 
     @assembly_level.setter
     def assembly_level(self, value):
-        if value not in self._DEFAULTS['assembly_level']:
-            raise ValueError("Unsupported assembly level: {}".format(value))
-        self._assembly_level = value
+        levels = _create_list(value)
+        available_levels = set(self._DEFAULTS['assembly_level'])
+        for level in levels:
+            if level not in available_levels:
+                raise ValueError("Unsupported assembly level: {}".format(level))
+        if 'all' in levels:
+            levels = list(self._LEVELS)
+        self._assembly_level = levels
 
     @property
     def refseq_category(self):
@@ -197,6 +203,11 @@ class NgdConfig(object):
     @genus.setter
     def genus(self, value):
         self._genus = _create_list(value, allow_filename=True)
+
+    def is_compatible_assembly_level(self, ncbi_assembly_level):
+        """Check if a given ncbi assembly level string matches the configured assembly levels."""
+        configured_ncbi_strings = [self._LEVELS[level] for level in self.assembly_level]
+        return ncbi_assembly_level in configured_ncbi_strings
 
     @classmethod
     def from_kwargs(cls, **kwargs):
@@ -245,11 +256,6 @@ class NgdConfig(object):
     def get_fileending(cls, file_format):
         """Get the fileending for a given file format."""
         return cls._FORMATS[file_format]
-
-    @classmethod
-    def get_assembly_level_string(cls, assembly_level):
-        """Get the NCBI string for an assembly level."""
-        return cls._LEVELS[assembly_level]
 
     @classmethod
     def get_refseq_category_string(cls, category):

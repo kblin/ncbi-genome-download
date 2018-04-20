@@ -89,6 +89,21 @@ def test_assembly_level():
     with pytest.raises(ValueError):
         config.assembly_level = 'garbage'
 
+def test_is_compatible_assembly_level():
+    """Test NgdConfig.is_compatible_assembly_level."""
+    config = NgdConfig()
+    ncbi_string = "Complete Genome"
+
+    assert config.is_compatible_assembly_level(ncbi_string)
+
+    config.assembly_level = "complete"
+    assert config.is_compatible_assembly_level(ncbi_string)
+
+    config.assembly_level = "chromosome,complete"
+    assert config.is_compatible_assembly_level(ncbi_string)
+
+    config.assembly_level = "chromosome"
+    assert not config.is_compatible_assembly_level(ncbi_string)
 
 def test_refseq_category():
     """Test NgdConfig.refseq_category getters/setters."""

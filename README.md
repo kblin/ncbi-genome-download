@@ -80,6 +80,11 @@ To download only completed bacterial RefSeq genomes in GenBank format, run:
 ncbi-genome-download --assembly-level complete bacteria
 ```
 
+It is possible to download multiple assembly levels at once by supplying a list:
+```
+ncbi-genome-download --assembly-level complete,chromosome bacteria
+```
+
 To download only bacterial reference genomes from RefSeq in GenBank format, run:
 ```
 ncbi-genome-download --refseq-category reference bacteria
