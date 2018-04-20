@@ -1,3 +1,4 @@
+"""Test the argument parsing."""
 from ncbi_genome_download.core import argument_parser
 
 
@@ -35,3 +36,21 @@ def test_assembly_levels():
     parser = argument_parser()
     ns = parser.parse_args(args=args)
     assert ns.assembly_level == 'complete,chromosome'
+
+
+def test_assembly_accessions():
+    """Test the -A/--assembly-accessions option works as ecpected."""
+    args = ['-A', 'GCF_000203835.1', 'bacteria']
+    parser = argument_parser()
+    ns = parser.parse_args(args=args)
+    assert ns.assembly_accessions == 'GCF_000203835.1'
+
+    args = ['--assembly-accessions', 'GCF_000203835.1,GCF_000444875.1', 'bacteria']
+    parser = argument_parser()
+    ns = parser.parse_args(args=args)
+    assert ns.assembly_accessions == 'GCF_000203835.1,GCF_000444875.1'
+
+    args = ['--assembly-accessions', 'some/path/here.txt', 'bacteria']
+    parser = argument_parser()
+    ns = parser.parse_args(args=args)
+    assert ns.assembly_accessions == 'some/path/here.txt'

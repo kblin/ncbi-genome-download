@@ -54,6 +54,7 @@ class NgdConfig(object):
         'genus': [],
         'species_taxid': [],
         'taxid': [],
+        'assembly_accessions': [],
         'output': os.getcwd(),
         'uri': 'https://ftp.ncbi.nih.gov/genomes',
         'parallel': 1,
@@ -64,6 +65,7 @@ class NgdConfig(object):
     }
 
     _LIST_TYPES = set([
+        'assembly_accessions',
         'assembly_level',
         'group',
         'file_format',
@@ -81,6 +83,7 @@ class NgdConfig(object):
         '_genus',
         '_species_taxid',
         '_taxid',
+        '_assembly_accessions',
         'output',
         'uri',
         'parallel',
@@ -203,6 +206,23 @@ class NgdConfig(object):
     @genus.setter
     def genus(self, value):
         self._genus = _create_list(value, allow_filename=True)
+
+    @property
+    def assembly_accessions(self):
+        """Get the assembly_accessions."""
+        return self._assembly_accessions
+
+    @assembly_accessions.setter
+    def assembly_accessions(self, value):
+        self._assembly_accessions = _create_list(value, allow_filename=True)
+
+    def is_compatible_assembly_accession(self, acc):
+        """Check if a given NCBI assembly accession matches the configured assembly accessions."""
+        # if no filter was configured, it's a match
+        if not self.assembly_accessions:
+            return True
+
+        return acc in self.assembly_accessions
 
     def is_compatible_assembly_level(self, ncbi_assembly_level):
         """Check if a given ncbi assembly level string matches the configured assembly levels."""

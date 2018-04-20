@@ -89,6 +89,7 @@ def test_assembly_level():
     with pytest.raises(ValueError):
         config.assembly_level = 'garbage'
 
+
 def test_is_compatible_assembly_level():
     """Test NgdConfig.is_compatible_assembly_level."""
     config = NgdConfig()
@@ -104,6 +105,33 @@ def test_is_compatible_assembly_level():
 
     config.assembly_level = "chromosome"
     assert not config.is_compatible_assembly_level(ncbi_string)
+
+
+def test_assembly_accessions():
+    """Test NgdConfig.assembly_accessions getters/setters."""
+    config = NgdConfig()
+
+    assert config.assembly_accessions == []
+
+    config.assembly_accessions = "GCF_000203835.1"
+    assert config.assembly_accessions == ['GCF_000203835.1']
+
+    config.assembly_accessions = "GCF_000203835.1,GCF_000444875.1"
+    assert config.assembly_accessions == ['GCF_000203835.1', 'GCF_000444875.1']
+
+
+def test_is_compatible_assembly_accession():
+    """Test NgdConfig.is_compatible_assembly_accession."""
+    config = NgdConfig()
+
+    assert config.is_compatible_assembly_accession("GCF_000444875.1")
+
+    config.assembly_accessions = "GCF_000203835.1,GCF_000444875.1"
+    assert config.is_compatible_assembly_accession("GCF_000444875.1")
+
+    config.assembly_accessions = "GCF_000203835.1"
+    assert not config.is_compatible_assembly_accession("GCF_000444875.1")
+
 
 def test_refseq_category():
     """Test NgdConfig.refseq_category getters/setters."""

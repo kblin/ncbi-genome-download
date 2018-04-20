@@ -318,6 +318,20 @@ def test_parse_summary():
         assert 'assembly_accession' in first
 
 
+def test_filter_entries():
+    """Test filter_entries."""
+    config = NgdConfig()
+    with open(_get_file('assembly_status.txt'), 'r') as fh:
+        entries = list(core.parse_summary(fh))
+
+    assert core.filter_entries(entries, config) == entries
+
+    expected = entries[-1:]
+    config.assembly_accessions = "GCF_000203835.1"
+
+    assert core.filter_entries(entries, config) == expected
+
+
 def prepare_create_downloadjob(req, tmpdir, format_map=NgdConfig._FORMATS, human_readable=False,
                                create_local_file=False):
     # Set up test env

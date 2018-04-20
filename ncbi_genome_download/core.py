@@ -69,6 +69,11 @@ def argument_parser(version=None):
                         help='Only download sequences of the provided NCBI taxonomy ID. '
                              'A comma-separated list of taxids is also possible. For example: "9606,9685". '
                              '(default: %(default)s)')
+    parser.add_argument('-A', '--assembly-accessions', dest='assembly_accessions',
+                        default=NgdConfig.get_default('assembly_accessions'),
+                        help='Only download sequences matching the provided NCBI assembly accession(s). '
+                        'A comma-separated list of accessions is possible, as well as a path to a filename '
+                        'containing one accession per line.')
     parser.add_argument('-R', '--refseq-category', dest='refseq_category',
                         choices=NgdConfig.get_choices('refseq_category'),
                         default=NgdConfig.get_default('refseq_category'),
@@ -244,6 +249,9 @@ def filter_entries(entries, config):
         if config.taxid and entry['taxid'] not in config.taxid:
             logging.debug('Organism TaxID %r does not match with any in %r, skipping',
                           entry['taxid'], config.taxid)
+            continue
+        if not config.is_compatible_assembly_accession(entry['assembly_accession']):
+            logging.debug('Skipping entry with incompatible assembly accession %r', entry['assembly_accession'])
             continue
         if not config.is_compatible_assembly_level(entry['assembly_level']):
             logging.debug('Skipping entry with assembly level %r', entry['assembly_level'])
