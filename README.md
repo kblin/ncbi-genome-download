@@ -189,6 +189,37 @@ ngd.download()
 ```
 **Note**: To specify a taxonomic group, like *bacteria*, use the `group` keyword.
 
+
+### Contributed Scripts: `gimme_taxa.py`
+This script lets you find out what TaxIDs to pass to `ngd`, and will write a simple one-item-per-line
+file to pass in to it. It utilises the `ete3` toolkit, so refer to their site to install the dependency
+if it's not already satisfied.
+
+You can query the database using a particular TaxID, or a scientific name. The primary function of the
+script is to return all the child taxa of the specified parent taxa. If specified with `-v` verbose
+flags however, the script will also print out some information about the lineages etc.
+
+A basic invocation may look like:
+
+```
+# Fetch all descendent taxa for Escherichia:
+python gimme_taxa.py -v -o ~/mytaxafile.txt -t 561
+
+alternatively
+
+python gimme_taxa.py -v -o ~/mytaxafile.txt -n Escherichia
+```
+
+On first use, a small sqlite database will be created in your home directory. In future this can be
+updated by providing the `--update` flag.
+
+To see all help:
+```
+python gimme_taxa.py
+python gimme_taxa.py -h
+python gimme_taxa.py --help
+```
+
 ## License
 All code is available under the Apache License version 2, see the
 [`LICENSE`](LICENSE) file for details.
