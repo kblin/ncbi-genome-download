@@ -111,7 +111,7 @@ def main():
 	# Update the database if required.
 	if args.update is True:
 		if args.verbose > 1:
-			print("Updating the taxonomy database.")
+			print("Updating the taxonomy database. This may take several minutes...")
 		ncbi.update_taxonomy_database()
 
 	# If a name was provided instead of a TaxID, convert and store it.
