@@ -28,6 +28,7 @@ class NgdConfig(object):
         ('genpept', '_protein.gpff.gz'),
         ('wgs', '_wgsmaster.gbff.gz'),
         ('cds-fasta', '_cds_from_genomic.fna.gz'),
+        ('rna-fna', '_rna.fna.gz'),
         ('rna-fasta', '_rna_from_genomic.fna.gz'),
         ('assembly-report', '_assembly_report.txt'),
         ('assembly-stats', '_assembly_stats.txt'),
