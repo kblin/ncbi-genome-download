@@ -67,7 +67,7 @@ def get_args():
     parser = argparse.ArgumentParser(description=desc, epilog=epi,
                                      formatter_class=argparse.RawTextHelpFormatter)
     parser.add_argument('taxid', metavar='taxid', type=str,
-			help='A comma-separated list of TaxIDs. (e.g. 561,2172)')   
+			help='A comma-separated list of TaxIDs and/or taxon names. (e.g. 561,2172)')   
     parser.add_argument('-v', '--verbose', action='count', default=0,
 			help='Verbose behaviour. Supports 3 levels at present: Off = 0, Info = 1, Verbose = 2. (default: %(default)s)')
     parser.add_argument('-d', '--database', type=str, default=None,
@@ -78,7 +78,6 @@ def get_args():
                         help='Just write out a list of taxids an no other information (default: %(default)s)')
     parser.add_argument('-i', '--taxon-info', action='store_true', default=False,
                         help='Just write out rank & lineage info on the provided taxids (default: %(default)s)')
-    parser.add_argument('-n', '--name', action='store', help='Provide a scientific name instead of a TaxID, if you\'re too lazy to find it out! (e.g. Escherichia).') 
     parser.add_argument('-o', '--outfile', action='store',
 			help='Output file to store the descendent TaxIDs for the query.')
     return parser.parse_args()
@@ -119,7 +118,23 @@ def taxon_info(taxid, ncbi, outFH):
     lineage = ';'.join(lineage)
     x = [str(x) for x in [tax_name, taxid, rank, lineage]]
     outFH.write('\t'.join(x) + '\n')
-            
+
+def name2taxid(taxids, ncbi):
+    """Converting taxon names to taxids
+    """
+    new_taxids = []
+    for taxid in taxids:
+        try:
+            new_taxids.append(ncbi.get_name_translator([taxid])[taxid][0])
+        except KeyError:
+            try:
+                new_taxids.append(int(taxid))
+            except ValueError:
+                msg = 'Error: cannot convert to taxid: {}'
+                raise ValueError(msg.format(taxid))
+
+    return new_taxids
+    
 def main():
     """Make queries against NCBI Taxa databases
     """
@@ -139,17 +154,17 @@ def main():
             sys.stderr.write(msg)
         ncbi.update_taxonomy_database()
             
-    # If a name was provided instead of a TaxID, convert and store it.
-    if args.name:
-        args.taxid = [ncbi.get_name_translator([x])[x][0] for x in args.name.split(',')]
-
+    # If names were provided in taxid list, convert to taxids
+    args.taxid = args.taxid.replace('"', '').replace("'", '').split(',')
+    args.taxid = name2taxid(args.taxid, ncbi)
+        
     # Output
     if args.outfile is None:
         outFH = sys.stdout
     else:
         outFH = open(args.outfile, 'w')
         
-    for taxid in args.taxid.split(','):
+    for taxid in args.taxid:
         if args.taxon_info:
             outFH.write('\t'.join(['name', 'taxid', 'rank', 'lineage']) + '\n')
             taxon_info(taxid, ncbi, outFH)
