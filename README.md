@@ -196,22 +196,27 @@ file to pass in to it. It utilises the `ete3` toolkit, so refer to their site to
 if it's not already satisfied.
 
 You can query the database using a particular TaxID, or a scientific name. The primary function of the
-script is to return all the child taxa of the specified parent taxa. If specified with `-v` verbose
-flags however, the script will also print out some information about the lineages etc.
+script is to return all the child taxa of the specified parent taxa. The script has various options
+for what information is written in the output. 
 
 A basic invocation may look like:
 
 ```
-# Fetch all descendent taxa for Escherichia:
-python gimme_taxa.py -v -o ~/mytaxafile.txt -t 561
+# Fetch all descendent taxa for Escherichia (taxid 561):
+python gimme_taxa.py -o ~/mytaxafile.txt 561
 
-alternatively
+# Alternatively, just provide the taxon name
+python gimme_taxa.py -o all_descendent_taxids.txt Escherichia
 
-python gimme_taxa.py -v -o ~/mytaxafile.txt -n Escherichia
+# You can provide multiple taxids and/or names
+python gimme_taxa.py -o all_descendent_taxids.txt 561,Methanobrevibacter
 ```
 
-On first use, a small sqlite database will be created in your home directory. In future this can be
-updated by providing the `--update` flag.
+On first use, a small sqlite database will be created in your home directory
+by default (change the location with the `--database` flag). You can update this database
+by using the `--update` flag. Note that if the database is not in your home directory,
+you must specify it with `--database` or a new database will be created in your home
+directory.
 
 To see all help:
 ```
