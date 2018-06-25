@@ -157,25 +157,28 @@ def main():
     # If names were provided in taxid list, convert to taxids
     args.taxid = args.taxid.replace('"', '').replace("'", '').split(',')
     args.taxid = name2taxid(args.taxid, ncbi)
-        
+
     # Output
     if args.outfile is None:
         outFH = sys.stdout
     else:
         outFH = open(args.outfile, 'w')
-        
+    ## header
+    if args.taxon_info:
+        outFH.write('\t'.join(['name', 'taxid', 'rank', 'lineage']) + '\n')
+    elif not args.just_taxids:
+        outFH.write('\t'.join(['parent_taxid',
+                               'descendent_taxid',
+                               'descendent_name']) + '\n')
+    ## body
     for taxid in args.taxid:
         if args.taxon_info:
-            outFH.write('\t'.join(['name', 'taxid', 'rank', 'lineage']) + '\n')
             taxon_info(taxid, ncbi, outFH)
         else:
-            if not args.just_taxids:
-                outFH.write('\t'.join(['parent_taxid',
-                                       'descendent_taxid',
-                                       'descendent_name']) + '\n')
             desc_taxa(taxid, ncbi,  outFH, args.just_taxids)
             
     outFH.close()
 
+    
 if __name__ == "__main__":
 	main()
