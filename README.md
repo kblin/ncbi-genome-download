@@ -32,6 +32,13 @@ pip install --upgrade pip
 ```
 and then rerun the `ncbi-genome-download` install.
 
+Alternatively, `ncbi-genome-download` is packaged in `conda`.
+Refer the the Anaconda/miniconda site to install a distribution (highly recommended) https://conda.io/miniconda.html
+With that installed one can do:
+```
+conda install -c bioconda ncbi-genome-download
+```
+
 `ncbi-genome-download` is only developed and tested on Python releases still under active
 support by the Python project. At the moment, this means versions 2.7, 3.4, 3.5 and 3.6.
 Specifically, no attempt at testing under Python versions older than 2.7 or 3.4 is being made.
