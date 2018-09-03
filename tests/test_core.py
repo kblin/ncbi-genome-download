@@ -686,6 +686,32 @@ def test_download_file_rna_fasta(req, tmpdir):
     assert core.worker(core.download_file_job(entry, str(dl_dir), checksums, 'rna-fasta'))
 
 
+def test_download_file_rna_fna(req, tmpdir):
+    entry = {'ftp_path': 'ftp://fake/path'}
+    fake_file = tmpdir.join('fake_rna.fna.gz')
+    fake_file.write('foo')
+    assert fake_file.check()
+    checksum = core.md5sum(str(fake_file))
+    checksums = [{'checksum': checksum, 'file': fake_file.basename}]
+    dl_dir = tmpdir.mkdir('download')
+    req.get('https://fake/path/fake_rna.fna.gz', text=fake_file.read())
+
+    assert core.worker(core.download_file_job(entry, str(dl_dir), checksums, 'rna-fna'))
+
+
+def test_download_file_rm_out(req, tmpdir):
+    entry = {'ftp_path': 'ftp://fake/path'}
+    fake_file = tmpdir.join('fake_rm.out.gz')
+    fake_file.write('foo')
+    assert fake_file.check()
+    checksum = core.md5sum(str(fake_file))
+    checksums = [{'checksum': checksum, 'file': fake_file.basename}]
+    dl_dir = tmpdir.mkdir('download')
+    req.get('https://fake/path/fake_rm.out.gz', text=fake_file.read())
+
+    assert core.worker(core.download_file_job(entry, str(dl_dir), checksums, 'rm'))
+
+
 def test_download_file_symlink_path(req, tmpdir):
     entry = {'ftp_path': 'ftp://fake/path'}
     fake_file = tmpdir.join('fake_genomic.gbff.gz')
