@@ -22,7 +22,7 @@ class NgdConfig(object):
     _FORMATS = OrderedDict([
         ('genbank', '_genomic.gbff.gz'),
         ('fasta', '_genomic.fna.gz'),
-		('rm', '_rm.out.gz'),
+        ('rm', '_rm.out.gz'),
         ('features', '_feature_table.txt.gz'),
         ('gff', '_genomic.gff.gz'),
         ('protein-fasta', '_protein.faa.gz'),
