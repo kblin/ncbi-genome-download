@@ -54,3 +54,33 @@ def test_assembly_accessions():
     parser = argument_parser()
     ns = parser.parse_args(args=args)
     assert ns.assembly_accessions == 'some/path/here.txt'
+
+def test_relation_to_type_material():
+  """Test the -M/--type-material option works as expected."""
+  # Empty args should default to 'all'
+  args = ['bacteria']
+  parser = argument_parser()
+  ns = parser.parse_args(args)
+  assert ns.type_material == 'any'
+
+  args = ['-M', 'type', 'bacteria']
+  parser = argument_parser()
+  ns = parser.parse_args(args)
+  assert ns.type_material == 'type'
+
+  args = ['-M', 'type,synonym', 'fungi']
+  parser = argument_parser()
+  ns = parser.parse_args(args)
+  assert ns.type_material == 'type,synonym'
+
+  args = ['--type-material', 'reference', 'fungi']
+  parser = argument_parser()
+  ns = parser.parse_args(args)
+  assert ns.type_material == 'reference'
+
+  args = ['-M', 'all', 'fungi']
+  parser = argument_parser()
+  ns = parser.parse_args(args)
+  assert ns.type_material == 'all'
+
+  #'type', 'reference', 'synonym', 'proxytype', 'neotype'
