@@ -199,7 +199,7 @@ def config_download(config):
                 return 1
 
         if config.metadata_table:
-            with open(config.metadata_table, 'wt') as handle:
+            with codecs.open(config.metadata_table, mode='w', encoding='utf-8') as handle:
                 table = metadata.get()
                 table.write(handle)
 
