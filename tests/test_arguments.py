@@ -82,5 +82,3 @@ def test_relation_to_type_material():
   parser = argument_parser()
   ns = parser.parse_args(args)
   assert ns.type_material == 'all'
-
-  #'type', 'reference', 'synonym', 'proxytype', 'neotype'
