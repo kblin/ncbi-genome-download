@@ -47,6 +47,14 @@ class NgdConfig(object):
         ('representative', 'representative genome'),
     ])
 
+    _RELATION_TO_TYPE_MATERIAL = OrderedDict([
+        ('type', 'assembly from type material'),
+        ('reference', 'assembly from reference material'),
+        ('synonym', 'assembly from synonym type material'),
+        ('proxytype', 'assembly from proxytype material'),
+        ('neotype', 'assembly designated as neotype')
+    ])
+
     _DEFAULTS = {
         'group': ['all'] + SUPPORTED_TAXONOMIC_GROUPS,
         'section': ['refseq', 'genbank'],
@@ -64,6 +72,7 @@ class NgdConfig(object):
         'metadata_table': None,
         'dry_run': False,
         'use_cache': False,
+        'type_material': ['any', 'all'] + list(_RELATION_TO_TYPE_MATERIAL)
     }
 
     _LIST_TYPES = set([
@@ -74,6 +83,7 @@ class NgdConfig(object):
         'genus',
         'species_taxid',
         'taxid',
+        'type_material'
     ])
 
     __slots__ = (
@@ -85,6 +95,7 @@ class NgdConfig(object):
         '_genus',
         '_species_taxid',
         '_taxid',
+        '_type_material',
         '_assembly_accessions',
         'output',
         'uri',
@@ -167,6 +178,23 @@ class NgdConfig(object):
         if 'all' in levels:
             levels = list(self._LEVELS)
         self._assembly_level = levels
+
+    @property
+    def type_material(self):
+        """Get the relation to type material. """
+        return self._type_material
+    @type_material.setter
+    def type_material(self, value):
+        type_materials = _create_list(value)
+        available_types = set(self._DEFAULTS['type_material'])
+        for type_material in type_materials:
+            if type_material not in available_types:
+                raise ValueError("Unsupported relation to type material: {}".format(type_material))
+        if 'all' in type_materials:
+            type_materials = list(self._RELATION_TO_TYPE_MATERIAL)
+        elif 'any' in type_materials:
+            type_materials = ['any']
+        self._type_material = type_materials
 
     @property
     def refseq_category(self):
