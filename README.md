@@ -177,6 +177,16 @@ There is a "dry-run" option to show which accessions would be downloaded, given 
 ncbi-genome-download --dry-run bacteria
 ```
 
+If you want to filter for the "relation to type material" column of the
+assembly summary file, you can use the `--type-material` option. Possible
+values are "any", "all", "type", "reference", "synonym", "proxytype", and/or
+"neotype". "any" will include assemblies with no relation to type material
+value defined, "all" will download only assemblies with a defined value.
+Multiple values can be given, separated by comma:
+```
+ncbi-genome-download --type-material type,reference
+```
+
 By default, ncbi-genome-download caches the assembly summary files for the respective taxonomic
 groups for one day. You can skip using the cache file by using the `--no-cache` option.
 The output of `--help` also shows the cache directory, should you want to remove any of the cached
