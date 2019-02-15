@@ -540,12 +540,31 @@ def save_and_check(response, local_file, expected_checksum):
 
 
 def create_symlink(local_file, symlink_path):
-    """Create a symlink if symlink path is given."""
+    """Create a relative symbolic link if symlink path is given.
+
+    Parameters
+    ----------
+    local_file
+        relative path to output folder (includes ./ prefix) of file saved
+    symlink_path
+        relative path to output folder (includes ./ prefix) of symbolic link
+        to be created
+
+    Returns
+    -------
+    bool
+        success code
+
+    """
     if symlink_path is not None:
         if os.path.exists(symlink_path) or os.path.lexists(symlink_path):
             os.unlink(symlink_path)
-
-        os.symlink(os.path.abspath(local_file), symlink_path)
+        local_file = os.path.normpath(local_file)
+        symlink_path = os.path.normpath(symlink_path)
+        num_dirs_upward = len(os.path.dirname(symlink_path).split(os.sep))
+        local_relative_to_symlink = num_dirs_upward * (os.pardir + os.sep)
+        os.symlink(os.path.join(local_relative_to_symlink, local_file),
+            symlink_path)
 
     return True
 
