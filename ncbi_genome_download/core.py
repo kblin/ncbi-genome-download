@@ -59,6 +59,9 @@ def argument_parser(version=None):
                         help='Only download sequences of the provided genus. '
                         'A comma-seperated list of genera is also possible. For example: '
                         '"Streptomyces coelicolor,Escherichia coli". (default: %(default)s)')
+    parser.add_argument('--fuzzy-genus', dest='fuzzy_genus', action="store_true",
+                        default=NgdConfig.get_default('fuzzy_genus'),
+                        help="Use a fuzzy search on the organism name instead of an exact match.")
     parser.add_argument('-T', '--species-taxid', dest='species_taxid',
                         default=NgdConfig.get_default('species_taxid'),
                         help='Only download sequences of the provided species NCBI taxonomy ID. '
@@ -239,7 +242,10 @@ def filter_entries(entries, config):
     """Narrrow down which entries to download."""
     def in_genus_list(species, genus_list):
         for genus in genus_list:
-            if species.startswith(genus.capitalize()):
+            if config.fuzzy_genus:
+                if species.lower().find(genus.lower()) > -1:
+                    return True
+            elif species.startswith(genus.capitalize()):
                 return True
         return False
 

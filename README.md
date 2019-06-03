@@ -127,6 +127,15 @@ ncbi-genome-download --genus my_genera.txt bacteria
 ```
 **Note**: The above command will download all _Streptomyces_ and _Amycolatopsis_ genomes from RefSeq.
 
+You can make the string match fuzzy using the `--fuzzy-genus` option. This can be handy if you need to match
+a value in the middle of the NCBI organism name, like so:
+
+```
+ncbi-genome-download --genus coelicolor --fuzzy-genus bacteria
+```
+**Note**: The above command will download all bacterial genomes containing "coelicolor" anywhere in their
+organism name from RefSeq.
+
 To download bacterial RefSeq genomes based on their NCBI species taxonomy ID, run:
 ```
 ncbi-genome-download --species-taxid 562 bacteria
