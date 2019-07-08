@@ -62,6 +62,7 @@ class NgdConfig(object):
         'assembly_level': ['all'] + list(_LEVELS),
         'refseq_category': ['all'] + list(_REFSEQ_CATEGORIES),
         'genus': [],
+        'fuzzy_accessions': False,
         'fuzzy_genus': False,
         'species_taxid': [],
         'taxid': [],
@@ -98,6 +99,7 @@ class NgdConfig(object):
         '_taxid',
         '_type_material',
         '_assembly_accessions',
+        'fuzzy_accessions',
         'fuzzy_genus',
         'output',
         'uri',
@@ -254,7 +256,13 @@ class NgdConfig(object):
         if not self.assembly_accessions:
             return True
 
-        return acc in self.assembly_accessions
+        if not self.fuzzy_accessions:
+            return acc in self.assembly_accessions
+        else:
+            for specified in self.assembly_accessions:
+                if acc.startswith(specified):
+                    return True
+            return False
 
     def is_compatible_assembly_level(self, ncbi_assembly_level):
         """Check if a given ncbi assembly level string matches the configured assembly levels."""
