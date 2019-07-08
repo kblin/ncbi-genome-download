@@ -223,7 +223,7 @@ if it's not already satisfied.
 
 You can query the database using a particular TaxID, or a scientific name. The primary function of the
 script is to return all the child taxa of the specified parent taxa. The script has various options
-for what information is written in the output. 
+for what information is written in the output.
 
 A basic invocation may look like:
 
