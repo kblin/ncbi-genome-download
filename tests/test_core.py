@@ -806,6 +806,10 @@ def test_get_species_label():
     fake_entry = {'organism_name': 'Example species ABC 1234'}
     assert core.get_species_label(fake_entry) == 'species'
 
+    fake_entry = {'organism_name': 'archaeon', 'infraspecific_name': '',
+                  'isolate': 'ARS1334'}
+    assert core.get_species_label(fake_entry) == 'sp.'
+
 
 def test_get_strain_label():
     fake_entry = {'infraspecific_name': 'strain=ABC 1234'}

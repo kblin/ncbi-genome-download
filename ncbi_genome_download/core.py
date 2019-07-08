@@ -582,7 +582,10 @@ def get_genus_label(entry):
 
 def get_species_label(entry):
     """Get the species name of an assembly summary entry."""
-    return entry['organism_name'].split(' ')[1]
+    parts = entry['organism_name'].split(' ')
+    if len(parts) < 2:
+        return 'sp.'
+    return parts[1]
 
 
 def get_strain_label(entry, viral=False):
