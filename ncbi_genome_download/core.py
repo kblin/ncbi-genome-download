@@ -256,8 +256,6 @@ def filter_entries(entries, config):
             if not entry['relation_to_type_material'] or entry['relation_to_type_material'] not in requested_types:
                 logging.debug("Skipping assembly with no reference to type material or reference to type material does not match requested")
                 continue
-            else:
-                print(entry['relation_to_type_material'])
         if config.genus and not in_genus_list(entry['organism_name'], config.genus):
             logging.debug('Organism name %r does not start with any in %r, skipping',
                           entry['organism_name'], config.genus)
