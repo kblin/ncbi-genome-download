@@ -60,6 +60,9 @@ Downloading multiple groups is also possible:
 ncbi-genome-download bacteria,viral
 ```
 
+**Note**: To see all available groups, see `ncbi-genome-download --help`, or simply use `all` to check all groups.
+Naming a more specific group will reduce the download size and the time needed to find the sequences to download.
+
 If you're on a reasonably fast connection, you might want to try running multiple downloads in parallel:
 ```
 ncbi-genome-download bacteria --parallel 4
