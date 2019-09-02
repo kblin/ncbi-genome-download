@@ -17,6 +17,7 @@ def main():
     else:
         log_level = logging.WARNING
 
+    logger = logging.getLogger("ncbi-genome-download")
     logging.basicConfig(format='%(levelname)s: %(message)s', level=log_level)
 
     max_retries = args.retries
@@ -24,7 +25,7 @@ def main():
     ret = args_download(args)
     while ret == 75 and attempts < max_retries:
         attempts += 1
-        logging.error(
+        logger.error(
             'Downloading from NCBI failed due to a connection error, retrying. Retries so far: %s',
             attempts)
         ret = args_download(args)

@@ -168,11 +168,12 @@ def config_download(config):
         success code
 
     """
+    logger = logging.getLogger("ncbi-genome-download")
     try:
         download_candidates = select_candidates(config)
 
         if len(download_candidates) < 1:
-            logging.error("No downloads matched your filter. Please check your options.")
+            logger.error("No downloads matched your filter. Please check your options.")
             return 1
 
         if config.dry_run:
@@ -198,7 +199,7 @@ def config_download(config):
                 jobs.get(0xFFFF)
             except KeyboardInterrupt:
                 # TODO: Actually test this once I figure out how to do this in py.test
-                logging.error("Interrupted by user")
+                logger.error("Interrupted by user")
                 return 1
 
         if config.metadata_table:
@@ -207,7 +208,7 @@ def config_download(config):
                 table.write(handle)
 
     except requests.exceptions.ConnectionError as err:
-        logging.error('Download from NCBI failed: %r', err)
+        logger.error('Download from NCBI failed: %r', err)
         # Exit code 75 meas TEMPFAIL in C/C++, so let's stick with that for now.
         return 75
     return 0
@@ -240,6 +241,7 @@ def select_candidates(config):
 
 def filter_entries(entries, config):
     """Narrrow down which entries to download."""
+    logger = logging.getLogger("ncbi-genome-download")
     def in_genus_list(species, genus_list):
         for genus in genus_list:
             if config.fuzzy_genus:
@@ -254,29 +256,29 @@ def filter_entries(entries, config):
         if config.type_material and config.type_material != ['any']:
             requested_types = map(lambda x: config._RELATION_TO_TYPE_MATERIAL[x], config.type_material)
             if not entry['relation_to_type_material'] or entry['relation_to_type_material'] not in requested_types:
-                logging.debug("Skipping assembly with no reference to type material or reference to type material does not match requested")
+                logger.debug("Skipping assembly with no reference to type material or reference to type material does not match requested")
                 continue
         if config.genus and not in_genus_list(entry['organism_name'], config.genus):
-            logging.debug('Organism name %r does not start with any in %r, skipping',
+            logger.debug('Organism name %r does not start with any in %r, skipping',
                           entry['organism_name'], config.genus)
             continue
         if config.species_taxid and entry['species_taxid'] not in config.species_taxid:
-            logging.debug('Species TaxID %r does not match with any in %r, skipping',
+            logger.debug('Species TaxID %r does not match with any in %r, skipping',
                           entry['species_taxid'], config.species_taxid)
             continue
         if config.taxid and entry['taxid'] not in config.taxid:
-            logging.debug('Organism TaxID %r does not match with any in %r, skipping',
+            logger.debug('Organism TaxID %r does not match with any in %r, skipping',
                           entry['taxid'], config.taxid)
             continue
         if not config.is_compatible_assembly_accession(entry['assembly_accession']):
-            logging.debug('Skipping entry with incompatible assembly accession %r', entry['assembly_accession'])
+            logger.debug('Skipping entry with incompatible assembly accession %r', entry['assembly_accession'])
             continue
         if not config.is_compatible_assembly_level(entry['assembly_level']):
-            logging.debug('Skipping entry with assembly level %r', entry['assembly_level'])
+            logger.debug('Skipping entry with assembly level %r', entry['assembly_level'])
             continue
         if config.refseq_category != 'all' \
                 and entry['refseq_category'] != config.get_refseq_category_string(config.refseq_category):
-            logging.debug('Skipping entry with refseq_category %r, not %r', entry['refseq_category'],
+            logger.debug('Skipping entry with refseq_category %r, not %r', entry['refseq_category'],
                           config.refseq_category)
             continue
         new_entries.append(entry)
@@ -286,6 +288,7 @@ def filter_entries(entries, config):
 
 def worker(job):
     """Run a single download job."""
+    logger = logging.getLogger("ncbi-genome-download")
     ret = False
     try:
         if job.full_url is not None:
@@ -296,24 +299,25 @@ def worker(job):
         ret = create_symlink(job.local_file, job.symlink_path)
     except KeyboardInterrupt:  # pragma: no cover
         # TODO: Actually test this once I figure out how to do this in py.test
-        logging.debug("Ignoring keyboard interrupt.")
+        logger.debug("Ignoring keyboard interrupt.")
 
     return ret
 
 
 def get_summary(section, domain, uri, use_cache):
     """Get the assembly_summary.txt file from NCBI and return a StringIO object for it."""
-    logging.debug('Checking for a cached summary file')
+    logger = logging.getLogger("ncbi-genome-download")
+    logger.debug('Checking for a cached summary file')
 
     cachefile = "{section}_{domain}_assembly_summary.txt".format(section=section, domain=domain)
     full_cachefile = os.path.join(CACHE_DIR, cachefile)
     if use_cache and os.path.exists(full_cachefile) and \
        datetime.utcnow() - datetime.fromtimestamp(os.path.getmtime(full_cachefile)) < timedelta(days=1):
-        logging.info('Using cached summary.')
+        logger.info('Using cached summary.')
         with codecs.open(full_cachefile, 'r', encoding='utf-8') as fh:
             return StringIO(fh.read())
 
-    logging.debug('Downloading summary for %r/%r uri: %r', section, domain, uri)
+    logger.debug('Downloading summary for %r/%r uri: %r', section, domain, uri)
     url = '{uri}/{section}/{domain}/assembly_summary.txt'.format(
         section=section, domain=domain, uri=uri)
     req = requests.get(url)
@@ -339,7 +343,8 @@ def parse_summary(summary_file):
 
 def create_downloadjob(entry, domain, config):
     """Create download jobs for all file formats from a summary file entry."""
-    logging.info('Checking record %r', entry['assembly_accession'])
+    logger = logging.getLogger("ncbi-genome-download")
+    logger.info('Checking record %r', entry['assembly_accession'])
     full_output_dir = create_dir(entry, config.section, domain, config.output)
 
     symlink_path = None
@@ -364,7 +369,7 @@ def create_downloadjob(entry, domain, config):
                 download_jobs.append(
                     create_symlink_job(full_output_dir, parsed_checksums, fmt, symlink_path))
         except ValueError as err:
-            logging.error(err)
+            logger.error(err)
 
     return download_jobs
 
@@ -421,6 +426,7 @@ def convert_ftp_url(url):
 
 def parse_checksums(checksums_string):
     """Parse a file containing checksums and filenames."""
+    logger = logging.getLogger("ncbi-genome-download")
     checksums_list = []
     for line in checksums_string.split('\n'):
         try:
@@ -434,7 +440,7 @@ def parse_checksums(checksums_string):
                 filename = filename[2:]
             checksums_list.append({'checksum': checksum, 'file': filename})
         except ValueError:
-            logging.debug('Skipping over unexpected checksum line %r', line)
+            logger.debug('Skipping over unexpected checksum line %r', line)
             continue
 
     return checksums_list
@@ -530,13 +536,14 @@ def create_symlink_job(directory, checksums, filetype, symlink_path):
 
 def save_and_check(response, local_file, expected_checksum):
     """Save the content of an http response and verify the checksum matches."""
+    logger = logging.getLogger("ncbi-genome-download")
     with open(local_file, 'wb') as handle:
         for chunk in response.iter_content(4096):
             handle.write(chunk)
 
     actual_checksum = md5sum(local_file)
     if actual_checksum != expected_checksum:
-        logging.error('Checksum mismatch for %r. Expected %r, got %r',
+        logger.error('Checksum mismatch for %r. Expected %r, got %r',
                       local_file, expected_checksum, actual_checksum)
         return False
 
