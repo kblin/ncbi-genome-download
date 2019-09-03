@@ -1,6 +1,7 @@
 # NCBI基因组下载脚本
 
-> Translate by [jamesyang](https://github.com/jamesyangget)
+> Translate by [jamesyang](https://github.com/jamesyangget), the translation may not be timely. If you can't find it in the Chinese version, you can refer to the original document.
+> 由[jamesyang](https://github.com/jamesyangget)翻译，翻译可能不及时，如果在中文文档里找不到需要的东西，你可以参考原文档。
 
 一些脚本在他们刚刚重组他们的FTP后从NCBI下载细菌和真菌基因组。
 
