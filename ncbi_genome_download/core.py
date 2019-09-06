@@ -87,7 +87,7 @@ def argument_parser(version=None):
                         help='Create output hierarchy in specified folder (default: %(default)s)')
     parser.add_argument('--flat-output', dest="flat_output", action="store_true",
                         default=NgdConfig.get_default('flat_output'),
-                        help='Dump all files into a single ')
+                        help='Dump all files right into the output folder without creating any subfolders.')
     parser.add_argument('-H', '--human-readable', dest='human_readable', action='store_true',
                         help='Create links in human-readable hierarchy (might fail on Windows)')
     parser.add_argument('-u', '--uri', dest='uri',
