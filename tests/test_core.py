@@ -433,7 +433,7 @@ def test_create_downloadjob_symlink_only(req, tmpdir):
 def test_create_dir(tmpdir):
     entry = {'assembly_accession': 'FAKE0.1'}
     output = tmpdir.mkdir('output')
-    ret = core.create_dir(entry, 'refseq', 'bacteria', str(output))
+    ret = core.create_dir(entry, 'refseq', 'bacteria', str(output), flat_output=False)
 
     expected = output.join('refseq', 'bacteria', 'FAKE0.1')
     assert expected.check()
@@ -444,7 +444,7 @@ def test_create_dir_exists(tmpdir):
     entry = {'assembly_accession': 'FAKE0.1'}
     output = tmpdir.mkdir('output')
     expected = output.mkdir('refseq').mkdir('bacteria').mkdir('FAKE0.1')
-    ret = core.create_dir(entry, 'refseq', 'bacteria', str(output))
+    ret = core.create_dir(entry, 'refseq', 'bacteria', str(output), flat_output=False)
     assert ret == str(expected)
 
 
@@ -453,7 +453,15 @@ def test_create_dir_isfile(tmpdir):
     output = tmpdir.mkdir('output')
     output.join('refseq', 'bacteria', 'FAKE0.1').write('foo', ensure=True)
     with pytest.raises(OSError):
-        core.create_dir(entry, 'refseq', 'bacteria', str(output))
+        core.create_dir(entry, 'refseq', 'bacteria', str(output), flat_output=False)
+
+
+def test_create_dir_flat(tmpdir):
+    entry = {'assembly_accession': 'FAKE0.1'}
+    output = tmpdir.mkdir('output')
+    ret = core.create_dir(entry, 'refseq', 'bacteria', str(output), flat_output=True)
+
+    assert ret == str(output)
 
 
 def test_create_readable_dir(tmpdir):

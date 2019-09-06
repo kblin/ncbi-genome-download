@@ -84,6 +84,9 @@ def argument_parser(version=None):
     parser.add_argument('-o', '--output-folder', dest='output',
                         default=NgdConfig.get_default('output'),
                         help='Create output hierarchy in specified folder (default: %(default)s)')
+    parser.add_argument('--flat-output', dest="flat_output", action="store_true",
+                        default=NgdConfig.get_default('flat_output'),
+                        help='Dump all files into a single ')
     parser.add_argument('-H', '--human-readable', dest='human_readable', action='store_true',
                         help='Create links in human-readable hierarchy (might fail on Windows)')
     parser.add_argument('-u', '--uri', dest='uri',
@@ -345,7 +348,7 @@ def create_downloadjob(entry, domain, config):
     """Create download jobs for all file formats from a summary file entry."""
     logger = logging.getLogger("ncbi-genome-download")
     logger.info('Checking record %r', entry['assembly_accession'])
-    full_output_dir = create_dir(entry, config.section, domain, config.output)
+    full_output_dir = create_dir(entry, config.section, domain, config.output, config.flat_output)
 
     symlink_path = None
     if config.human_readable:
@@ -353,9 +356,10 @@ def create_downloadjob(entry, domain, config):
 
     checksums = grab_checksums_file(entry)
 
-    # TODO: Only write this when the checksums file changed
-    with open(os.path.join(full_output_dir, 'MD5SUMS'), 'w') as handle:
-        handle.write(checksums)
+    if not config.flat_output:
+        # TODO: Only write this when the checksums file changed
+        with open(os.path.join(full_output_dir, 'MD5SUMS'), 'w') as handle:
+            handle.write(checksums)
 
     parsed_checksums = parse_checksums(checksums)
 
@@ -374,9 +378,12 @@ def create_downloadjob(entry, domain, config):
     return download_jobs
 
 
-def create_dir(entry, section, domain, output):
+def create_dir(entry, section, domain, output, flat_output):
     """Create the output directory for the entry if needed."""
-    full_output_dir = os.path.join(output, section, domain, entry['assembly_accession'])
+    if not flat_output:
+        full_output_dir = os.path.join(output, section, domain, entry['assembly_accession'])
+    else:
+        full_output_dir = os.path.join(output)
     try:
         os.makedirs(full_output_dir)
     except OSError as err:
