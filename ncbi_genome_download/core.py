@@ -52,7 +52,8 @@ def argument_parser(version=None):
     parser.add_argument('-l', '--assembly-level', dest='assembly_level',
                         default=NgdConfig.get_default('assembly_level'),
                         help='Assembly level of genomes to download (default: %(default)s). '
-                        'A comma-separated list of assembly levels is also possible. For example: "complete,chromosome". '
+                        'A comma-separated list of assembly levels is also possible. '
+                        'For example: "complete,chromosome". '
                         'Coose from: {choices}'.format(choices=NgdConfig.get_choices('assembly_level')))
     parser.add_argument('-g', '--genus', dest='genus',
                         default=NgdConfig.get_default('genus'),
@@ -114,7 +115,8 @@ def argument_parser(version=None):
     parser.add_argument('-M', '--type-material', dest='type_material',
                         default=NgdConfig.get_default('type_material'),
                         help='Specifies the relation to type material for the assembly (default: %(default)s). '
-                        '"any" will include assemblies with no relation to type material value defined, "all" will download only assemblies with a defined value. '
+                        '"any" will include assemblies with no relation to type material value defined, "all" will '
+                        'download only assemblies with a defined value. '
                         'A comma-separated list of relatons. For example: "reference,synonym".  '
                         'Choose from: {choices} .  '.format(choices=NgdConfig.get_choices('type_material')))
 
