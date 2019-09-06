@@ -39,12 +39,11 @@ conda install -c bioconda ncbi-genome-download
 ```
 
 `ncbi-genome-download` is only developed and tested on Python releases still under active
-support by the Python project. At the moment, this means versions 2.7, 3.4, 3.5 and 3.6.
-Specifically, no attempt at testing under Python versions older than 2.7 or 3.4 is being made.
+support by the Python project. At the moment, this means versions 2.7, 3.5, 3.6 and 3.7.
+Specifically, no attempt at testing under Python versions older than 2.7 or 3.5 is being made.
 
 If your system is stuck on an older version of Python, consider using a tool like
-[Homebrew](http://brew.sh) or [Linuxbrew](http://linuxbrew.sh) to obtain a more up-to-date
-version.
+[Homebrew](http://brew.sh) to obtain a more up-to-date version.
 
 
 ## Usage
