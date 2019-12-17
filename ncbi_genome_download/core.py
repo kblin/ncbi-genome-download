@@ -189,15 +189,19 @@ def config_download(config):
             return 0
 
         download_jobs = []
-        for entry, group in download_candidates:
-            download_jobs.extend(create_downloadjob(entry, group, config))
 
         if config.parallel == 1:
+            for entry, group in download_candidates:
+                download_jobs.extend(create_downloadjob(entry, group, config))
             for dl_job in download_jobs:
                 worker(dl_job)
         else:  # pragma: no cover
             # Testing multiprocessing code is annoying
             pool = Pool(processes=config.parallel)
+
+            for created_dl_job in pool.imap_unordered(downloadjob_creator_caller, [ (entry, group, config) for entry, group in download_candidates ]):
+                download_jobs.extend(created_dl_job)
+
             jobs = pool.map_async(worker, download_jobs)
             try:
                 # 0xFFFF is just "a really long time"
@@ -345,6 +349,9 @@ def parse_summary(summary_file):
     """Parse the summary file from TSV format to a csv DictReader-like object."""
     return SummaryReader(summary_file)
 
+
+def downloadjob_creator_caller(args):
+    return create_downloadjob(*args)
 
 def create_downloadjob(entry, domain, config):
     """Create download jobs for all file formats from a summary file entry."""
