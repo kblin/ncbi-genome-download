@@ -1,0 +1,3 @@
+#   See ftp://ftp.ncbi.nlm.nih.gov/genomes/README_assembly_summary.txt for a description of the columns in this file.
+# assembly_accession	bioproject	biosample	wgs_master	refseq_category	taxid	species_taxid	organism_name	infraspecific_name	isolate	version_status	assembly_level	release_type	genome_rep	seq_rel_date	asm_name	submitter	gbrs_paired_asm	paired_asm_comp	ftp_path	excluded_from_refseq	relation_to_type_material
+GCF_007991095.1	PRJNA224116	SAMD00169743	BJXR00000000.1	na	33	33	Myxococcus fulvus	strain=NBRC 100333		latest	Contig	Major	Full	2019/07/31	ASM799109v1	National Institute of Technology and Evaluation	GCA_007991095.1	identical	ftp://ftp.ncbi.nlm.nih.gov/genomes/all/GCF/007/991/095/GCF_007991095.1_ASM799109v1		assembly from type material

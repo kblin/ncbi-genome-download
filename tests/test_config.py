@@ -141,6 +141,14 @@ def test_refseq_category():
         config.refseq_category = 'garbage'
 
 
+def test_type_material():
+    """Test NgdConfig.type_material setters."""
+    config = NgdConfig()
+
+    with pytest.raises(ValueError):
+        config.type_material = "invalid"
+
+
 def test_get_choices():
     """Test NgdConfig.get_choices works."""
     assert NgdConfig.get_choices('refseq_category') == ['all', 'reference', 'representative']

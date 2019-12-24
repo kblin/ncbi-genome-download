@@ -289,6 +289,37 @@ def test_download_refseq_category(monkeypatch, mocker, req):
                'organism_name'] == 'Streptomyces coelicolor A3(2)'
 
 
+def test_download_type_material(monkeypatch, mocker, req):
+    summary_contents = open(_get_file('type_material.txt'), 'r').read()
+    req.get('https://ftp.ncbi.nih.gov/genomes/refseq/bacteria/assembly_summary.txt',
+            text=summary_contents)
+    print(summary_contents)
+    mocker.spy(core, 'get_summary')
+    mocker.spy(core, 'parse_summary')
+    mocker.patch('ncbi_genome_download.core.create_downloadjob')
+    core.download(group='bacteria', output='/tmp/fake', type_material=["all"])
+    assert core.get_summary.call_count == 1
+    assert core.parse_summary.call_count == 1
+    assert core.create_downloadjob.call_count == 1
+    # Many nested tuples in call_args_list, no kidding.
+    assert core.create_downloadjob.call_args_list[0][0][0][
+               'organism_name'] == 'Myxococcus fulvus'
+
+
+def test_download_type_material_no_match(monkeypatch, mocker, req):
+    summary_contents = open(_get_file('type_material.txt'), 'r').read()
+    req.get('https://ftp.ncbi.nih.gov/genomes/refseq/bacteria/assembly_summary.txt',
+            text=summary_contents)
+    print(summary_contents)
+    mocker.spy(core, 'get_summary')
+    mocker.spy(core, 'parse_summary')
+    mocker.patch('ncbi_genome_download.core.create_downloadjob')
+    core.download(group='bacteria', output='/tmp/fake', type_material=["neotype"])
+    assert core.get_summary.call_count == 1
+    assert core.parse_summary.call_count == 1
+    assert core.create_downloadjob.call_count == 0
+
+
 def test_get_summary(monkeypatch, req, tmpdir):
     """Test getting the assembly summary file."""
     cache_dir = tmpdir.mkdir('cache')
