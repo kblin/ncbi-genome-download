@@ -132,6 +132,14 @@ def test_is_compatible_assembly_accession():
     config.assembly_accessions = "GCF_000203835.1"
     assert not config.is_compatible_assembly_accession("GCF_000444875.1")
 
+    config.fuzzy_accessions = True
+
+    config.assembly_accessions = "GCF_000203835"
+    assert config.is_compatible_assembly_accession("GCF_000203835.1")
+
+    config.assembly_accessions = "GCF_000203835.1"
+    assert not config.is_compatible_assembly_accession("GCF_000444875.1")
+
 
 def test_refseq_category():
     """Test NgdConfig.refseq_category getters/setters."""
