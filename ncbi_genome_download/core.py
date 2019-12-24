@@ -350,7 +350,8 @@ def parse_summary(summary_file):
     return SummaryReader(summary_file)
 
 
-def downloadjob_creator_caller(args):
+def downloadjob_creator_caller(args):  # pragma: no cover  # No point testing this without testing multiprocessing downloads
+    """Call the download job function from a worker pool runner."""
     return create_downloadjob(*args)
 
 def create_downloadjob(entry, domain, config):
