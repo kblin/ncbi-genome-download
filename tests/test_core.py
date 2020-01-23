@@ -147,11 +147,11 @@ def test_metadata_fill_multi(req, tmpdir):
     jobs = []
     assert len(core.metadata.get().rows) == 0
     download_candidates = [(entry, 'bacteria')]
-    with Pool(processes=1) as p:
-        for index, created_dl_job in enumerate(p.imap(core.downloadjob_creator_caller, [ (curr_entry, curr_group, config) for curr_entry, curr_group in download_candidates ])):
-            jobs.extend(created_dl_job)
-            assert download_candidates[index][0] == entry
-            core.fill_metadata(created_dl_job, download_candidates[index][0])
+    p = Pool(processes=1)
+    for index, created_dl_job in enumerate(p.imap(core.downloadjob_creator_caller, [ (curr_entry, curr_group, config) for curr_entry, curr_group in download_candidates ])):
+        jobs.extend(created_dl_job)
+        assert download_candidates[index][0] == entry
+        core.fill_metadata(created_dl_job, download_candidates[index][0])
     expected = [j for j in joblist if j.local_file.endswith('_genomic.gbff.gz')]
     assert len(core.metadata.get().rows) == 1
     assert jobs == expected
