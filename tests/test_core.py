@@ -4,12 +4,13 @@ from argparse import Namespace
 from collections import OrderedDict
 import os
 from os import path
+from multiprocessing import Pool
 
 import pytest
 import requests_mock
 from requests.exceptions import ConnectionError
 
-from ncbi_genome_download import core
+from ncbi_genome_download import core, metadata
 from ncbi_genome_download import NgdConfig, SUPPORTED_TAXONOMIC_GROUPS
 
 
@@ -132,6 +133,26 @@ def test_download_metadata(monkeypatch, mocker, req, tmpdir):
     assert core.create_downloadjob.call_count == 4
     assert metadata_file.check()
 
+def test_metadata_fill(mocker, req, tmpdir):
+    entry, config, _ = prepare_create_downloadjob(req, tmpdir)
+    metadata.clear()#clear it, otherwise operations realized in other tests might impact it
+    assert len(core.metadata.get().rows) == 0
+    jobs = core.create_downloadjob(entry, 'bacteria', config)
+    assert len(core.metadata.get().rows) == 1
+
+@pytest.mark.xfail
+def test_metadata_fill_multi(mocker, req, tmpdir):
+    entry, config, joblist = prepare_create_downloadjob(req, tmpdir)
+    metadata.clear()#clear it, otherwise operations realized in other tests might impact it, since it is a global...
+    jobs = []
+    assert len(core.metadata.get().rows) == 0
+    download_candidates = [(entry, 'bacteria')]
+    with Pool(processes=1) as p:
+        for index, created_dl_job in enumerate(p.imap(core.downloadjob_creator_caller, [ (curr_entry, curr_group, config) for curr_entry, curr_group in download_candidates ])):
+            jobs.extend(created_dl_job)
+    expected = [j for j in joblist if j.local_file.endswith('_genomic.gbff.gz')]
+    assert len(core.metadata.get().rows) == 1
+    assert jobs == expected
 
 def test_download_complete(monkeypatch, mocker, req):
     summary_contents = open(_get_file('assembly_status.txt'), 'r').read()
