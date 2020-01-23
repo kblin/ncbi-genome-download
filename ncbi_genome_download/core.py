@@ -192,15 +192,19 @@ def config_download(config):
 
         if config.parallel == 1:
             for entry, group in download_candidates:
-                download_jobs.extend(create_downloadjob(entry, group, config))
+                curr_jobs = create_downloadjob(entry, group, config)
+                fill_metadata(curr_jobs, entry)
+                download_jobs.extend(curr_jobs)
+
             for dl_job in download_jobs:
                 worker(dl_job)
         else:  # pragma: no cover
             # Testing multiprocessing code is annoying
             pool = Pool(processes=config.parallel)
 
-            for created_dl_job in pool.imap_unordered(downloadjob_creator_caller, [ (entry, group, config) for entry, group in download_candidates ]):
+            for index, created_dl_job in enumerate(pool.imap(downloadjob_creator_caller, [ (entry, group, config) for entry, group in download_candidates ])):
                 download_jobs.extend(created_dl_job)
+                fill_metadata(created_dl_job, download_candidates[index][0])#index is conserved from download_candidates with the use of imap
 
             jobs = pool.map_async(worker, download_jobs)
             try:
@@ -222,6 +226,11 @@ def config_download(config):
         return 75
     return 0
 
+def fill_metadata(jobs, entry):
+    for job in jobs:
+        if job.full_url is not None:#if it is None, it's a symlink making, so nothing to write
+            mtable = metadata.get()
+            mtable.add(entry, job.local_file)
 
 def select_candidates(config):
     """Select candidates to download.
@@ -533,10 +542,6 @@ def download_file_job(entry, directory, checksums, filetype='genbank', symlink_p
     full_symlink = None
     if symlink_path is not None:
         full_symlink = os.path.join(symlink_path, filename)
-
-    # Keep metadata around
-    mtable = metadata.get()
-    mtable.add(entry, local_file)
 
     return DownloadJob(full_url, local_file, expected_checksum, full_symlink)
 # pylint: enable=too-many-arguments,too-many-locals
