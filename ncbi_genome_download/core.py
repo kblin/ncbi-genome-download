@@ -190,10 +190,11 @@ def config_download(config):
 
         download_jobs = []
 
+        mtable = metadata.get()
         if config.parallel == 1:
             for entry, group in download_candidates:
                 curr_jobs = create_downloadjob(entry, group, config)
-                fill_metadata(curr_jobs, entry)
+                fill_metadata(curr_jobs, entry, mtable)
                 download_jobs.extend(curr_jobs)
 
             for dl_job in download_jobs:
@@ -204,7 +205,8 @@ def config_download(config):
 
             for index, created_dl_job in enumerate(pool.imap(downloadjob_creator_caller, [ (entry, group, config) for entry, group in download_candidates ])):
                 download_jobs.extend(created_dl_job)
-                fill_metadata(created_dl_job, download_candidates[index][0])#index is conserved from download_candidates with the use of imap
+                # index is conserved from download_candidates with the use of imap
+                fill_metadata(created_dl_job, download_candidates[index][0], mtable)
 
             jobs = pool.map_async(worker, download_jobs)
             try:
@@ -227,7 +229,7 @@ def config_download(config):
     return 0
 
 
-def fill_metadata(jobs, entry):
+def fill_metadata(jobs, entry, mtable):
     """Fill the metadata table with the info on the downloaded files.
 
     Parameters
@@ -236,6 +238,8 @@ def fill_metadata(jobs, entry):
         List of all different file format download jobs for an entry
     entry:
         An assembly entry describing the current download jobs
+    mtable:
+        Metadata table object to write into
 
     Returns
     -------
@@ -243,7 +247,6 @@ def fill_metadata(jobs, entry):
     """
     for job in jobs:
         if job.full_url is not None:#if it is None, it's a symlink making, so nothing to write
-            mtable = metadata.get()
             mtable.add(entry, job.local_file)
 
 

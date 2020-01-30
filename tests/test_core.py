@@ -133,28 +133,33 @@ def test_download_metadata(monkeypatch, mocker, req, tmpdir):
     assert core.create_downloadjob.call_count == 4
     assert metadata_file.check()
 
+
 def test_metadata_fill(req, tmpdir):
     entry, config, _ = prepare_create_downloadjob(req, tmpdir)
-    metadata.clear()#clear it, otherwise operations realized in other tests might impact it
-    assert len(core.metadata.get().rows) == 0
+    metadata.clear()  #clear it, otherwise operations realized in other tests might impact it
+    mtable = metadata.get()
+    assert len(mtable.rows) == 0
     jobs = core.create_downloadjob(entry, 'bacteria', config)
-    core.fill_metadata(jobs, entry)
-    assert len(core.metadata.get().rows) == 1
+    core.fill_metadata(jobs, entry, mtable)
+    assert len(mtable.rows) == 1
+
 
 def test_metadata_fill_multi(req, tmpdir):
     entry, config, joblist = prepare_create_downloadjob(req, tmpdir)
-    metadata.clear()#clear it, otherwise operations realized in other tests might impact it
+    metadata.clear()  #clear it, otherwise operations realized in other tests might impact it
+    mtable = metadata.get()
     jobs = []
-    assert len(core.metadata.get().rows) == 0
+    assert len(mtable.rows) == 0
     download_candidates = [(entry, 'bacteria')]
     p = Pool(processes=1)
     for index, created_dl_job in enumerate(p.imap(core.downloadjob_creator_caller, [ (curr_entry, curr_group, config) for curr_entry, curr_group in download_candidates ])):
         jobs.extend(created_dl_job)
         assert download_candidates[index][0] == entry
-        core.fill_metadata(created_dl_job, download_candidates[index][0])
+        core.fill_metadata(created_dl_job, download_candidates[index][0], mtable)
     expected = [j for j in joblist if j.local_file.endswith('_genomic.gbff.gz')]
-    assert len(core.metadata.get().rows) == 1
+    assert len(mtable.rows) == 1
     assert jobs == expected
+
 
 def test_download_complete(monkeypatch, mocker, req):
     summary_contents = open(_get_file('assembly_status.txt'), 'r').read()
