@@ -226,11 +226,26 @@ def config_download(config):
         return 75
     return 0
 
+
 def fill_metadata(jobs, entry):
+    """Fill the metadata table with the info on the downloaded files.
+
+    Parameters
+    ----------
+    jobs: List[DownloadJob]
+        List of all different file format download jobs for an entry
+    entry:
+        An assembly entry describing the current download jobs
+
+    Returns
+    -------
+    None
+    """
     for job in jobs:
         if job.full_url is not None:#if it is None, it's a symlink making, so nothing to write
             mtable = metadata.get()
             mtable.add(entry, job.local_file)
+
 
 def select_candidates(config):
     """Select candidates to download.
