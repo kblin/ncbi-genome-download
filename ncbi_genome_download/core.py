@@ -283,6 +283,9 @@ def filter_entries(entries, config):
             if config.fuzzy_genus:
                 if species.lower().find(genus.lower()) > -1:
                     return True
+            elif species.startswith(genus):
+                return True
+            # Be nice and also find capitalised species names if the user didn't
             elif species.startswith(genus.capitalize()):
                 return True
         return False
