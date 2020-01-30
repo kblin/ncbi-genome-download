@@ -5,8 +5,18 @@ from collections import OrderedDict
 import os
 import sys
 
-SUPPORTED_TAXONOMIC_GROUPS = ['archaea', 'bacteria', 'fungi', 'invertebrate', 'plant', 'protozoa',
-                              'vertebrate_mammalian', 'vertebrate_other', 'viral']
+SUPPORTED_TAXONOMIC_GROUPS = [
+    'archaea',
+    'bacteria',
+    'fungi',
+    'invertebrate',
+    'metagenomes',
+    'plant',
+    'protozoa',
+    'vertebrate_mammalian',
+    'vertebrate_other',
+    'viral'
+]
 
 
 # TODO: Remove this once we drop py2 support
