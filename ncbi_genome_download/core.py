@@ -527,15 +527,18 @@ def need_to_create_symlink(directory, checksums, filetype, symlink_path):
 
 def get_name_and_checksum(checksums, end):
     """Extract a full filename and checksum from the checksums list for a file ending in given end."""
+    cds_fasta = NgdConfig.get_fileending('cds-fasta')
+    rna_fasta = NgdConfig.get_fileending('rna-fasta')
     for entry in checksums:
         if not entry['file'].endswith(end):
             # wrong file
             continue
         # workaround for ..cds_from_genomic.fna.gz and ..rna_from_genomic.fna.gz also
         # ending in _genomic.fna.gz, causing bogus matches for the plain fasta
-        if '_from_' not in end and '_from_' in entry['file']:
+        if (entry['file'].endswith(cds_fasta) and end != cds_fasta) or \
+           (entry['file'].endswith(rna_fasta) and end != rna_fasta):
             # still the wrong file
-            continue
+            continue  # pragma: no cover  # somehow coverage misses that this is in fact covered
         filename = entry['file']
         expected_checksum = entry['checksum']
         return filename, expected_checksum
