@@ -32,18 +32,23 @@ import sys
 import argparse
 try:
     from ete3 import NCBITaxa
-except ImportError:
+except ImportError as exc:
+
+    # There are other reasons why this import may fail
+    # Thus make sure to print the import error as well.
     msg = """
 The ete3 import failed, the module doesn't appear to be installed
 (at least in the PYTHONPATH for this python binary").
 
 Try running:
- $ python -m pip install ete3
+ $ python -m pip install ete3 six
 
 or 
 
  $ conda install -c etetoolkit ete3 ete_toolchain
-"""
+ 
+Exception: %s
+""" % exc
     print(msg)
     sys.exit(1)
 

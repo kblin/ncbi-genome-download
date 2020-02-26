@@ -82,4 +82,7 @@ setup(
     extras_require={
         'testing': tests_require,
     },
+    scripts=[
+        'contrib/gimme_taxa.py',
+    ],
 )
