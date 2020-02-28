@@ -1,6 +1,7 @@
 # NCBI基因组下载脚本
 
 > Translate by [jamesyang](https://github.com/jamesyangget), the translation may not be timely. If you can't find it in the Chinese version, you can refer to the original document.
+> 
 > 由[jamesyang](https://github.com/jamesyangget)翻译，翻译可能不及时，如果在中文文档里找不到需要的东西，你可以参考原文档。
 
 [![PyPI release](https://img.shields.io/pypi/v/ncbi-genome-download.svg)](https://pypi.python.org/pypi/ncbi-genome-download/)
