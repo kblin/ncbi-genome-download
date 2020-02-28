@@ -4,8 +4,6 @@
 > 
 > 由[jamesyang](https://github.com/jamesyangget)翻译，翻译可能不及时，如果在中文文档里找不到需要的东西，你可以参考原文档。
 
-[![PyPI release](https://img.shields.io/pypi/v/ncbi-genome-download.svg)](https://pypi.python.org/pypi/ncbi-genome-download/)
-
 从NCBI下载重组FTP后的细菌和真菌基因组的一些脚本
 
 从 [Mick Watson的Kraken下载程序脚本](http://www.opiniomics.org/building-a-kraken-database-with-new-ftp-structure-and-no-gi-numbers/) 中获得的想法，这些[脚本](http://www.opiniomics.org/building-a-kraken-database-with-new-ftp-structure-and-no-gi-numbers/)也可以在Mick的[GitHub](https://github.com/mw55309/Kraken_db_install_scripts)仓库中找到。然而，Mick是~~用Perl语言编写的~~ 专门用于实际构建 Kraken 数据库（如广告所示）。
