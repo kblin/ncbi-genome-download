@@ -193,6 +193,9 @@ def config_download(config):
         mtable = metadata.get()
         if config.parallel == 1:
             for entry, group in download_candidates:
+                if entry['ftp_path'] == "na":
+                    logger.warning("Entry %r has no ftp directory listed, skipping", entry['assembly_accession'])
+                    continue
                 curr_jobs = create_downloadjob(entry, group, config)
                 fill_metadata(curr_jobs, entry, mtable)
                 download_jobs.extend(curr_jobs)
@@ -388,12 +391,12 @@ def create_downloadjob(entry, domain, config):
     """Create download jobs for all file formats from a summary file entry."""
     logger = logging.getLogger("ncbi-genome-download")
     logger.info('Checking record %r', entry['assembly_accession'])
+
     full_output_dir = create_dir(entry, config.section, domain, config.output, config.flat_output)
 
     symlink_path = None
     if config.human_readable:
         symlink_path = create_readable_dir(entry, config.section, domain, config.output)
-
     checksums = grab_checksums_file(entry)
 
     if not config.flat_output:
