@@ -391,12 +391,12 @@ def create_downloadjob(entry, domain, config):
     """Create download jobs for all file formats from a summary file entry."""
     logger = logging.getLogger("ncbi-genome-download")
     logger.info('Checking record %r', entry['assembly_accession'])
-
     full_output_dir = create_dir(entry, config.section, domain, config.output, config.flat_output)
 
     symlink_path = None
     if config.human_readable:
         symlink_path = create_readable_dir(entry, config.section, domain, config.output)
+
     checksums = grab_checksums_file(entry)
 
     if not config.flat_output:
