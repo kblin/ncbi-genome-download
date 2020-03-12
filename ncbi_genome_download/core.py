@@ -320,6 +320,10 @@ def filter_entries(entries, config):
             logger.debug('Skipping entry with refseq_category %r, not %r', entry['refseq_category'],
                           config.refseq_category)
             continue
+        if entry['ftp_path'] == "na":
+            logger.warning("Skipping entry, as it has no ftp directory listed: %r", entry['assembly_accession'])
+            continue
+
         new_entries.append(entry)
 
     return new_entries
