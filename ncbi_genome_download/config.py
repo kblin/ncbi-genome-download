@@ -103,8 +103,8 @@ class NgdConfig(object):
     ])
 
     __slots__ = (
+        '_section',  # section needs to be set first, because group init uses it
         '_group',
-        '_section',
         '_file_format',
         '_assembly_level',
         '_refseq_category',
@@ -157,10 +157,8 @@ class NgdConfig(object):
         for group in groups:
             if group not in available_groups:
                 raise ValueError("Unsupported group: {}".format(group))
-            # in a first initialisation 'section' might not be set
-            if hasattr(self, 'section'):
-                if self.section == "refseq" and group in GENBANK_EXCLUSIVE:
-                    raise ValueError("Unsupported group in refseq: {}".format(group))
+            if self.section == "refseq" and group in GENBANK_EXCLUSIVE:
+                raise ValueError("Unsupported group in refseq: {}".format(group))
 
         if 'all' in groups:
             groups = SUPPORTED_TAXONOMIC_GROUPS
