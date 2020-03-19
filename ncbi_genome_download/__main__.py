@@ -22,7 +22,11 @@ def main():
 
     max_retries = args.retries
     attempts = 0
-    ret = args_download(args)
+    try:
+        ret = args_download(args)
+    except ValueError as err:
+        print(err)
+        return -2
     while ret == 75 and attempts < max_retries:
         attempts += 1
         logger.error(
