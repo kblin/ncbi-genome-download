@@ -1,5 +1,4 @@
 """Configuration for the downloader."""
-
 import codecs
 from collections import OrderedDict
 import os
@@ -17,6 +16,10 @@ SUPPORTED_TAXONOMIC_GROUPS = [
     'vertebrate_other',
     'viral'
 ]
+
+GENBANK_EXCLUSIVE = [
+        'metagenomes'
+        ]
 
 
 # TODO: Remove this once we drop py2 support
@@ -154,6 +157,10 @@ class NgdConfig(object):
         for group in groups:
             if group not in available_groups:
                 raise ValueError("Unsupported group: {}".format(group))
+            # in a first initialisation 'section' might not be set
+            if hasattr(self, 'section'):
+                if self.section == "refseq" and group in GENBANK_EXCLUSIVE:
+                    raise ValueError("Unsupported group in refseq: {}".format(group))
 
         if 'all' in groups:
             groups = SUPPORTED_TAXONOMIC_GROUPS
