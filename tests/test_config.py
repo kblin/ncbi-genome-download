@@ -65,6 +65,15 @@ def test_group():
     with pytest.raises(ValueError):
         config.group = "garbage"
 
+    # No metagenomes in refseq
+    with pytest.raises(ValueError):
+        config.section = "refseq"
+        config.group = "metagenomes"
+
+    # genbank has metagenomes
+    config.section = "genbank"
+    config.group = "metagenomes"
+
 
 def test_file_format():
     """Test NgdConfig.file_format getters/setters."""
