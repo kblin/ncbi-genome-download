@@ -196,6 +196,7 @@ class NgdConfig(object):
     def type_material(self):
         """Get the relation to type material. """
         return self._type_material
+
     @type_material.setter
     def type_material(self, value):
         type_materials = _create_list(value)

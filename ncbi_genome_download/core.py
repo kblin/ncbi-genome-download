@@ -195,7 +195,8 @@ def config_download(config):
             # Testing multiprocessing code is annoying
             pool = Pool(processes=config.parallel)
 
-            for index, created_dl_job in enumerate(pool.imap(downloadjob_creator_caller, [ (entry, group, config) for entry, group in download_candidates ])):
+            for index, created_dl_job in enumerate(pool.imap(downloadjob_creator_caller,
+                                                   [(entry, group, config) for entry, group in download_candidates])):
                 download_jobs.extend(created_dl_job)
                 # index is conserved from download_candidates with the use of imap
                 fill_metadata(created_dl_job, download_candidates[index][0], mtable)
@@ -238,7 +239,7 @@ def fill_metadata(jobs, entry, mtable):
     None
     """
     for job in jobs:
-        if job.full_url is not None:#if it is None, it's a symlink making, so nothing to write
+        if job.full_url is not None:  # if it is None, it's a symlink making, so nothing to write
             mtable.add(entry, job.local_file)
 
 
@@ -270,6 +271,7 @@ def select_candidates(config):
 def filter_entries(entries, config):
     """Narrrow down which entries to download."""
     logger = logging.getLogger("ncbi-genome-download")
+
     def in_genus_list(species, genus_list):
         for genus in genus_list:
             if config.fuzzy_genus:
@@ -287,19 +289,20 @@ def filter_entries(entries, config):
         if config.type_material and config.type_material != ['any']:
             requested_types = map(lambda x: config._RELATION_TO_TYPE_MATERIAL[x], config.type_material)
             if not entry['relation_to_type_material'] or entry['relation_to_type_material'] not in requested_types:
-                logger.debug("Skipping assembly with no reference to type material or reference to type material does not match requested")
+                logger.debug("Skipping assembly with no reference to type material or reference to type material does "
+                             "not match requested")
                 continue
         if config.genus and not in_genus_list(entry['organism_name'], config.genus):
             logger.debug('Organism name %r does not start with any in %r, skipping',
-                          entry['organism_name'], config.genus)
+                         entry['organism_name'], config.genus)
             continue
         if config.species_taxid and entry['species_taxid'] not in config.species_taxid:
             logger.debug('Species TaxID %r does not match with any in %r, skipping',
-                          entry['species_taxid'], config.species_taxid)
+                         entry['species_taxid'], config.species_taxid)
             continue
         if config.taxid and entry['taxid'] not in config.taxid:
             logger.debug('Organism TaxID %r does not match with any in %r, skipping',
-                          entry['taxid'], config.taxid)
+                         entry['taxid'], config.taxid)
             continue
         if not config.is_compatible_assembly_accession(entry['assembly_accession']):
             logger.debug('Skipping entry with incompatible assembly accession %r', entry['assembly_accession'])
@@ -310,7 +313,7 @@ def filter_entries(entries, config):
         if config.refseq_category != 'all' \
                 and entry['refseq_category'] != config.get_refseq_category_string(config.refseq_category):
             logger.debug('Skipping entry with refseq_category %r, not %r', entry['refseq_category'],
-                          config.refseq_category)
+                         config.refseq_category)
             continue
         if entry['ftp_path'] == "na":
             logger.warning("Skipping entry, as it has no ftp directory listed: %r", entry['assembly_accession'])
@@ -376,9 +379,10 @@ def parse_summary(summary_file):
     return SummaryReader(summary_file)
 
 
-def downloadjob_creator_caller(args):  # pragma: no cover  # No point testing this without testing multiprocessing downloads
+def downloadjob_creator_caller(args):  # pragma: no cover  # No point testing this without testing multiprocessing d/ls
     """Call the download job function from a worker pool runner."""
     return create_downloadjob(*args)
+
 
 def create_downloadjob(entry, domain, config):
     """Create download jobs for all file formats from a summary file entry."""
@@ -586,7 +590,7 @@ def save_and_check(response, local_file, expected_checksum):
     actual_checksum = md5sum(local_file)
     if actual_checksum != expected_checksum:
         logger.error('Checksum mismatch for %r. Expected %r, got %r',
-                      local_file, expected_checksum, actual_checksum)
+                     local_file, expected_checksum, actual_checksum)
         return False
 
     return True
@@ -617,7 +621,7 @@ def create_symlink(local_file, symlink_path):
         num_dirs_upward = len(os.path.dirname(symlink_path).split(os.sep))
         local_relative_to_symlink = num_dirs_upward * (os.pardir + os.sep)
         os.symlink(os.path.join(local_relative_to_symlink, local_file),
-            symlink_path)
+                   symlink_path)
 
     return True
 

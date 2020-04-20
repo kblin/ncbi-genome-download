@@ -7,6 +7,7 @@ from setuptools.command.test import test as TestCommand
 def read(fname):
     return open(os.path.join(os.path.dirname(__file__), fname)).read()
 
+
 long_description = read('README.md')
 
 install_requires = [
@@ -15,6 +16,7 @@ install_requires = [
 ]
 
 tests_require = [
+    'flake8',
     'pytest',
     'coverage',
     'pytest-cov',
@@ -63,6 +65,7 @@ setup(
     license='Apache Software License',
     classifiers=[
         'Programming Language :: Python',
+        'Programming Language :: Python :: 3',
         'Development Status :: 3 - Alpha',
         'Intended Audience :: Science/Research',
         'Topic :: Scientific/Engineering :: Bio-Informatics',
