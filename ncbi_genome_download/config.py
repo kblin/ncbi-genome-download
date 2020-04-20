@@ -2,7 +2,6 @@
 import codecs
 from collections import OrderedDict
 import os
-import sys
 
 SUPPORTED_TAXONOMIC_GROUPS = [
     'archaea',
@@ -20,13 +19,6 @@ SUPPORTED_TAXONOMIC_GROUPS = [
 GENBANK_EXCLUSIVE = [
         'metagenomes'
         ]
-
-
-# TODO: Remove this once we drop py2 support
-if sys.version_info[0] == 2:  # pragma: no cover
-    string_type = basestring
-else:
-    string_type = str
 
 
 class NgdConfig(object):
@@ -349,7 +341,7 @@ def _create_list(value, allow_filename=False):
     """
     if isinstance(value, list):
         return value
-    elif isinstance(value, string_type):
+    elif isinstance(value, str):
         if allow_filename and os.path.isfile(value):
             with codecs.open(value, 'r', encoding="utf-8") as handle:
                 return handle.read().splitlines()

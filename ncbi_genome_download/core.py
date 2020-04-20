@@ -1,6 +1,4 @@
 """Core functionality of ncbi-genome-download."""
-from __future__ import print_function
-
 from appdirs import user_cache_dir
 import argparse
 import codecs
@@ -9,7 +7,6 @@ import errno
 import hashlib
 import logging
 import os
-import sys
 from io import StringIO
 from multiprocessing import Pool
 
@@ -21,11 +18,6 @@ from .config import (
 from .jobs import DownloadJob
 from . import metadata
 from .summary import SummaryReader
-
-# Python < 2.7.9 hack: fix ssl support
-if sys.version_info < (2, 7, 9):  # pragma: no cover
-    from requests.packages.urllib3.contrib import pyopenssl
-    pyopenssl.inject_into_urllib3()
 
 
 # Get the user's cache dir in a system-independent manner
