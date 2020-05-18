@@ -202,7 +202,11 @@ def config_download(config):
         else:  # pragma: no cover
             # Testing multiprocessing code is annoying
             with Pool(processes=config.parallel) as pool:
-                for index, created_dl_job in enumerate(pool.imap(downloadjob_creator_caller, [ (entry, group, config) for entry, group in download_candidates ])):
+                dl_jobs = pool.imap(
+                        downloadjob_creator_caller,
+                        [ (entry, group, config) for entry, group in download_candidates ],
+                    )
+                for index, created_dl_job in enumerate(dl_jobs):
                     download_jobs.extend(created_dl_job)
                     # index is conserved from download_candidates with the use of imap
                     fill_metadata(created_dl_job, download_candidates[index][0], mtable)
