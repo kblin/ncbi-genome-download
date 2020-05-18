@@ -201,21 +201,20 @@ def config_download(config):
                 worker(dl_job)
         else:  # pragma: no cover
             # Testing multiprocessing code is annoying
-            pool = Pool(processes=config.parallel)
+            with Pool(processes=config.parallel) as pool:
+                for index, created_dl_job in enumerate(pool.imap(downloadjob_creator_caller, [ (entry, group, config) for entry, group in download_candidates ])):
+                    download_jobs.extend(created_dl_job)
+                    # index is conserved from download_candidates with the use of imap
+                    fill_metadata(created_dl_job, download_candidates[index][0], mtable)
 
-            for index, created_dl_job in enumerate(pool.imap(downloadjob_creator_caller, [ (entry, group, config) for entry, group in download_candidates ])):
-                download_jobs.extend(created_dl_job)
-                # index is conserved from download_candidates with the use of imap
-                fill_metadata(created_dl_job, download_candidates[index][0], mtable)
-
-            jobs = pool.map_async(worker, download_jobs)
-            try:
-                # 0xFFFF is just "a really long time"
-                jobs.get(0xFFFF)
-            except KeyboardInterrupt:
-                # TODO: Actually test this once I figure out how to do this in py.test
-                logger.error("Interrupted by user")
-                return 1
+                jobs = pool.map_async(worker, download_jobs)
+                try:
+                    # 0xFFFF is just "a really long time"
+                    jobs.get(0xFFFF)
+                except KeyboardInterrupt:
+                    # TODO: Actually test this once I figure out how to do this in py.test
+                    logger.error("Interrupted by user")
+                    return 1
 
         if config.metadata_table:
             with codecs.open(config.metadata_table, mode='w', encoding='utf-8') as handle:
