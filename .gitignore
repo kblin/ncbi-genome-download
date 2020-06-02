@@ -11,3 +11,5 @@ dist/*
 # Pycharm
 .idea/*
 
+# neovim
+.vim/*
