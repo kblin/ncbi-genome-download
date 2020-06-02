@@ -168,7 +168,7 @@ def test_type_material():
 
 def test_get_choices():
     """Test NgdConfig.get_choices works."""
-    assert NgdConfig.get_choices('refseq_category') == ['all', 'reference', 'representative']
+    assert NgdConfig.get_choices('refseq_category') == ['all', 'reference', 'representative', 'na']
 
     with pytest.raises(KeyError):
         NgdConfig.get_choices('garbage')

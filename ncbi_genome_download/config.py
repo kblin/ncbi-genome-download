@@ -50,6 +50,7 @@ class NgdConfig(object):
     _REFSEQ_CATEGORIES = OrderedDict([
         ('reference', 'reference genome'),
         ('representative', 'representative genome'),
+        ('na', 'na'),
     ])
 
     _RELATION_TO_TYPE_MATERIAL = OrderedDict([
@@ -89,6 +90,7 @@ class NgdConfig(object):
         'group',
         'file_format',
         'genus',
+        'refseq_category',
         'species_taxid',
         'taxid',
         'type_material'
@@ -217,9 +219,13 @@ class NgdConfig(object):
 
     @refseq_category.setter
     def refseq_category(self, value):
-        if value not in self._DEFAULTS['refseq_category']:
-            raise ValueError("Unsupported refseq_category: {}".format(value))
-        self._refseq_category = value
+        refseq_categories = _create_list(value)
+        for category in refseq_categories:
+            if category not in self._DEFAULTS['refseq_category']:
+                raise ValueError("Unsupported refseq_category: {}".format(category))
+        if 'all' in refseq_categories:
+            refseq_categories = list(self._REFSEQ_CATEGORIES)
+        self._refseq_category = refseq_categories
 
     # TODO: Rename to 'taxids' once we do the next API bump
     @property
@@ -278,6 +284,11 @@ class NgdConfig(object):
         """Check if a given ncbi assembly level string matches the configured assembly levels."""
         configured_ncbi_strings = [self._LEVELS[level] for level in self.assembly_level]
         return ncbi_assembly_level in configured_ncbi_strings
+
+    def is_compatible_refseq_category(self, category):
+        """Check if a given refseq category matches the configured category."""
+        configured_refseq_categories = [self.get_refseq_category_string(category) for category in self.refseq_category]
+        return category in configured_refseq_categories
 
     @classmethod
     def from_kwargs(cls, **kwargs):

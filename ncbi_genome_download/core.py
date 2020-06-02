@@ -71,8 +71,6 @@ def argument_parser(version=None):
                         'A comma-separated list of accessions is possible, as well as a path to a filename '
                         'containing one accession per line.')
     parser.add_argument('-R', '--refseq-category', dest='refseq_category',
-                        choices=NgdConfig.get_choices('refseq_category'),
-                        default=NgdConfig.get_default('refseq_category'),
                         help='Only download sequences of the provided refseq category (default: %(default)s)')
     parser.add_argument('-o', '--output-folder', dest='output',
                         default=NgdConfig.get_default('output'),
@@ -310,8 +308,7 @@ def filter_entries(entries, config):
         if not config.is_compatible_assembly_level(entry['assembly_level']):
             logger.debug('Skipping entry with assembly level %r', entry['assembly_level'])
             continue
-        if config.refseq_category != 'all' \
-                and entry['refseq_category'] != config.get_refseq_category_string(config.refseq_category):
+        if not config.is_compatible_refseq_category(entry['refseq_category']):
             logger.debug('Skipping entry with refseq_category %r, not %r', entry['refseq_category'],
                          config.refseq_category)
             continue
