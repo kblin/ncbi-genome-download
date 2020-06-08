@@ -55,6 +55,11 @@ def argument_parser(version=None):
     parser.add_argument('--fuzzy-genus', dest='fuzzy_genus', action="store_true",
                         default=NgdConfig.get_default('fuzzy_genus'),
                         help="Use a fuzzy search on the organism name instead of an exact match.")
+    parser.add_argument('-S', '--strains', dest='strains',
+                        default=NgdConfig.get_default('strains'),
+                        help='Only download sequences of the given strain(s). '
+                        'A comma-separated list of strain names is possible, as well as a path to a filename '
+                        'containing one name per line.')
     parser.add_argument('-T', '--species-taxid', dest='species_taxid',
                         default=NgdConfig.get_default('species_taxid'),
                         help='Only download sequences of the provided species NCBI taxonomy ID. '
@@ -296,6 +301,10 @@ def filter_entries(entries, config):
         if config.genus and not in_genus_list(entry['organism_name'], config.genus):
             logger.debug('Organism name %r does not start with any in %r, skipping',
                          entry['organism_name'], config.genus)
+            continue
+        if config.strains and get_strain(entry) not in config.strains:
+            logger.debug('Strain name %r does not match with any in %r, skipping',
+                         get_strain(entry), config.strains)
             continue
         if config.species_taxid and entry['species_taxid'] not in config.species_taxid:
             logger.debug('Species TaxID %r does not match with any in %r, skipping',

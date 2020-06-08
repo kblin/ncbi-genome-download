@@ -68,6 +68,7 @@ class NgdConfig(object):
         'assembly_level': ['all'] + list(_LEVELS),
         'refseq_category': ['all'] + list(_REFSEQ_CATEGORIES),
         'genus': [],
+        'strains': [],
         'flat_output': False,
         'fuzzy_accessions': False,
         'fuzzy_genus': False,
@@ -90,6 +91,7 @@ class NgdConfig(object):
         'group',
         'file_format',
         'genus',
+        'strains',
         'refseq_category',
         'species_taxid',
         'taxid',
@@ -103,6 +105,7 @@ class NgdConfig(object):
         '_assembly_level',
         '_refseq_category',
         '_genus',
+        '_strains',
         '_species_taxid',
         '_taxid',
         '_type_material',
@@ -256,6 +259,15 @@ class NgdConfig(object):
     @genus.setter
     def genus(self, value):
         self._genus = _create_list(value, allow_filename=True)
+
+    @property
+    def strains(self):
+        """Get the strains."""
+        return self._strains
+
+    @strains.setter
+    def strains(self, value):
+        self._strains = _create_list(value, allow_filename=True)
 
     @property
     def assembly_accessions(self):
