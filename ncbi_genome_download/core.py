@@ -71,6 +71,7 @@ def argument_parser(version=None):
                         'A comma-separated list of accessions is possible, as well as a path to a filename '
                         'containing one accession per line.')
     parser.add_argument('-R', '--refseq-category', dest='refseq_category',
+                        default=NgdConfig.get_default('refseq_category'),
                         help='Only download sequences of the provided refseq category (default: %(default)s)')
     parser.add_argument('-o', '--output-folder', dest='output',
                         default=NgdConfig.get_default('output'),
