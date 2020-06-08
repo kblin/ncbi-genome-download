@@ -639,28 +639,31 @@ def get_species_label(entry):
     return parts[1]
 
 
-def get_strain_label(entry, viral=False):
+def get_strain(entry, viral=False):
     """Try to extract a strain from an assemly summary entry.
 
     First this checks 'infraspecific_name', then 'isolate', then
     it tries to get it from 'organism_name'. If all fails, it
     falls back to just returning the assembly accesion number.
     """
-    def get_strain(entry):
-        strain = entry['infraspecific_name']
-        if strain != '':
-            strain = strain.split('=')[-1]
-            return strain
+    strain = entry['infraspecific_name']
+    if strain != '':
+        strain = strain.split('=')[-1]
+        return strain
 
-        strain = entry['isolate']
-        if strain != '':
-            return strain
+    strain = entry['isolate']
+    if strain != '':
+        return strain
 
-        if len(entry['organism_name'].split(' ')) > 2 and not viral:
-            strain = ' '.join(entry['organism_name'].split(' ')[2:])
-            return strain
+    if len(entry['organism_name'].split(' ')) > 2 and not viral:
+        strain = ' '.join(entry['organism_name'].split(' ')[2:])
+        return strain
 
-        return entry['assembly_accession']
+    return entry['assembly_accession']
+
+
+def get_strain_label(entry, viral=False):
+    """Clean up the strain name so it can be used in a file name."""
 
     def cleanup(strain):
         strain = strain.strip()
@@ -670,4 +673,4 @@ def get_strain_label(entry, viral=False):
         strain = strain.replace('\\', '_')
         return strain
 
-    return cleanup(get_strain(entry))
+    return cleanup(get_strain(entry, viral))
