@@ -75,46 +75,46 @@ ncbi-genome-download --section genbank fungi
 
 To download all viral RefSeq genomes in FASTA format, run:
 ```
-ncbi-genome-download --format fasta viral
+ncbi-genome-download --formats fasta viral
 ```
 
 It is possible to download multiple formats by supplying a list of formats or simply download all formats:
 ```
-ncbi-genome-download --format fasta,assembly-report viral
-ncbi-genome-download --format all viral
+ncbi-genome-download --formats fasta,assembly-report viral
+ncbi-genome-download --formats all viral
 ```
 
 To download only completed bacterial RefSeq genomes in GenBank format, run:
 ```
-ncbi-genome-download --assembly-level complete bacteria
+ncbi-genome-download --assembly-levels complete bacteria
 ```
 
 It is possible to download multiple assembly levels at once by supplying a list:
 ```
-ncbi-genome-download --assembly-level complete,chromosome bacteria
+ncbi-genome-download --assembly-levels complete,chromosome bacteria
 ```
 
 To download only bacterial reference genomes from RefSeq in GenBank format, run:
 ```
-ncbi-genome-download --refseq-category reference bacteria
+ncbi-genome-download --refseq-categories reference bacteria
 ```
 
 To download bacterial RefSeq genomes of the genus _Streptomyces_, run:
 ```
-ncbi-genome-download --genus Streptomyces bacteria
+ncbi-genome-download --genera Streptomyces bacteria
 ```
 **Note**: This is a simple string match on the organism name provided by NCBI only.
 
 You can also use this with a slight trick to download genomes of a certain species as well:
 ```
-ncbi-genome-download --genus "Streptomyces coelicolor" bacteria
+ncbi-genome-download --genera "Streptomyces coelicolor" bacteria
 ```
 **Note**: The quotes are important. Again, this is a simple string match on the organism
 name provided by the NCBI.
 
 Multiple genera is also possible:
 ```
-ncbi-genome-download --genus "Streptomyces coelicolor,Escherichia coli" bacteria
+ncbi-genome-download --genera "Streptomyces coelicolor,Escherichia coli" bacteria
 ```
 
 You can also put genus names into a file, one organism per line, e.g.:
@@ -123,9 +123,9 @@ Streptomyces
 Amycolatopsis
 ```
 
-Then, pass the path to that file (e.g. `my_genera.txt`) to the `--genus` option, like so:
+Then, pass the path to that file (e.g. `my_genera.txt`) to the `--genera` option, like so:
 ```
-ncbi-genome-download --genus my_genera.txt bacteria
+ncbi-genome-download --genera my_genera.txt bacteria
 ```
 **Note**: The above command will download all _Streptomyces_ and _Amycolatopsis_ genomes from RefSeq.
 
@@ -133,31 +133,31 @@ You can make the string match fuzzy using the `--fuzzy-genus` option. This can b
 a value in the middle of the NCBI organism name, like so:
 
 ```
-ncbi-genome-download --genus coelicolor --fuzzy-genus bacteria
+ncbi-genome-download --genera coelicolor --fuzzy-genus bacteria
 ```
 **Note**: The above command will download all bacterial genomes containing "coelicolor" anywhere in their
 organism name from RefSeq.
 
 To download bacterial RefSeq genomes based on their NCBI species taxonomy ID, run:
 ```
-ncbi-genome-download --species-taxid 562 bacteria
+ncbi-genome-download --species-taxids 562 bacteria
 ```
 **Note**: The above command will download all RefSeq genomes belonging to _Escherichia coli_.
 
 To download a specific bacterial RefSeq genomes based on its NCBI taxonomy ID, run:
 ```
-ncbi-genome-download --taxid 511145 bacteria
+ncbi-genome-download --taxids 511145 bacteria
 ```
 **Note**: The above command will download the RefSeq genome belonging to _Escherichia coli str. K-12 substr. MG1655_.
 
 It is also possible to download multiple species taxids or taxids by supplying the numbers in a comma-separated list:
 ```
-ncbi-genome-download --taxid 9606,9685 --assembly-level chromosome vertebrate_mammalian
+ncbi-genome-download --taxids 9606,9685 --assembly-level chromosome vertebrate_mammalian
 ```
 **Note**: The above command will download the reference genomes for cat and human.
 
 In addition, you can put multiple species taxids or taxids into a file, one per line
-and pass that filename to the `--species-taxid` or `--taxid` parameters, respectively.
+and pass that filename to the `--species-taxids` or `--taxids` parameters, respectively.
 
 Assuming you had a file `my_taxids.txt` with the following contents:
 ```
@@ -166,7 +166,7 @@ Assuming you had a file `my_taxids.txt` with the following contents:
 ```
 You could download the reference genomes for cat and human like this:
 ```
-ncbi-genome-download --taxid my_taxids.txt --assembly-level chromosome vertebrate_mammalian
+ncbi-genome-download --taxids my_taxids.txt --assembly-levels chromosome vertebrate_mammalian
 ```
 
 It is possible to also create a human-readable directory structure in parallel to mirroring
@@ -189,13 +189,13 @@ ncbi-genome-download --dry-run bacteria
 ```
 
 If you want to filter for the "relation to type material" column of the
-assembly summary file, you can use the `--type-material` option. Possible
+assembly summary file, you can use the `--type-materials` option. Possible
 values are "any", "all", "type", "reference", "synonym", "proxytype", and/or
 "neotype". "any" will include assemblies with no relation to type material
 value defined, "all" will download only assemblies with a defined value.
 Multiple values can be given, separated by comma:
 ```
-ncbi-genome-download --type-material type,reference
+ncbi-genome-download --type-materials type,reference
 ```
 
 By default, ncbi-genome-download caches the assembly summary files for the respective taxonomic

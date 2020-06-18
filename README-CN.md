@@ -36,7 +36,7 @@ pip install --upgrade pip
 conda install -c bioconda ncbi-genome-download
 ```
 
-`ncbi-genome-download`仅在Python团队仍活跃支持下的Python版本上开发和测试。目前，这些代表版本有2.7，3.5，3.6，3.7和3.8。具体来说，没有尝试在2.7或3.5之前的Python版本下进行测试。
+`ncbi-genome-download`仅在Python团队仍活跃支持下的Python版本上开发和测试。目前，这些代表版本有3.5，3.6，3.7和3.8。具体来说，没有尝试在3.5之前的Python版本下进行测试。
 
 如果您的系统停留在旧版本的 Python 上，请考虑使用 [Homebrew](http://brew.sh/) 等工具获取更新版本。
 
@@ -73,38 +73,38 @@ ncbi-genome-download --section genbank fungi
 要从RefSeq下载所有FASTA格式的病毒基因组，请运行：
 
 ``` bash 
-ncbi-genome-download --format fasta viral
+ncbi-genome-download --formats fasta viral
 ```
 
 可以通过提供格式列表或仅下载所有格式来下载多种格式：
 
 ``` bash 
-ncbi-genome-download --format fasta,assembly-report viral
-ncbi-genome-download --format all viral
+ncbi-genome-download --formats fasta,assembly-report viral
+ncbi-genome-download --formats all viral
 ```
 
 仅从RefSeq下载GenBank格式的细菌全基因组，请运行：
 
 ``` bash 
-ncbi-genome-download --assembly-level complete bacteria
+ncbi-genome-download --assembly-levels complete bacteria
 ```
 
 通过提供列表，可以一次下载多个程序集级别：
 
 ``` bash 
-ncbi-genome-download --assembly-level complete,chromosome bacteria
+ncbi-genome-download --assembly-levels complete,chromosome bacteria
 ```
 
 仅从RefSeq下载GenBank格式的细菌参考基因组，请运行：
 
 ``` bash 
-ncbi-genome-download --refseq-category reference bacteria
+ncbi-genome-download --refseq-categories reference bacteria
 ```
 
 要从RefSeq下载*Streptomyces*（链霉菌）属的细菌基因组，请运行：
 
 ``` bash 
-ncbi-genome-download --genus Streptomyces bacteria
+ncbi-genome-download --genera Streptomyces bacteria
 ```
 
 **注意**：这是仅由NCBI提供的有机体名称上的简单字符串匹配。
@@ -112,7 +112,7 @@ ncbi-genome-download --genus Streptomyces bacteria
 您也可以用一点小技巧来下载特定物种的基因组
 
 ``` bash 
-ncbi-genome-download --genus "Streptomyces coelicolor" bacteria
+ncbi-genome-download --genera "Streptomyces coelicolor" bacteria
 ```
 
 **注意**：引号很重要。同样，这是NCBI提供的有机体名称上的简单字符串匹配。
@@ -120,7 +120,7 @@ ncbi-genome-download --genus "Streptomyces coelicolor" bacteria
 也可以有多个属：
 
 ``` bash 
-ncbi-genome-download --genus "Streptomyces coelicolor,Escherichia coli" bacteria
+ncbi-genome-download --genera "Streptomyces coelicolor,Escherichia coli" bacteria
 ```
 
 您还可以将属名放入一个文件中，每行一个有机体，例如：
@@ -130,10 +130,10 @@ Streptomyces
 Amycolatopsis
 ```
 
-然后，将该文件的路径（例如`my_genera.txt`）传递给 `--genus` 选项，如下所示：
+然后，将该文件的路径（例如`my_genera.txt`）传递给 `--genera` 选项，如下所示：
 
 ``` bash 
-ncbi-genome-download --genus my_genera.txt bacteria
+ncbi-genome-download --genera my_genera.txt bacteria
 ```
 
 **注意**：上述命令将从RefSeq下载所有*Streptomyces*（链球菌）和*Amycolatopsis*（拟无枝菌酸菌）的基因组。
@@ -141,7 +141,7 @@ ncbi-genome-download --genus my_genera.txt bacteria
 您可以使用`--fuzzy-genus`选项模糊匹配字符串。如果您需要匹配NCBI生物体名称中间的值，这很方便，如下所示：
 
 ``` bash 
-ncbi-genome-download --genus coelicolor --fuzzy-genus bacteria
+ncbi-genome-download --genera coelicolor --fuzzy-genus bacteria
 ```
 
 **注意**：上述命令将从 RefSeq 下载所有含有“coelicolor”的细菌基因组。
@@ -149,7 +149,7 @@ ncbi-genome-download --genus coelicolor --fuzzy-genus bacteria
 要基于NCBI物种分类ID从RefSeq下载细菌基因组，请运行：
 
 ``` bash 
-ncbi-genome-download --species-taxid 562 bacteria
+ncbi-genome-download --species-taxids 562 bacteria
 ```
 
 **注意**：上述命令将下载属于*Escherichia coli*（大肠杆菌）的所有RefSeq基因组。
@@ -157,7 +157,7 @@ ncbi-genome-download --species-taxid 562 bacteria
 要基于NCBI分类标识ID从RefSeq下载特定细菌基因组，请运行：
 
 ``` bash 
-ncbi-genome-download --taxid 511145 bacteria
+ncbi-genome-download --taxids 511145 bacteria
 ```
 
 **注意**：上述命令将从 RefSeq 下载属于*Escherichia coli str. K-12 substr. MG1655*的基因组 。
@@ -165,12 +165,12 @@ ncbi-genome-download --taxid 511145 bacteria
 也可以下载多种分类ID或通过在逗号分隔列表中提供数字来下载多种分类ID物种：
 
 ``` bash 
-ncbi-genome-download --taxid 9606,9685 --assembly-level chromosome vertebrate_mammalian
+ncbi-genome-download --taxids 9606,9685 --assembly-levels chromosome vertebrate_mammalian
 ```
 
 **注意**：上述命令将下载猫和人类的参考基因组。
 
-此外，您可以将多个物种分类ID或物种分类ID放入一个文件中，每行一个，并将该文件名分别传递给`--species-taxid`或`--taxid`参数。
+此外，您可以将多个物种分类ID或物种分类ID放入一个文件中，每行一个，并将该文件名分别传递给`--species-taxids`或`--taxids`参数。
 
 假设您有一个`my_taxids.txt`文件包含以下内容：
 
@@ -182,7 +182,7 @@ ncbi-genome-download --taxid 9606,9685 --assembly-level chromosome vertebrate_ma
 你可以下载猫和人的参考基因组，如下所示：
 
 ``` bash 
-ncbi-genome-download --taxid my_taxids.txt --assembly-level chromosome vertebrate_mammalian
+ncbi-genome-download --taxids my_taxids.txt --assembly-levels chromosome vertebrate_mammalian
 ```
 
 也可以创建可读的目录结构，并行镜像 NCBI 使用的布局：

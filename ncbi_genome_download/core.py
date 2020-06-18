@@ -7,6 +7,7 @@ import errno
 import hashlib
 import logging
 import os
+import sys
 from io import StringIO
 from multiprocessing import Pool
 
@@ -24,34 +25,49 @@ from .summary import SummaryReader
 CACHE_DIR = user_cache_dir(appname="ncbi-genome-download", appauthor="kblin")
 
 
+class DeprecatedAction(argparse.Action):
+    def __init__(self, option_strings, *args, new_name=None, **kwargs):
+        if new_name is None:
+            raise ValueError("new_name must be set to name of new argument")
+        super(DeprecatedAction, self).__init__(option_strings, *args, **kwargs)
+        self.new_name = new_name
+
+    def __call__(self, parser, namespace, values, option_string=None):
+        print('Deprecated: option', option_string, 'is deprecated, please use', self.new_name, 'instead',
+              file=sys.stderr)
+        setattr(namespace, self.dest, values)
+
+
 def argument_parser(version=None):
     """Create the argument parser for ncbi-genome-download."""
     parser = argparse.ArgumentParser()
-    parser.add_argument('group',
-                        default=NgdConfig.get_default('group'),
-                        help='The NCBI taxonomic group to download (default: %(default)s). '
+    parser.add_argument('groups',
+                        default=NgdConfig.get_default('groups'),
+                        help='The NCBI taxonomic groups to download (default: %(default)s). '
                         'A comma-separated list of taxonomic groups is also possible. For example: "bacteria,viral"'
-                        'Choose from: {choices}'.format(choices=NgdConfig.get_choices('group')))
+                        'Choose from: {choices}'.format(choices=NgdConfig.get_choices('groups')))
     parser.add_argument('-s', '--section', dest='section',
                         choices=NgdConfig.get_choices('section'),
                         default=NgdConfig.get_default('section'),
                         help='NCBI section to download (default: %(default)s)')
-    parser.add_argument('-F', '--format', dest='file_format',
-                        default=NgdConfig.get_default('file_format'),
-                        help='Which format to download (default: %(default)s).'
+    parser.add_argument('-F', '--formats', dest='file_formats',
+                        default=NgdConfig.get_default('file_formats'),
+                        help='Which formats to download (default: %(default)s).'
                         'A comma-separated list of formats is also possible. For example: "fasta,assembly-report". '
-                        'Choose from: {choices}'.format(choices=NgdConfig.get_choices('file_format')))
-    parser.add_argument('-l', '--assembly-level', dest='assembly_level',
-                        default=NgdConfig.get_default('assembly_level'),
-                        help='Assembly level of genomes to download (default: %(default)s). '
+                        'Choose from: {choices}'.format(choices=NgdConfig.get_choices('file_formats')))
+    parser.add_argument('-l', '--assembly-levels', dest='assembly_levels',
+                        default=NgdConfig.get_default('assembly_levels'),
+                        help='Assembly levels of genomes to download (default: %(default)s). '
                         'A comma-separated list of assembly levels is also possible. '
                         'For example: "complete,chromosome". '
-                        'Coose from: {choices}'.format(choices=NgdConfig.get_choices('assembly_level')))
-    parser.add_argument('-g', '--genus', dest='genus',
-                        default=NgdConfig.get_default('genus'),
-                        help='Only download sequences of the provided genus. '
+                        'Coose from: {choices}'.format(choices=NgdConfig.get_choices('assembly_levels')))
+    parser.add_argument('-g', '--genera', dest='genera',
+                        default=NgdConfig.get_default('genera'),
+                        help='Only download sequences of the provided genera. '
                         'A comma-seperated list of genera is also possible. For example: '
                         '"Streptomyces coelicolor,Escherichia coli". (default: %(default)s)')
+    parser.add_argument('--genus', dest='genera', action=DeprecatedAction, new_name="--genera",
+                        help='Deprecated alias of --genera')
     parser.add_argument('--fuzzy-genus', dest='fuzzy_genus', action="store_true",
                         default=NgdConfig.get_default('fuzzy_genus'),
                         help="Use a fuzzy search on the organism name instead of an exact match.")
@@ -60,14 +76,14 @@ def argument_parser(version=None):
                         help='Only download sequences of the given strain(s). '
                         'A comma-separated list of strain names is possible, as well as a path to a filename '
                         'containing one name per line.')
-    parser.add_argument('-T', '--species-taxid', dest='species_taxid',
-                        default=NgdConfig.get_default('species_taxid'),
-                        help='Only download sequences of the provided species NCBI taxonomy ID. '
+    parser.add_argument('-T', '--species-taxids', dest='species_taxids',
+                        default=NgdConfig.get_default('species_taxids'),
+                        help='Only download sequences of the provided species NCBI taxonomy IDs. '
                              'A comma-separated list of species taxids is also possible. For example: "52342,12325". '
                              '(default: %(default)s)')
-    parser.add_argument('-t', '--taxid', dest='taxid',
-                        default=NgdConfig.get_default('taxid'),
-                        help='Only download sequences of the provided NCBI taxonomy ID. '
+    parser.add_argument('-t', '--taxids', dest='taxids',
+                        default=NgdConfig.get_default('taxids'),
+                        help='Only download sequences of the provided NCBI taxonomy IDs. '
                              'A comma-separated list of taxids is also possible. For example: "9606,9685". '
                              '(default: %(default)s)')
     parser.add_argument('-A', '--assembly-accessions', dest='assembly_accessions',
@@ -75,9 +91,12 @@ def argument_parser(version=None):
                         help='Only download sequences matching the provided NCBI assembly accession(s). '
                         'A comma-separated list of accessions is possible, as well as a path to a filename '
                         'containing one accession per line.')
-    parser.add_argument('-R', '--refseq-category', dest='refseq_category',
-                        default=NgdConfig.get_default('refseq_category'),
-                        help='Only download sequences of the provided refseq category (default: %(default)s)')
+    parser.add_argument('-R', '--refseq-categories', dest='refseq_categories',
+                        default=NgdConfig.get_default('refseq_categories'),
+                        help='Only download sequences of the provided refseq categories (default: %(default)s)')
+    parser.add_argument('--refseq-category', dest='refseq_categories',
+                        action=DeprecatedAction, new_name="--refseq-categories",
+                        help="Deprecated alias for --refseq-categories")
     parser.add_argument('-o', '--output-folder', dest='output',
                         default=NgdConfig.get_default('output'),
                         help='Create output hierarchy in specified folder (default: %(default)s)')
@@ -108,13 +127,13 @@ def argument_parser(version=None):
                         help='print debugging information')
     parser.add_argument('-V', '--version', action='version', version=version,
                         help='print version information')
-    parser.add_argument('-M', '--type-material', dest='type_material',
-                        default=NgdConfig.get_default('type_material'),
+    parser.add_argument('-M', '--type-materials', dest='type_materials',
+                        default=NgdConfig.get_default('type_materials'),
                         help='Specifies the relation to type material for the assembly (default: %(default)s). '
                         '"any" will include assemblies with no relation to type material value defined, "all" will '
                         'download only assemblies with a defined value. '
                         'A comma-separated list of relatons. For example: "reference,synonym".  '
-                        'Choose from: {choices} .  '.format(choices=NgdConfig.get_choices('type_material')))
+                        'Choose from: {choices} .  '.format(choices=NgdConfig.get_choices('type_materials')))
 
     return parser
 
@@ -264,7 +283,7 @@ def select_candidates(config):
     """
     download_candidates = []
 
-    for group in config.group:
+    for group in config.groups:
         summary_file = get_summary(config.section, group, config.uri, config.use_cache)
         entries = parse_summary(summary_file)
 
@@ -292,27 +311,27 @@ def filter_entries(entries, config):
 
     new_entries = []
     for entry in entries:
-        if config.type_material and config.type_material != ['any']:
-            requested_types = map(lambda x: config._RELATION_TO_TYPE_MATERIAL[x], config.type_material)
+        if config.type_materials and config.type_materials != ['any']:
+            requested_types = map(lambda x: config._RELATION_TO_TYPE_MATERIAL[x], config.type_materials)
             if not entry['relation_to_type_material'] or entry['relation_to_type_material'] not in requested_types:
                 logger.debug("Skipping assembly with no reference to type material or reference to type material does "
                              "not match requested")
                 continue
-        if config.genus and not in_genus_list(entry['organism_name'], config.genus):
+        if config.genera and not in_genus_list(entry['organism_name'], config.genera):
             logger.debug('Organism name %r does not start with any in %r, skipping',
-                         entry['organism_name'], config.genus)
+                         entry['organism_name'], config.genera)
             continue
         if config.strains and get_strain(entry) not in config.strains:
             logger.debug('Strain name %r does not match with any in %r, skipping',
                          get_strain(entry), config.strains)
             continue
-        if config.species_taxid and entry['species_taxid'] not in config.species_taxid:
+        if config.species_taxids and entry['species_taxid'] not in config.species_taxids:
             logger.debug('Species TaxID %r does not match with any in %r, skipping',
-                         entry['species_taxid'], config.species_taxid)
+                         entry['species_taxid'], config.species_taxids)
             continue
-        if config.taxid and entry['taxid'] not in config.taxid:
+        if config.taxids and entry['taxid'] not in config.taxids:
             logger.debug('Organism TaxID %r does not match with any in %r, skipping',
-                         entry['taxid'], config.taxid)
+                         entry['taxid'], config.taxids)
             continue
         if not config.is_compatible_assembly_accession(entry['assembly_accession']):
             logger.debug('Skipping entry with incompatible assembly accession %r', entry['assembly_accession'])
@@ -322,7 +341,7 @@ def filter_entries(entries, config):
             continue
         if not config.is_compatible_refseq_category(entry['refseq_category']):
             logger.debug('Skipping entry with refseq_category %r, not %r', entry['refseq_category'],
-                         config.refseq_category)
+                         config.refseq_categories)
             continue
         if entry['ftp_path'] == "na":
             logger.warning("Skipping entry, as it has no ftp directory listed: %r", entry['assembly_accession'])
@@ -413,7 +432,7 @@ def create_downloadjob(entry, domain, config):
     parsed_checksums = parse_checksums(checksums)
 
     download_jobs = []
-    for fmt in config.file_format:
+    for fmt in config.file_formats:
         try:
             if has_file_changed(full_output_dir, parsed_checksums, fmt):
                 download_jobs.append(
