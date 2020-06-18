@@ -180,7 +180,7 @@ def config_download(config):
         if config.dry_run:
             print("Considering the following {} assemblies for download:".format(len(download_candidates)))
             for entry, _ in download_candidates:
-                print(entry['assembly_accession'], entry['organism_name'], sep="\t")
+                print(entry['assembly_accession'], entry['organism_name'], get_strain(entry), sep="\t")
 
             return 0
 
