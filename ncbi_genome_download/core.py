@@ -246,7 +246,7 @@ def config_download(config):
                         _jobs = jobs
                     # add a wrapper for progress bar
                     # 0xFFFF is just "a really long time"
-                    [_.get(0xFFFF) for _ in tqdm(_jobs)]
+                    [_.get(0xFFFF) for _ in _jobs]
                 except KeyboardInterrupt:
                     # TODO: Actually test this once I figure out how to do this in py.test
                     logger.error("Interrupted by user")
