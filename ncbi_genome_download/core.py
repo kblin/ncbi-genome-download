@@ -10,6 +10,7 @@ import os
 import sys
 from io import StringIO
 from multiprocessing import Pool
+from tqdm import tqdm
 
 import requests
 
@@ -105,6 +106,8 @@ def argument_parser(version=None):
                         help='Dump all files right into the output folder without creating any subfolders.')
     parser.add_argument('-H', '--human-readable', dest='human_readable', action='store_true',
                         help='Create links in human-readable hierarchy (might fail on Windows)')
+    parser.add_argument('-pb', '--progress-bar', dest='progress_bar', action='store_false',
+                        help='Create a progress bar for indicating the download progress')
     parser.add_argument('-u', '--uri', dest='uri',
                         default=NgdConfig.get_default('uri'),
                         help='NCBI base URI to use (default: %(default)s)')
@@ -211,8 +214,13 @@ def config_download(config):
                 curr_jobs = create_downloadjob(entry, group, config)
                 fill_metadata(curr_jobs, entry, mtable)
                 download_jobs.extend(curr_jobs)
+            if config.progress_bar:
+                tqdm.write("start download. No parallel")
+                _download_jobs = tqdm(download_jobs)
+            else:
+                _download_jobs = download_jobs
 
-            for dl_job in download_jobs:
+            for dl_job in _download_jobs:
                 worker(dl_job)
         else:  # pragma: no cover
             # Testing multiprocessing code is annoying
@@ -221,15 +229,24 @@ def config_download(config):
                         downloadjob_creator_caller,
                         [ (entry, group, config) for entry, group in download_candidates ],
                     )
+
                 for index, created_dl_job in enumerate(dl_jobs):
                     download_jobs.extend(created_dl_job)
                     # index is conserved from download_candidates with the use of imap
                     fill_metadata(created_dl_job, download_candidates[index][0], mtable)
 
-                jobs = pool.map_async(worker, download_jobs)
+                jobs = [pool.apply_async(worker, (_,))
+                        for _ in download_jobs]
                 try:
+
+                    if config.progress_bar:
+                        tqdm.write("start download. Parallel=5")
+                        _jobs = tqdm(jobs)
+                    else:
+                        _jobs = jobs
+                    # add a wrapper for progress bar
                     # 0xFFFF is just "a really long time"
-                    jobs.get(0xFFFF)
+                    [_.get(0xFFFF) for _ in tqdm(_jobs)]
                 except KeyboardInterrupt:
                     # TODO: Actually test this once I figure out how to do this in py.test
                     logger.error("Interrupted by user")

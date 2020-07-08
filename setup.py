@@ -13,6 +13,7 @@ long_description = read('README.md')
 install_requires = [
     'appdirs',
     'requests >= 2.4.3',
+    'tqdm'
 ]
 
 tests_require = [
