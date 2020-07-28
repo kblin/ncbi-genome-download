@@ -24,6 +24,14 @@ def test_bacteria_unicode():
     assert 'ftp_path' in first
 
 
+def test_weird_organism_name():
+    ascii_file = open_testfile('weird_organism_name_summary.txt')
+    reader = SummaryReader(ascii_file)
+    first = next(reader)
+    assert 'assembly_accession' in first
+    assert 'ftp_path' in first
+
+
 # stupid viral summary file has an extra comment
 def test_virus():
     utf8_file = open_testfile('viral_summary.txt')

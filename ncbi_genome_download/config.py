@@ -1,19 +1,24 @@
 """Configuration for the downloader."""
-
 import codecs
 from collections import OrderedDict
 import os
-import sys
 
-SUPPORTED_TAXONOMIC_GROUPS = ['archaea', 'bacteria', 'fungi', 'invertebrate', 'plant', 'protozoa',
-                              'vertebrate_mammalian', 'vertebrate_other', 'viral']
+SUPPORTED_TAXONOMIC_GROUPS = [
+    'archaea',
+    'bacteria',
+    'fungi',
+    'invertebrate',
+    'metagenomes',
+    'plant',
+    'protozoa',
+    'vertebrate_mammalian',
+    'vertebrate_other',
+    'viral'
+]
 
-
-# TODO: Remove this once we drop py2 support
-if sys.version_info[0] == 2:  # pragma: no cover
-    string_type = basestring
-else:
-    string_type = str
+GENBANK_EXCLUSIVE = [
+        'metagenomes'
+        ]
 
 
 class NgdConfig(object):
@@ -45,17 +50,30 @@ class NgdConfig(object):
     _REFSEQ_CATEGORIES = OrderedDict([
         ('reference', 'reference genome'),
         ('representative', 'representative genome'),
+        ('na', 'na'),
+    ])
+
+    _RELATION_TO_TYPE_MATERIAL = OrderedDict([
+        ('type', 'assembly from type material'),
+        ('reference', 'assembly from reference material'),
+        ('synonym', 'assembly from synonym type material'),
+        ('proxytype', 'assembly from proxytype material'),
+        ('neotype', 'assembly designated as neotype')
     ])
 
     _DEFAULTS = {
-        'group': ['all'] + SUPPORTED_TAXONOMIC_GROUPS,
+        'groups': ['all'] + SUPPORTED_TAXONOMIC_GROUPS,
         'section': ['refseq', 'genbank'],
-        'file_format': list(_FORMATS) + ['all'],
-        'assembly_level': ['all'] + list(_LEVELS),
-        'refseq_category': ['all'] + list(_REFSEQ_CATEGORIES),
-        'genus': [],
-        'species_taxid': [],
-        'taxid': [],
+        'file_formats': list(_FORMATS) + ['all'],
+        'assembly_levels': ['all'] + list(_LEVELS),
+        'refseq_categories': ['all'] + list(_REFSEQ_CATEGORIES),
+        'genera': [],
+        'strains': [],
+        'flat_output': False,
+        'fuzzy_accessions': False,
+        'fuzzy_genus': False,
+        'species_taxids': [],
+        'taxids': [],
         'assembly_accessions': [],
         'output': os.getcwd(),
         'uri': 'https://ftp.ncbi.nih.gov/genomes',
@@ -64,28 +82,37 @@ class NgdConfig(object):
         'metadata_table': None,
         'dry_run': False,
         'use_cache': False,
+        'type_materials': ['any', 'all'] + list(_RELATION_TO_TYPE_MATERIAL)
     }
 
     _LIST_TYPES = set([
         'assembly_accessions',
-        'assembly_level',
-        'group',
-        'file_format',
-        'genus',
-        'species_taxid',
-        'taxid',
+        'assembly_levels',
+        'groups',
+        'file_formats',
+        'genera',
+        'strains',
+        'refseq_categories',
+        'species_taxids',
+        'taxids',
+        'type_materials'
     ])
 
     __slots__ = (
-        '_group',
-        '_section',
-        '_file_format',
-        '_assembly_level',
-        '_refseq_category',
-        '_genus',
-        '_species_taxid',
-        '_taxid',
+        '_section',  # section needs to be set first, because group init uses it
+        '_groups',
+        '_file_formats',
+        '_assembly_levels',
+        '_refseq_categories',
+        '_genera',
+        '_strains',
+        '_species_taxids',
+        '_taxids',
+        '_type_materials',
         '_assembly_accessions',
+        'flat_output',
+        'fuzzy_accessions',
+        'fuzzy_genus',
         'output',
         'uri',
         'parallel',
@@ -113,101 +140,129 @@ class NgdConfig(object):
             raise ValueError("Unsupported section {}".format(value))
         self._section = value
 
-    # TODO: Rename this to 'groups' once we do the next API bump
     @property
-    def group(self):
+    def groups(self):
         """Access the taxonomic groups."""
-        return self._group
+        return self._groups
 
-    @group.setter
-    def group(self, value):
+    @groups.setter
+    def groups(self, value):
         groups = _create_list(value)
 
-        available_groups = set(self._DEFAULTS['group'])
+        available_groups = set(self._DEFAULTS['groups'])
         for group in groups:
             if group not in available_groups:
                 raise ValueError("Unsupported group: {}".format(group))
+            if self.section == "refseq" and group in GENBANK_EXCLUSIVE:
+                raise ValueError("Unsupported group in refseq: {}".format(group))
 
         if 'all' in groups:
             groups = SUPPORTED_TAXONOMIC_GROUPS
 
-        self._group = groups
+        self._groups = groups
 
-    # TODO: Rename this to 'file_formats' once we do the next API bump
     @property
-    def file_format(self):
+    def file_formats(self):
         """Get the file format to downoad."""
-        return self._file_format
+        return self._file_formats
 
-    @file_format.setter
-    def file_format(self, value):
+    @file_formats.setter
+    def file_formats(self, value):
         formats = _create_list(value)
 
-        available_formats = set(self._DEFAULTS['file_format'])
+        available_formats = set(self._DEFAULTS['file_formats'])
         for file_format in formats:
             if file_format not in available_formats:
                 raise ValueError("Unsupported file format: {}".format(file_format))
         if 'all' in formats:
             formats = list(self._FORMATS)
 
-        self._file_format = formats
+        self._file_formats = formats
 
     @property
-    def assembly_level(self):
+    def assembly_levels(self):
         """Get the assembly level."""
-        return self._assembly_level
+        return self._assembly_levels
 
-    @assembly_level.setter
-    def assembly_level(self, value):
+    @assembly_levels.setter
+    def assembly_levels(self, value):
         levels = _create_list(value)
-        available_levels = set(self._DEFAULTS['assembly_level'])
+        available_levels = set(self._DEFAULTS['assembly_levels'])
         for level in levels:
             if level not in available_levels:
                 raise ValueError("Unsupported assembly level: {}".format(level))
         if 'all' in levels:
             levels = list(self._LEVELS)
-        self._assembly_level = levels
+        self._assembly_levels = levels
 
     @property
-    def refseq_category(self):
-        """Get the refseq_category."""
-        return self._refseq_category
+    def type_materials(self):
+        """Get the relation to type material. """
+        return self._type_materials
 
-    @refseq_category.setter
-    def refseq_category(self, value):
-        if value not in self._DEFAULTS['refseq_category']:
-            raise ValueError("Unsupported refseq_category: {}".format(value))
-        self._refseq_category = value
+    @type_materials.setter
+    def type_materials(self, value):
+        type_materials = _create_list(value)
+        available_types = set(self._DEFAULTS['type_materials'])
+        for type_material in type_materials:
+            if type_material not in available_types:
+                raise ValueError("Unsupported relation to type material: {}".format(type_material))
+        if 'all' in type_materials:
+            type_materials = list(self._RELATION_TO_TYPE_MATERIAL)
+        elif 'any' in type_materials:
+            type_materials = ['any']
+        self._type_materials = type_materials
 
-    # TODO: Rename to 'taxids' once we do the next API bump
     @property
-    def taxid(self):
-        """Get the taxid."""
-        return self._taxid
+    def refseq_categories(self):
+        """Get the refseq_categories."""
+        return self._refseq_categories
 
-    @taxid.setter
-    def taxid(self, value):
-        self._taxid = _create_list(value, allow_filename=True)
+    @refseq_categories.setter
+    def refseq_categories(self, value):
+        refseq_categories = _create_list(value)
+        for category in refseq_categories:
+            if category not in self._DEFAULTS['refseq_categories']:
+                raise ValueError("Unsupported refseq_category: {}".format(category))
+        if 'all' in refseq_categories:
+            refseq_categories = list(self._REFSEQ_CATEGORIES)
+        self._refseq_categories = refseq_categories
 
-    # TODO: Rename to 'species_taxids' once we do the next API bump
     @property
-    def species_taxid(self):
+    def taxids(self):
+        """Get the taxids."""
+        return self._taxids
+
+    @taxids.setter
+    def taxids(self, value):
+        self._taxids = _create_list(value, allow_filename=True)
+
+    @property
+    def species_taxids(self):
         """Get the species_taxids."""
-        return self._species_taxid
+        return self._species_taxids
 
-    @species_taxid.setter
-    def species_taxid(self, value):
-        self._species_taxid = _create_list(value, allow_filename=True)
+    @species_taxids.setter
+    def species_taxids(self, value):
+        self._species_taxids = _create_list(value, allow_filename=True)
 
-    # TODO: Rename to 'genera' once we do the next API bump
     @property
-    def genus(self):
+    def genera(self):
         """Get the genera."""
-        return self._genus
+        return self._genera
 
-    @genus.setter
-    def genus(self, value):
-        self._genus = _create_list(value, allow_filename=True)
+    @genera.setter
+    def genera(self, value):
+        self._genera = _create_list(value, allow_filename=True)
+
+    @property
+    def strains(self):
+        """Get the strains."""
+        return self._strains
+
+    @strains.setter
+    def strains(self, value):
+        self._strains = _create_list(value, allow_filename=True)
 
     @property
     def assembly_accessions(self):
@@ -224,12 +279,23 @@ class NgdConfig(object):
         if not self.assembly_accessions:
             return True
 
-        return acc in self.assembly_accessions
+        if not self.fuzzy_accessions:
+            return acc in self.assembly_accessions
+        else:
+            for specified in self.assembly_accessions:
+                if acc.startswith(specified):
+                    return True
+            return False
 
     def is_compatible_assembly_level(self, ncbi_assembly_level):
         """Check if a given ncbi assembly level string matches the configured assembly levels."""
-        configured_ncbi_strings = [self._LEVELS[level] for level in self.assembly_level]
+        configured_ncbi_strings = [self._LEVELS[level] for level in self.assembly_levels]
         return ncbi_assembly_level in configured_ncbi_strings
+
+    def is_compatible_refseq_category(self, category):
+        """Check if a given refseq category matches the configured category."""
+        configured_refseq_categories = [self.get_refseq_category_string(category) for category in self.refseq_categories]
+        return category in configured_refseq_categories
 
     @classmethod
     def from_kwargs(cls, **kwargs):
@@ -294,7 +360,7 @@ def _create_list(value, allow_filename=False):
     """
     if isinstance(value, list):
         return value
-    elif isinstance(value, string_type):
+    elif isinstance(value, str):
         if allow_filename and os.path.isfile(value):
             with codecs.open(value, 'r', encoding="utf-8") as handle:
                 return handle.read().splitlines()

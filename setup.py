@@ -7,6 +7,7 @@ from setuptools.command.test import test as TestCommand
 def read(fname):
     return open(os.path.join(os.path.dirname(__file__), fname)).read()
 
+
 long_description = read('README.md')
 
 install_requires = [
@@ -14,17 +15,8 @@ install_requires = [
     'requests >= 2.4.3',
 ]
 
-# Can't use environment markers on old setuptools, so fix the requirements
-# dynamically here. For wheels, again override the requirements in setup.cfg
-# to not cause conflicts.
-if sys.version_info[:3] < (2, 7, 9):
-    install_requires.extend(['pyOpenSSL', 'ndg-httpsclient'])
-
-# Enum is only available since 3.4
-if sys.version_info[:3] < (3, 4, 0):
-    install_requires.extend(['enum34',])
-
 tests_require = [
+    'flake8',
     'pytest',
     'coverage',
     'pytest-cov',
@@ -73,6 +65,7 @@ setup(
     license='Apache Software License',
     classifiers=[
         'Programming Language :: Python',
+        'Programming Language :: Python :: 3',
         'Development Status :: 3 - Alpha',
         'Intended Audience :: Science/Research',
         'Topic :: Scientific/Engineering :: Bio-Informatics',
@@ -82,4 +75,7 @@ setup(
     extras_require={
         'testing': tests_require,
     },
+    scripts=[
+        'contrib/gimme_taxa.py',
+    ],
 )

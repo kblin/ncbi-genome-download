@@ -1,0 +1,3 @@
+#   See ftp://ftp.ncbi.nlm.nih.gov/genomes/README_assembly_summary.txt for a description of the columns in this file.
+# assembly_accession	bioproject	biosample	wgs_master	refseq_category	taxid	species_taxid	organism_name	infraspecific_name	isolate	version_status	assembly_level	release_type	genome_rep	seq_rel_date	asm_name	submitter	gbrs_paired_asm	paired_asm_comp	ftp_path	excluded_from_refseq	relation_to_type_material
+GCA_002686315.1	PRJNA391943	SAMN07618365	NZBO00000000.1	na	1906665	1906665	archaeon		ARS1334	latest	Contig	Major	Full	2017/10/24	ASM268631v1	Tara Oceans Consortium	na	na	ftp://ftp.ncbi.nlm.nih.gov/genomes/all/GCA/002/686/315/GCA_002686315.1_ASM268631v1	derived from metagenome	
