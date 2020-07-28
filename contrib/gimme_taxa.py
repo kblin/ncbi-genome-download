@@ -7,24 +7,13 @@ via the ETE3 toolkit.
 
 Depends on ETE3 (obviously).
 
-TODO:
-  - Add some of the tree functionality?
-  - Offer more CLI options for arguments to subcommands?
-     -> E.g. collapse_subspecies to get_descendent_taxa
-  - Alter script to query multiple taxids at once for topology etc?
-  - Include some functionality in future for the Phlyo methods in ETE?
-  - Consider making update trigger automatically if certain time has elapsed?
-    -> Would need to check if that logic already exists in ete.
-  - Make lineage also print out with the scientific names
-    -> names = ncbi.get_taxid_translator(lineage)... etc
-  - Allow users to specify a different directory for the tax_dump
 """
 
 __author__ = "Joe R. J. Healey; Nick Youngblut"
 __version__ = "1.1"
 __title__ = "gimme_taxa"
 __license__ = "Apache2.0"
-__author_email__ = "J.R.J.Healey@warwick.ac.uk"
+__author_email__ = "jrj.healey@gmail.com"
 
 
 # Check script compatibilities and module requirements
@@ -51,6 +40,7 @@ Exception: %s
 """ % exc
     print(msg)
     sys.exit(1)
+
 
 def get_args():
     """Parse command line arguments
@@ -87,15 +77,6 @@ def get_args():
 			help='Output file to store the descendent TaxIDs for the query.')
     return parser.parse_args()
 
-def pretty(d, indent=0):
-    """A prettier way to print nested dicts
-    """
-    for key, value in d.items():
-        print('  ' * indent + str(key))
-        if isinstance(value, dict):
-            pretty(value, indent+1)
-        else:
-            sys.stderr.write('  ' * (indent+1) + str(value) + '\n')
 
 def desc_taxa(taxid, ncbi, outFH, just_taxids=False):
     """Write descendent taxa for taxid
@@ -112,6 +93,7 @@ def desc_taxa(taxid, ncbi, outFH, just_taxids=False):
             x = [str(x) for x in [taxid, dt, dtn]]
             outFH.write('\t'.join(x) + '\n')
 
+
 def taxon_info(taxid, ncbi, outFH):
     """Write info on taxid
     """
@@ -123,6 +105,7 @@ def taxon_info(taxid, ncbi, outFH):
     lineage = ';'.join(lineage)
     x = [str(x) for x in [tax_name, taxid, rank, lineage]]
     outFH.write('\t'.join(x) + '\n')
+
 
 def name2taxid(taxids, ncbi):
     """Converting taxon names to taxids
@@ -139,6 +122,7 @@ def name2taxid(taxids, ncbi):
                 raise ValueError(msg.format(taxid))
 
     return new_taxids
+
     
 def main():
     """Make queries against NCBI Taxa databases
