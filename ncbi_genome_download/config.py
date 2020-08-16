@@ -79,7 +79,7 @@ class NgdConfig(object):
         'uri': 'https://ftp.ncbi.nih.gov/genomes',
         'parallel': 1,
         'human_readable': False,
-        'progress_bar': True,
+        'progress_bar': False,
         'metadata_table': None,
         'dry_run': False,
         'use_cache': False,
