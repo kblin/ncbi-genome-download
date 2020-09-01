@@ -61,7 +61,7 @@ def argument_parser(version=None):
                         help='Assembly levels of genomes to download (default: %(default)s). '
                         'A comma-separated list of assembly levels is also possible. '
                         'For example: "complete,chromosome". '
-                        'Coose from: {choices}'.format(choices=NgdConfig.get_choices('assembly_levels')))
+                        'Choose from: {choices}'.format(choices=NgdConfig.get_choices('assembly_levels')))
     parser.add_argument('-g', '--genera', dest='genera',
                         default=NgdConfig.get_default('genera'),
                         help='Only download sequences of the provided genera. '
