@@ -1,3 +1,0 @@
-include *.md
-include *.txt
-include tests/*.txt
