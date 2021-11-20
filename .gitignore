@@ -13,3 +13,6 @@ dist/*
 
 # neovim
 .vim/*
+
+# vscode
+.vscode/*
