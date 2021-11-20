@@ -19,7 +19,7 @@ def _get_file(fname):
     return path.join(path.dirname(__file__), fname)
 
 
-@pytest.yield_fixture
+@pytest.fixture
 def req():
     """Fake requests object."""
     with requests_mock.mock() as req:

@@ -159,7 +159,10 @@ class NgdConfig(object):
                 raise ValueError("Unsupported group in refseq: {}".format(group))
 
         if 'all' in groups:
-            groups = SUPPORTED_TAXONOMIC_GROUPS
+            groups = SUPPORTED_TAXONOMIC_GROUPS[::]
+            if self.section == "refseq":
+                for group in GENBANK_EXCLUSIVE:
+                    groups.remove(group)
 
         self._groups = groups
 
