@@ -228,7 +228,7 @@ def config_download(config):
             with Pool(processes=config.parallel) as pool:
                 dl_jobs = pool.imap(
                         downloadjob_creator_caller,
-                        [ (entry, group, config) for entry, group in download_candidates ],
+                        [(entry, group, config) for entry, group in download_candidates],
                     )
 
                 for index, created_dl_job in enumerate(dl_jobs):

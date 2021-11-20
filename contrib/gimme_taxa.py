@@ -1,5 +1,4 @@
-#!/usr/bin/env python
-from __future__ import print_function
+#!/usr/bin/env python3
 
 """
 Perform various queries and tasks with the NCBI taxonomy database,
@@ -32,10 +31,10 @@ The ete3 import failed, the module doesn't appear to be installed
 Try running:
  $ python -m pip install ete3 six
 
-or 
+or
 
  $ conda install -c etetoolkit ete3 ete_toolchain
- 
+
 Exception: %s
 """ % exc
     print(msg)
@@ -47,41 +46,41 @@ def get_args():
     """
     desc = 'Perform queries against the NCBI Taxa database'
     epi = """DESCRIPTION:
-    This script lets you find out what TaxIDs to pass to ngd, and will write 
-    a simple one-item-per-line file to pass in to it. It utilises the ete3 
-    toolkit, so refer to their site to install the dependency if it's not 
+    This script lets you find out what TaxIDs to pass to ngd, and will write
+    a simple one-item-per-line file to pass in to it. It utilises the ete3
+    toolkit, so refer to their site to install the dependency if it's not
     already satisfied.
 
-    You can query the database using a particular TaxID, or a scientific name. 
+    You can query the database using a particular TaxID, or a scientific name.
     The primary function of the script is to return all the child taxa of the
     specified parent taxa. If specified with -v verbose flags however, the
     script will also print out some information about the lineages etc.
- 
+
     WARNING: This script is still somewhat experimental
     """
     parser = argparse.ArgumentParser(description=desc, epilog=epi,
                                      formatter_class=argparse.RawTextHelpFormatter)
     parser.add_argument('taxid', metavar='taxid', type=str,
-			help='A comma-separated list of TaxIDs and/or taxon names. (e.g. 561,2172)')   
+                        help='A comma-separated list of TaxIDs and/or taxon names. (e.g. 561,2172)')
     parser.add_argument('-v', '--verbose', action='count', default=0,
-			help='Verbose behaviour. Supports 3 levels at present: Off = 0, Info = 1, Verbose = 2. (default: %(default)s)')
+                        help='Verbose behaviour. Supports 3 levels at present: Off = 0, Info = 1, Verbose = 2. (default: %(default)s)')  # noqa: E501
     parser.add_argument('-d', '--database', type=str, default=None,
-			help='NCBI taxonomy database file path. If "None", it will be downloaded (default: %(default)s)')
+                        help='NCBI taxonomy database file path. If "None", it will be downloaded (default: %(default)s)')  # noqa: E501
     parser.add_argument('-u', '--update', action='store_true', default=False,
-                        help='Update the local taxon database before querying. Recommended if not used for a while. (default: %(default)s)')
+                        help='Update the local taxon database before querying. Recommended if not used for a while. (default: %(default)s)')  # noqa: E501
     parser.add_argument('-j', '--just-taxids', action='store_true', default=False,
                         help='Just write out a list of taxids an no other information (default: %(default)s)')
     parser.add_argument('-i', '--taxon-info', action='store_true', default=False,
                         help='Just write out rank & lineage info on the provided taxids (default: %(default)s)')
     parser.add_argument('-o', '--outfile', action='store',
-			help='Output file to store the descendent TaxIDs for the query.')
+                        help='Output file to store the descendent TaxIDs for the query.')
     return parser.parse_args()
 
 
 def desc_taxa(taxid, ncbi, outFH, just_taxids=False):
     """Write descendent taxa for taxid
     """
-    # Main feature of the script is to get all taxa within a given group.	
+    # Main feature of the script is to get all taxa within a given group.
     descendent_taxa = ncbi.get_descendant_taxa(taxid)
     descendent_taxa_names = ncbi.translate_to_names(descendent_taxa)
 
@@ -101,7 +100,7 @@ def taxon_info(taxid, ncbi, outFH):
     tax_name = ncbi.get_taxid_translator([taxid])[taxid]
     rank = list(ncbi.get_rank([taxid]).values())[0]
     lineage = ncbi.get_taxid_translator(ncbi.get_lineage(taxid))
-    lineage = ['{}:{}'.format(k,v) for k,v in lineage.items()]
+    lineage = ['{}:{}'.format(k, v) for k, v in lineage.items()]
     lineage = ';'.join(lineage)
     x = [str(x) for x in [tax_name, taxid, rank, lineage]]
     outFH.write('\t'.join(x) + '\n')
@@ -123,16 +122,16 @@ def name2taxid(taxids, ncbi):
 
     return new_taxids
 
-    
+
 def main():
     """Make queries against NCBI Taxa databases
     """
-    # Get commandline args		
+    # Get commandline args
     args = get_args()
-	
+
     # Instantiate the ete NCBI taxa object
     ncbi = NCBITaxa(dbfile=args.database)
-    ## dbfile location
+    # dbfile location
     if args.verbose > 1:
         sys.stderr.write('Taxa database is stored at {}\n'.format(ncbi.dbfile))
 
@@ -142,7 +141,7 @@ def main():
             msg = 'Updating the taxonomy database. This may take several minutes...\n'
             sys.stderr.write(msg)
         ncbi.update_taxonomy_database()
-            
+
     # If names were provided in taxid list, convert to taxids
     args.taxid = args.taxid.replace('"', '').replace("'", '').split(',')
     args.taxid = name2taxid(args.taxid, ncbi)
@@ -152,22 +151,22 @@ def main():
         outFH = sys.stdout
     else:
         outFH = open(args.outfile, 'w')
-    ## header
+    # header
     if args.taxon_info:
         outFH.write('\t'.join(['name', 'taxid', 'rank', 'lineage']) + '\n')
     elif not args.just_taxids:
         outFH.write('\t'.join(['parent_taxid',
                                'descendent_taxid',
                                'descendent_name']) + '\n')
-    ## body
+    # body
     for taxid in args.taxid:
         if args.taxon_info:
             taxon_info(taxid, ncbi, outFH)
         else:
             desc_taxa(taxid, ncbi,  outFH, args.just_taxids)
-            
+
     outFH.close()
 
-    
+
 if __name__ == "__main__":
-	main()
+    main()

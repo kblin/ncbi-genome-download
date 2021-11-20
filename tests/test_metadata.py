@@ -23,7 +23,7 @@ def test_write():
     mtable = metadata.get([u'foo', u'bar', u'local_filename'])
     fake_entry = dict(foo=u"foo_value", bar=u"bar_value")
     mtable.add(fake_entry, u'foo/bar/baz.gbk')
-    handle  = StringIO()
+    handle = StringIO()
     expected = u"""foo\tbar\tlocal_filename
 foo_value\tbar_value\t./foo/bar/baz.gbk
 """

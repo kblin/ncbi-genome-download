@@ -306,7 +306,8 @@ class NgdConfig(object):
 
     def is_compatible_refseq_category(self, category):
         """Check if a given refseq category matches the configured category."""
-        configured_refseq_categories = [self.get_refseq_category_string(category) for category in self.refseq_categories]
+        configured_refseq_categories = [self.get_refseq_category_string(category)
+                                        for category in self.refseq_categories]
         return category in configured_refseq_categories
 
     @classmethod

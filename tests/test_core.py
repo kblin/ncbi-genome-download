@@ -126,7 +126,8 @@ def test_download_metadata(monkeypatch, mocker, req, tmpdir):
             text=summary_contents)
     mocker.spy(core, 'get_summary')
     mocker.spy(core, 'parse_summary')
-    mocker.patch('ncbi_genome_download.core.create_downloadjob', return_value=[core.DownloadJob(None, None, None, None)])
+    mocker.patch('ncbi_genome_download.core.create_downloadjob',
+                 return_value=[core.DownloadJob(None, None, None, None)])
     core.download(groups='bacteria', output='/tmp/fake', metadata_table=str(metadata_file))
     assert core.get_summary.call_count == 1
     assert core.parse_summary.call_count == 1
@@ -632,18 +633,24 @@ def test_get_name_and_checksum():
         {'checksum': 'e2d9e1cfa085cb462a73d3d2d2c22be5', 'file': 'GCF_000009605.1_ASM960v1_genomic.gff.gz'},
     )
     weird_filenames = (
-        {'checksum': '4d5f39ceb7e113ad461f8370aaac4e41', 'file': 'GCF_003583405.1_CHULA_Jazt_1.1_for_version_1.1_of_the_Jishengella_sp._nov._AZ1-13_genome_from_a_lab_in_CHULA_cds_from_genomic.fna.gz'},
-        {'checksum': 'e77c1e8bf0df2c353ce6a4899ae0cb5e', 'file': 'GCF_003583405.1_CHULA_Jazt_1.1_for_version_1.1_of_the_Jishengella_sp._nov._AZ1-13_genome_from_a_lab_in_CHULA_genomic.fna.gz'},
-        {'checksum': 'c93ba924075c8b22210ac283d41207ad', 'file': 'GCF_003583405.1_CHULA_Jazt_1.1_for_version_1.1_of_the_Jishengella_sp._nov._AZ1-13_genome_from_a_lab_in_CHULA_genomic.gbff.gz'},
-        {'checksum': 'd8394d0aff594ae962c88e1192238413', 'file': 'GCF_003583405.1_CHULA_Jazt_1.1_for_version_1.1_of_the_Jishengella_sp._nov._AZ1-13_genome_from_a_lab_in_CHULA_rna_from_genomic.fna.gz'},
+        {'checksum': '4d5f39ceb7e113ad461f8370aaac4e41', 'file': 'GCF_003583405.1_CHULA_Jazt_1.1_for_version_1.1_of_the_Jishengella_sp._nov._AZ1-13_genome_from_a_lab_in_CHULA_cds_from_genomic.fna.gz'},  # noqa: E501
+        {'checksum': 'e77c1e8bf0df2c353ce6a4899ae0cb5e', 'file': 'GCF_003583405.1_CHULA_Jazt_1.1_for_version_1.1_of_the_Jishengella_sp._nov._AZ1-13_genome_from_a_lab_in_CHULA_genomic.fna.gz'},  # noqa: E501
+        {'checksum': 'c93ba924075c8b22210ac283d41207ad', 'file': 'GCF_003583405.1_CHULA_Jazt_1.1_for_version_1.1_of_the_Jishengella_sp._nov._AZ1-13_genome_from_a_lab_in_CHULA_genomic.gbff.gz'},  # noqa: E501
+        {'checksum': 'd8394d0aff594ae962c88e1192238413', 'file': 'GCF_003583405.1_CHULA_Jazt_1.1_for_version_1.1_of_the_Jishengella_sp._nov._AZ1-13_genome_from_a_lab_in_CHULA_rna_from_genomic.fna.gz'},  # noqa: E501
     )
     test_table = (
-        TestData(regular_filenames, NgdConfig.get_fileending('genbank'), regular_filenames[2]['file'], regular_filenames[2]['checksum']),
-        TestData(regular_filenames, NgdConfig.get_fileending('fasta'), regular_filenames[1]['file'], regular_filenames[1]['checksum']),
-        TestData(regular_filenames, NgdConfig.get_fileending('cds-fasta'), regular_filenames[0]['file'], regular_filenames[0]['checksum']),
-        TestData(weird_filenames, NgdConfig.get_fileending('genbank'), weird_filenames[2]['file'], weird_filenames[2]['checksum']),
-        TestData(weird_filenames, NgdConfig.get_fileending('fasta'), weird_filenames[1]['file'], weird_filenames[1]['checksum']),
-        TestData(weird_filenames, NgdConfig.get_fileending('cds-fasta'), weird_filenames[0]['file'], weird_filenames[0]['checksum']),
+        TestData(regular_filenames,
+                 NgdConfig.get_fileending('genbank'), regular_filenames[2]['file'], regular_filenames[2]['checksum']),
+        TestData(regular_filenames,
+                 NgdConfig.get_fileending('fasta'), regular_filenames[1]['file'], regular_filenames[1]['checksum']),
+        TestData(regular_filenames,
+                 NgdConfig.get_fileending('cds-fasta'), regular_filenames[0]['file'], regular_filenames[0]['checksum']),
+        TestData(weird_filenames,
+                 NgdConfig.get_fileending('genbank'), weird_filenames[2]['file'], weird_filenames[2]['checksum']),
+        TestData(weird_filenames,
+                 NgdConfig.get_fileending('fasta'), weird_filenames[1]['file'], weird_filenames[1]['checksum']),
+        TestData(weird_filenames,
+                 NgdConfig.get_fileending('cds-fasta'), weird_filenames[0]['file'], weird_filenames[0]['checksum']),
     )
 
     for test in test_table:

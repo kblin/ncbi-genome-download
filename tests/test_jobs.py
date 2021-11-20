@@ -1,5 +1,6 @@
 from ncbi_genome_download import jobs
 
+
 def test_job_eq():
     args = ['foo', 'bar', 'baz', 'blub']
     job_a = jobs.DownloadJob(*args)
