@@ -2,6 +2,8 @@
 import codecs
 from collections import OrderedDict
 import os
+from typing import List
+
 
 SUPPORTED_TAXONOMIC_GROUPS = [
     'archaea',
@@ -143,6 +145,14 @@ class NgdConfig(object):
         self._section = value
 
     @property
+    def available_groups(self) -> List[str]:
+        groups = SUPPORTED_TAXONOMIC_GROUPS[::]
+        if self.section == "refseq":
+            groups = list(filter(lambda x: x not in GENBANK_EXCLUSIVE, groups))
+
+        return groups
+
+    @property
     def groups(self):
         """Access the taxonomic groups."""
         return self._groups
@@ -159,10 +169,7 @@ class NgdConfig(object):
                 raise ValueError("Unsupported group in refseq: {}".format(group))
 
         if 'all' in groups:
-            groups = SUPPORTED_TAXONOMIC_GROUPS[::]
-            if self.section == "refseq":
-                for group in GENBANK_EXCLUSIVE:
-                    groups.remove(group)
+            groups = self.available_groups
 
         self._groups = groups
 

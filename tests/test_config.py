@@ -3,7 +3,11 @@
 from argparse import Namespace
 import pytest
 
-from ncbi_genome_download.config import NgdConfig, SUPPORTED_TAXONOMIC_GROUPS, _create_list
+from ncbi_genome_download.config import (
+    NgdConfig,
+    SUPPORTED_TAXONOMIC_GROUPS,
+    _create_list,
+)
 
 
 def test_init():
@@ -20,6 +24,8 @@ def test_init():
                     expected = expected[:1]
             if 'all' in expected:
                 expected = expected[::].remove('all')
+            if key == "groups":
+                expected = config.available_groups
         elif isinstance(expected, list):
             expected = expected[0]
 
@@ -54,13 +60,20 @@ def test_groups():
     """Test NgdConfig.groups getters/setters."""
     config = NgdConfig()
 
-    assert config.groups == SUPPORTED_TAXONOMIC_GROUPS
+    assert config.groups == config.available_groups
 
     config.groups = ['bacteria', 'fungi']
     assert config.groups == ['bacteria', 'fungi']
 
+    # need to switch section to genbank so no groups are filtered
+    config.section = "genbank"
     config.groups = "all"
     assert config.groups == SUPPORTED_TAXONOMIC_GROUPS
+
+    # Also no metagenomes if we com in via 'all'
+    config.section = "refseq"
+    config.groups = "all"
+    assert "metagenomes" not in config.groups
 
     with pytest.raises(ValueError):
         config.groups = "garbage"

@@ -11,7 +11,7 @@ import requests_mock
 from requests.exceptions import ConnectionError
 
 from ncbi_genome_download import core, metadata
-from ncbi_genome_download import NgdConfig, SUPPORTED_TAXONOMIC_GROUPS
+from ncbi_genome_download import NgdConfig
 
 
 def _get_file(fname):
@@ -41,7 +41,7 @@ def test_download_defaults(monkeypatch, mocker):
     monkeypatch.setattr(core, 'create_downloadjob', create_downloadjob_mock)
     monkeypatch.setattr(core, 'worker', worker_mock)
     assert core.download() == 0
-    assert select_candidates_mock.call_args_list[0][0][0].groups == SUPPORTED_TAXONOMIC_GROUPS
+    assert select_candidates_mock.call_args_list[0][0][0].groups == NgdConfig().available_groups
     assert create_downloadjob_mock.call_args_list[0][0][0] == entry
 
 
@@ -60,7 +60,7 @@ def test_args_download_defaults(monkeypatch, mocker):
     monkeypatch.setattr(core, 'create_downloadjob', create_downloadjob_mock)
     monkeypatch.setattr(core, 'worker', worker_mock)
     assert core.args_download(Namespace()) == 0
-    assert select_candidates_mock.call_args_list[0][0][0].groups == SUPPORTED_TAXONOMIC_GROUPS
+    assert select_candidates_mock.call_args_list[0][0][0].groups == NgdConfig().available_groups
     assert create_downloadjob_mock.call_args_list[0][0][0] == entry
 
 
