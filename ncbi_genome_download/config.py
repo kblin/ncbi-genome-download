@@ -40,6 +40,7 @@ class NgdConfig(object):
         ('rna-fasta', '_rna_from_genomic.fna.gz'),
         ('assembly-report', '_assembly_report.txt'),
         ('assembly-stats', '_assembly_stats.txt'),
+        ('translated-cds', '_translated_cds.faa.gz'),
     ])
 
     _LEVELS = OrderedDict([
