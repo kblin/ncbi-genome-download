@@ -92,6 +92,9 @@ def argument_parser(version=None):
                         help='Only download sequences matching the provided NCBI assembly accession(s). '
                         'A comma-separated list of accessions is possible, as well as a path to a filename '
                         'containing one accession per line.')
+    parser.add_argument('--fuzzy-accessions', dest='fuzzy_accessions', action="store_true",
+                        default=NgdConfig.get_default('fuzzy_accessions'),
+                        help="Use a fuzzy search on the entry accession instead of an exact match.")
     parser.add_argument('-R', '--refseq-categories', dest='refseq_categories',
                         default=NgdConfig.get_default('refseq_categories'),
                         help='Only download sequences of the provided refseq categories (default: %(default)s)')
