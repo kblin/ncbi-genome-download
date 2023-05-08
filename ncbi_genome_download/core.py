@@ -97,7 +97,8 @@ def argument_parser(version=None):
                         help="Use a fuzzy search on the entry accession instead of an exact match.")
     parser.add_argument('-R', '--refseq-categories', dest='refseq_categories',
                         default=NgdConfig.get_default('refseq_categories'),
-                        help='Only download sequences of the provided refseq categories (default: %(default)s)')
+                        help='Only download sequences of the provided refseq categories [refrerence, representative, na]. '
+                             'A comma-separated list of categories is also possible. (default: download all categories)')
     parser.add_argument('--refseq-category', dest='refseq_categories',
                         action=DeprecatedAction, new_name="--refseq-categories",
                         help="Deprecated alias for --refseq-categories")
