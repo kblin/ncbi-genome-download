@@ -7,7 +7,9 @@ import errno
 import hashlib
 import logging
 import os
+from pathlib import Path
 import sys
+import time
 from io import StringIO
 from multiprocessing import Pool
 from tqdm import tqdm
@@ -444,13 +446,19 @@ def create_downloadjob(entry, domain, config):
     if config.human_readable:
         symlink_path = create_readable_dir(entry, config.section, domain, config.output)
 
-    checksums = grab_checksums_file(entry)
-
     if not config.flat_output:
-        # TODO: Only write this when the checksums file changed
-        with open(os.path.join(full_output_dir, 'MD5SUMS'), 'w') as handle:
-            handle.write(checksums)
+        checksum_path = Path(full_output_dir) / 'MD5SUMS'
 
+        # if the MD5SUM file is missing or too old, redownload
+        if not checksum_path.exists() or checksum_path.stat().st_mtime + (24 * 60 * 60) < time.time():
+            checksums = grab_checksums_file(entry)
+            with checksum_path.open('w', encoding="utf-8") as handle:
+                handle.write(checksums)
+        else:
+            with checksum_path.open('r', encoding="utf-8") as handle:
+                checksums = handle.read()
+    else:
+        checksums = grab_checksums_file(entry)
     parsed_checksums = parse_checksums(checksums)
 
     download_jobs = []
