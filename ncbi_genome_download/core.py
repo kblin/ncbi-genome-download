@@ -217,13 +217,14 @@ def config_download(config):
 
         mtable = metadata.get()
         if config.parallel == 1:
+            if config.progress_bar:
+                download_candidates = tqdm(download_candidates, desc="Checking assemblies", unit="entries")
             for entry, group in download_candidates:
                 curr_jobs = create_downloadjob(entry, group, config)
                 fill_metadata(curr_jobs, entry, mtable)
                 download_jobs.extend(curr_jobs)
             if config.progress_bar:
-                tqdm.write("start download. No parallel")
-                _download_jobs = tqdm(download_jobs)
+                _download_jobs = tqdm(download_jobs, desc="Downloading assemblies", unit="files")
             else:
                 _download_jobs = download_jobs
 
@@ -232,10 +233,15 @@ def config_download(config):
         else:  # pragma: no cover
             # Testing multiprocessing code is annoying
             with Pool(processes=config.parallel) as pool:
-                dl_jobs = pool.imap(
-                        downloadjob_creator_caller,
-                        [(entry, group, config) for entry, group in download_candidates],
-                    )
+                dl_jobs = [pool.apply_async(downloadjob_creator_caller, ((entry, group, config),))
+                           for entry, group in download_candidates]
+
+                if config.progress_bar:
+                    _dl_jobs = tqdm(dl_jobs, desc="Checking assemblies", unit="entries")
+                else:
+                    _dl_jobs = dl_jobs
+
+                dl_jobs = [_.get(0xFFFF) for _ in _dl_jobs]
 
                 for index, created_dl_job in enumerate(dl_jobs):
                     download_jobs.extend(created_dl_job)
@@ -247,8 +253,7 @@ def config_download(config):
                 try:
 
                     if config.progress_bar:
-                        tqdm.write("start download. Parallel=5")
-                        _jobs = tqdm(jobs)
+                        _jobs = tqdm(jobs, desc="Downloading assemblies", unit="files")
                     else:
                         _jobs = jobs
                     # add a wrapper for progress bar
