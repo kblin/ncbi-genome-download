@@ -1,6 +1,5 @@
 # NCBI Genome Downloading Scripts
 
-[![Build Status](https://github.drone.secondarymetabolites.org/api/badges/kblin/ncbi-genome-download/status.svg)](https://github.drone.secondarymetabolites.org/kblin/ncbi-genome-download)
 [![PyPI release](https://img.shields.io/pypi/v/ncbi-genome-download.svg)](https://pypi.python.org/pypi/ncbi-genome-download/)
 
 Some script to download bacterial and fungal genomes from NCBI after they
