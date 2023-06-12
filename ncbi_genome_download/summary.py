@@ -1,6 +1,7 @@
 '''Parse NCBI RefSeq/GenBank summary files'''
 
 import logging
+import re
 
 
 # pylint: disable=too-few-public-methods
@@ -14,8 +15,9 @@ class SummaryReader(object):
             line = self._file.readline().rstrip('\n')
             self._lineno += 1
 
-        if line.startswith('# '):
-            line = line[2:]
+        if re.search(r'^#.*assembly_accession\t', line):
+            res = re.search(r'assembly_accession', line)
+            line = line[res.start():]
 
         self._fields = line.split('\t')
 
