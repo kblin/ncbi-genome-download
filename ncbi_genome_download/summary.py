@@ -16,6 +16,8 @@ class SummaryReader(object):
 
         if line.startswith('# '):
             line = line[2:]
+        if line.startswith('#assembly_accession'):
+            line = line[1:]
 
         self._fields = line.split('\t')
 
