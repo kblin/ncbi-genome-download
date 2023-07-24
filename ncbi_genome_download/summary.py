@@ -14,8 +14,8 @@ class SummaryReader(object):
             line = self._file.readline().rstrip('\n')
             self._lineno += 1
 
-        if line.startswith('# '):
-            line = line[2:]
+        if line.startswith('#'):
+            line = line[1:].strip()
 
         self._fields = line.split('\t')
 
