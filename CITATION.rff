@@ -1,11 +1,22 @@
 cff-version: 1.2.0
-message: "If you found ncbi-genome-download useful, please cite it as specified below."
+title: ncbi-genome-download
+message: >-
+  If you found ncbi-genome-download useful, please cite it
+  as specified below.
+type: software
 authors:
-- family-names: "Blin"
-  given-names: "Kai"
-  orcid: "https://orcid.org/0000-0003-3764-6051"
-title: "ncbi-genome-download"
+  - family-names: Blin
+    given-names: Kai
+    orcid: 'https://orcid.org/0000-0003-3764-6051'
+identifiers:
+  - type: doi
+    value: 10.5281/zenodo.8192433
+    description: Zenodo Archive
+repository-code: 'https://github.com/kblin/ncbi-genome-download'
+url: 'https://github.com/kblin/ncbi-genome-download'
+abstract: >
+  Some script to download bacterial and fungal genomes from
+  NCBI after they restructured their FTP a while ago.
+license: Apache-2.0
 version: 0.3.3
-doi: 10.5281/zenodo.8192433
-date-released: 2023-07-28
-url: "https://github.com/kblin/ncbi-genome-download"
+date-released: '2023-07-28'
