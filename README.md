@@ -1,6 +1,7 @@
 # NCBI Genome Downloading Scripts
 
 [![PyPI release](https://img.shields.io/pypi/v/ncbi-genome-download.svg)](https://pypi.python.org/pypi/ncbi-genome-download/)
+[![DOI](https://zenodo.org/badge/57950916.svg)](https://zenodo.org/badge/latestdoi/57950916)
 
 Some script to download bacterial and fungal genomes from NCBI after they
 restructured their FTP a while ago.
@@ -305,6 +306,11 @@ python gimme_taxa.py
 python gimme_taxa.py -h
 python gimme_taxa.py --help
 ```
+
+## Citing `ncbi-genome-download`
+
+You can cite `ncbi-genome-download` via the Zenodo deposit under
+[DOI: 10.5281/zenodo.8192433](https://doi.org/10.5281/zenodo.8192433).
 
 ## License
 
