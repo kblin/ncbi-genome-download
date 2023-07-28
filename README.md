@@ -310,7 +310,7 @@ python gimme_taxa.py --help
 ## Citing `ncbi-genome-download`
 
 You can cite `ncbi-genome-download` via the Zenodo deposit under
-[DOI: 10.5281/zenodo.8192433](https://doi.org/10.5281/zenodo.8192433).
+[DOI: 10.5281/zenodo.8192432](https://doi.org/10.5281/zenodo.8192432) or the specific DOI for the version you used.
 
 ## License
 
