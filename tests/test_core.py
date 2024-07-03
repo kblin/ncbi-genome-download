@@ -107,7 +107,7 @@ def test_download_connection_err(monkeypatch, mocker):
 
 def test_download(monkeypatch, mocker, req):
     summary_contents = open(_get_file('partial_summary.txt'), 'r').read()
-    req.get('https://ftp.ncbi.nih.gov/genomes/refseq/bacteria/assembly_summary.txt',
+    req.get('https://ftp.ncbi.nlm.nih.gov/genomes/refseq/bacteria/assembly_summary.txt',
             text=summary_contents)
     mocker.spy(core, 'get_summary')
     mocker.spy(core, 'parse_summary')
@@ -122,7 +122,7 @@ def test_download_metadata(monkeypatch, mocker, req, tmpdir):
     """Test creating the metadata file works."""
     metadata_file = tmpdir.join('metadata.tsv')
     summary_contents = open(_get_file('partial_summary.txt'), 'r').read()
-    req.get('https://ftp.ncbi.nih.gov/genomes/refseq/bacteria/assembly_summary.txt',
+    req.get('https://ftp.ncbi.nlm.nih.gov/genomes/refseq/bacteria/assembly_summary.txt',
             text=summary_contents)
     mocker.spy(core, 'get_summary')
     mocker.spy(core, 'parse_summary')
@@ -166,7 +166,7 @@ def test_metadata_fill_multi(req, tmpdir):
 
 def test_download_complete(monkeypatch, mocker, req):
     summary_contents = open(_get_file('assembly_status.txt'), 'r').read()
-    req.get('https://ftp.ncbi.nih.gov/genomes/refseq/bacteria/assembly_summary.txt',
+    req.get('https://ftp.ncbi.nlm.nih.gov/genomes/refseq/bacteria/assembly_summary.txt',
             text=summary_contents)
     mocker.spy(core, 'get_summary')
     mocker.spy(core, 'parse_summary')
@@ -181,7 +181,7 @@ def test_download_complete(monkeypatch, mocker, req):
 
 def test_download_chromosome(monkeypatch, mocker, req):
     summary_contents = open(_get_file('assembly_status.txt'), 'r').read()
-    req.get('https://ftp.ncbi.nih.gov/genomes/refseq/bacteria/assembly_summary.txt',
+    req.get('https://ftp.ncbi.nlm.nih.gov/genomes/refseq/bacteria/assembly_summary.txt',
             text=summary_contents)
     mocker.spy(core, 'get_summary')
     mocker.spy(core, 'parse_summary')
@@ -196,7 +196,7 @@ def test_download_chromosome(monkeypatch, mocker, req):
 
 def test_download_scaffold(monkeypatch, mocker, req):
     summary_contents = open(_get_file('assembly_status.txt'), 'r').read()
-    req.get('https://ftp.ncbi.nih.gov/genomes/refseq/bacteria/assembly_summary.txt',
+    req.get('https://ftp.ncbi.nlm.nih.gov/genomes/refseq/bacteria/assembly_summary.txt',
             text=summary_contents)
     mocker.spy(core, 'get_summary')
     mocker.spy(core, 'parse_summary')
@@ -211,7 +211,7 @@ def test_download_scaffold(monkeypatch, mocker, req):
 
 def test_download_contig(monkeypatch, mocker, req):
     summary_contents = open(_get_file('assembly_status.txt'), 'r').read()
-    req.get('https://ftp.ncbi.nih.gov/genomes/refseq/bacteria/assembly_summary.txt',
+    req.get('https://ftp.ncbi.nlm.nih.gov/genomes/refseq/bacteria/assembly_summary.txt',
             text=summary_contents)
     mocker.spy(core, 'get_summary')
     mocker.spy(core, 'parse_summary')
@@ -226,7 +226,7 @@ def test_download_contig(monkeypatch, mocker, req):
 
 def test_download_genus(monkeypatch, mocker, req):
     summary_contents = open(_get_file('partial_summary.txt'), 'r').read()
-    req.get('https://ftp.ncbi.nih.gov/genomes/refseq/bacteria/assembly_summary.txt',
+    req.get('https://ftp.ncbi.nlm.nih.gov/genomes/refseq/bacteria/assembly_summary.txt',
             text=summary_contents)
     mocker.spy(core, 'get_summary')
     mocker.spy(core, 'parse_summary')
@@ -242,7 +242,7 @@ def test_download_genus(monkeypatch, mocker, req):
 
 def test_download_genus_lowercase(monkeypatch, mocker, req):
     summary_contents = open(_get_file('partial_summary.txt'), 'r').read()
-    req.get('https://ftp.ncbi.nih.gov/genomes/refseq/bacteria/assembly_summary.txt',
+    req.get('https://ftp.ncbi.nlm.nih.gov/genomes/refseq/bacteria/assembly_summary.txt',
             text=summary_contents)
     mocker.spy(core, 'get_summary')
     mocker.spy(core, 'parse_summary')
@@ -258,7 +258,7 @@ def test_download_genus_lowercase(monkeypatch, mocker, req):
 
 def test_download_genus_fuzzy(monkeypatch, mocker, req):
     summary_contents = open(_get_file('partial_summary.txt'), 'r').read()
-    req.get('https://ftp.ncbi.nih.gov/genomes/refseq/bacteria/assembly_summary.txt',
+    req.get('https://ftp.ncbi.nlm.nih.gov/genomes/refseq/bacteria/assembly_summary.txt',
             text=summary_contents)
     mocker.spy(core, 'get_summary')
     mocker.spy(core, 'parse_summary')
@@ -274,7 +274,7 @@ def test_download_genus_fuzzy(monkeypatch, mocker, req):
 
 def test_download_taxid(monkeypatch, mocker, req):
     summary_contents = open(_get_file('partial_summary.txt'), 'r').read()
-    req.get('https://ftp.ncbi.nih.gov/genomes/refseq/bacteria/assembly_summary.txt',
+    req.get('https://ftp.ncbi.nlm.nih.gov/genomes/refseq/bacteria/assembly_summary.txt',
             text=summary_contents)
     mocker.spy(core, 'get_summary')
     mocker.spy(core, 'parse_summary')
@@ -290,7 +290,7 @@ def test_download_taxid(monkeypatch, mocker, req):
 
 def test_download_species_taxid(monkeypatch, mocker, req):
     summary_contents = open(_get_file('partial_summary.txt'), 'r').read()
-    req.get('https://ftp.ncbi.nih.gov/genomes/refseq/bacteria/assembly_summary.txt',
+    req.get('https://ftp.ncbi.nlm.nih.gov/genomes/refseq/bacteria/assembly_summary.txt',
             text=summary_contents)
     mocker.spy(core, 'get_summary')
     mocker.spy(core, 'parse_summary')
@@ -306,7 +306,7 @@ def test_download_species_taxid(monkeypatch, mocker, req):
 
 def test_download_refseq_category(monkeypatch, mocker, req):
     summary_contents = open(_get_file('assembly_status.txt'), 'r').read()
-    req.get('https://ftp.ncbi.nih.gov/genomes/refseq/bacteria/assembly_summary.txt',
+    req.get('https://ftp.ncbi.nlm.nih.gov/genomes/refseq/bacteria/assembly_summary.txt',
             text=summary_contents)
     mocker.spy(core, 'get_summary')
     mocker.spy(core, 'parse_summary')
@@ -322,7 +322,7 @@ def test_download_refseq_category(monkeypatch, mocker, req):
 
 def test_download_type_material(monkeypatch, mocker, req):
     summary_contents = open(_get_file('type_material.txt'), 'r').read()
-    req.get('https://ftp.ncbi.nih.gov/genomes/refseq/bacteria/assembly_summary.txt',
+    req.get('https://ftp.ncbi.nlm.nih.gov/genomes/refseq/bacteria/assembly_summary.txt',
             text=summary_contents)
     print(summary_contents)
     mocker.spy(core, 'get_summary')
@@ -339,7 +339,7 @@ def test_download_type_material(monkeypatch, mocker, req):
 
 def test_download_type_material_no_match(monkeypatch, mocker, req):
     summary_contents = open(_get_file('type_material.txt'), 'r').read()
-    req.get('https://ftp.ncbi.nih.gov/genomes/refseq/bacteria/assembly_summary.txt',
+    req.get('https://ftp.ncbi.nlm.nih.gov/genomes/refseq/bacteria/assembly_summary.txt',
             text=summary_contents)
     print(summary_contents)
     mocker.spy(core, 'get_summary')
@@ -356,7 +356,7 @@ def test_get_summary(monkeypatch, req, tmpdir):
     cache_dir = tmpdir.mkdir('cache')
     monkeypatch.setattr(core, 'CACHE_DIR', str(cache_dir))
     cache_file = cache_dir.join('refseq_bacteria_assembly_summary.txt')
-    req.get('https://ftp.ncbi.nih.gov/genomes/refseq/bacteria/assembly_summary.txt', text='test')
+    req.get('https://ftp.ncbi.nlm.nih.gov/genomes/refseq/bacteria/assembly_summary.txt', text='test')
 
     ret = core.get_summary('refseq', 'bacteria', NgdConfig.get_default('uri'), False)
     assert ret.read() == 'test'
@@ -366,7 +366,7 @@ def test_get_summary(monkeypatch, req, tmpdir):
     assert ret.read() == 'test'
     assert cache_file.check()
 
-    req.get('https://ftp.ncbi.nih.gov/genomes/refseq/bacteria/assembly_summary.txt', text='never read')
+    req.get('https://ftp.ncbi.nlm.nih.gov/genomes/refseq/bacteria/assembly_summary.txt', text='never read')
     ret = core.get_summary('refseq', 'bacteria', NgdConfig.get_default('uri'), True)
     assert ret.read() == 'test'
 
@@ -375,7 +375,7 @@ def test_get_summary_error_handling(monkeypatch, mocker, req, tmpdir):
     """Test get_summary error handling."""
     cache_dir = tmpdir.join('cache')
     monkeypatch.setattr(core, 'CACHE_DIR', str(cache_dir))
-    req.get('https://ftp.ncbi.nih.gov/genomes/refseq/bacteria/assembly_summary.txt', text='test')
+    req.get('https://ftp.ncbi.nlm.nih.gov/genomes/refseq/bacteria/assembly_summary.txt', text='test')
 
     fake_makedirs = mocker.MagicMock(side_effect=OSError(13, "Permission denied"))
     monkeypatch.setattr(os, 'makedirs', fake_makedirs)
@@ -588,8 +588,8 @@ def test_create_readable_dir_virus(tmpdir):
 
 
 def test_grab_checksums_file(req):
-    req.get('https://ftp.ncbi.nih.gov/genomes/all/FAKE0.1/md5checksums.txt', text='test')
-    entry = {'ftp_path': 'ftp://ftp.ncbi.nih.gov/genomes/all/FAKE0.1'}
+    req.get('https://ftp.ncbi.nlm.nih.gov/genomes/all/FAKE0.1/md5checksums.txt', text='test')
+    entry = {'ftp_path': 'ftp://ftp.ncbi.nlm.nih.gov/genomes/all/FAKE0.1'}
     ret = core.grab_checksums_file(entry)
     assert ret == 'test'
 
