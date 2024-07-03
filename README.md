@@ -307,6 +307,14 @@ python gimme_taxa.py -h
 python gimme_taxa.py --help
 ```
 
+To use the `gimme_taxa.py` script with `ncbi-genome-download`'s `--taxids` option,
+you need to call `gimme_taxa.py` with the `-j` option, like this:
+
+```bash
+gimme_taxa.py -j -o my_taxids.txt Escherichia
+ncbi-genome-download --taxids my_taxids.txt bacteria
+```
+
 ## Citing `ncbi-genome-download`
 
 You can cite `ncbi-genome-download` via the Zenodo deposit under
