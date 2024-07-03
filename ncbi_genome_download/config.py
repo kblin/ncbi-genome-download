@@ -79,7 +79,7 @@ class NgdConfig(object):
         'taxids': [],
         'assembly_accessions': [],
         'output': os.getcwd(),
-        'uri': 'https://ftp.ncbi.nih.gov/genomes',
+        'uri': 'https://ftp.ncbi.nlm.nih.gov/genomes',
         'parallel': 1,
         'human_readable': False,
         'progress_bar': False,
