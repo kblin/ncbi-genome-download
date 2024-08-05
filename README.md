@@ -259,15 +259,20 @@ ncbi-genome-download --help
 
 ### As a method
 
-You can also use it as a method call. Pass the pythonised keyword arguments
-(`_` instead of `-`) as described above or in the `--help`:
+You can also use it as a method call:
 
 ```python
 import ncbi_genome_download as ngd
 ngd.download()
 ```
 
-**Note**: To specify a taxonomic group, like _bacteria_, use the `group` keyword.
+Pass the pythonised keyword arguments as described above
+or in the `--help`. To specify taxonomic groups, like _bacteria_,
+use the `groups` keyword. To specify file formats, like for the `--format`
+CLI option, use `file_formats`. All other keywords should match the CLI
+options, with `-` converted to `_`. Note that because the method call
+follows the same logic as the CLI, lists data should still be passed as
+strings, separated by a comma but no spaces, just like on the command line.
 
 ### Contributed Scripts: `gimme_taxa.py`
 
