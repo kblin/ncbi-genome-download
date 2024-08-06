@@ -5,6 +5,11 @@ ncbi_genome_download.egg-info/*
 htmlcov/*
 .cache/*
 dist/*
+changes.txt
+
+# manual tests
+refseq/*
+genbank/*
 
 **/.ropeproject/*
 
