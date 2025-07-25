@@ -272,7 +272,7 @@ def config_download(config):
                 table = metadata.get()
                 table.write(handle)
 
-    except requests.exceptions.ConnectionError as err:
+    except (requests.exceptions.ConnectionError, requests.exceptions.ChunkedEncodingError) as err:
         logger.error('Download from NCBI failed: %r', err)
         # Exit code 75 meas TEMPFAIL in C/C++, so let's stick with that for now.
         return 75
