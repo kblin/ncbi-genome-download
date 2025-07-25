@@ -144,6 +144,9 @@ def argument_parser(version=None):
                         'download only assemblies with a defined value. '
                         'A comma-separated list of relatons. For example: "reference,synonym".  '
                         'Choose from: {choices} .  '.format(choices=NgdConfig.get_choices('type_materials')))
+    parser.add_argument('--md5-cache-days', dest='md5_cache_days', type=int,
+                        default=NgdConfig.get_default('md5_cache_days'),
+                        help="Age the md5sum files can have before having to be re-downloaded (default: %(default)s).")
 
     return parser
 
@@ -455,7 +458,7 @@ def create_downloadjob(entry, domain, config):
         checksum_path = Path(full_output_dir) / 'MD5SUMS'
 
         # if the MD5SUM file is missing or too old, redownload
-        if not checksum_path.exists() or checksum_path.stat().st_mtime + (24 * 60 * 60) < time.time():
+        if not checksum_path.exists() or checksum_path.stat().st_mtime + (config.md5_cache_days * 24 * 60 * 60) < time.time():
             checksums = grab_checksums_file(entry)
             with checksum_path.open('w', encoding="utf-8") as handle:
                 handle.write(checksums)

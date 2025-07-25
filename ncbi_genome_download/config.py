@@ -86,7 +86,8 @@ class NgdConfig(object):
         'metadata_table': None,
         'dry_run': False,
         'use_cache': False,
-        'type_materials': ['any', 'all'] + list(_RELATION_TO_TYPE_MATERIAL)
+        'type_materials': ['any', 'all'] + list(_RELATION_TO_TYPE_MATERIAL),
+        'md5_cache_days': 1,
     }
 
     _LIST_TYPES = set([
@@ -125,6 +126,7 @@ class NgdConfig(object):
         'metadata_table',
         'dry_run',
         'use_cache',
+        'md5_cache_days',
     )
 
     def __init__(self):
