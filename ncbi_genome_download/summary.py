@@ -34,7 +34,10 @@ class SummaryReader(object):
             if len(parts) != len(self._fields):
                 logging.error('Invalid line length in summary file line %s. Expected %s, got %s. Attempting to fix.',
                               self._lineno, len(self._fields), len(parts))
-                submitter_idx = self._fields.index('submitter')
+                try:
+                    submitter_idx = self._fields.index('asm_submitter')
+                except ValueError:
+                    submitter_idx = self._fields.index('submitter')
                 ftp_path_idx = self._fields.index('ftp_path')
                 # if there is a submitter, and the ftp_path is shifted by one
                 try:

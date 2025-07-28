@@ -46,6 +46,7 @@ def test_virus():
 
     # entry should now be the last
 
+
 # new bacterial file also has a different header format
 def test_new_format():
     utf8_file = open_testfile('new_format_summary.txt')
@@ -53,3 +54,11 @@ def test_new_format():
     entries = list(reader)
     first = entries[0]
     assert 'assembly_accession' in first
+
+
+# make sure the truncated line repair at least doesn't crash for the new header format
+def test_new_format_truncated():
+    utf8_file = open_testfile("truncated_summary_new.txt")
+    reader = SummaryReader(utf8_file)
+    entries = list(reader)
+    assert not len(entries)
