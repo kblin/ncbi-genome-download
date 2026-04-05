@@ -2,7 +2,7 @@
 from appdirs import user_cache_dir
 import argparse
 import codecs
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 import errno
 import hashlib
 import logging
@@ -410,7 +410,8 @@ def get_summary(section, domain, uri, use_cache):
     cachefile = "{section}_{domain}_assembly_summary.txt".format(section=section, domain=domain)
     full_cachefile = os.path.join(CACHE_DIR, cachefile)
     if use_cache and os.path.exists(full_cachefile) and \
-       datetime.utcnow() - datetime.fromtimestamp(os.path.getmtime(full_cachefile)) < timedelta(days=1):
+       datetime.now(timezone.utc) - datetime.fromtimestamp(
+            os.path.getmtime(full_cachefile), tz=timezone.utc) < timedelta(days=1):
         logger.info('Using cached summary.')
         with codecs.open(full_cachefile, 'r', encoding='utf-8') as fh:
             return StringIO(fh.read())
