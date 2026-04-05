@@ -41,7 +41,7 @@ class DeprecatedAction(argparse.Action):
         setattr(namespace, self.dest, values)
 
 
-def argument_parser(version=None):
+def argument_parser(version: str = ''):
     """Create the argument parser for ncbi-genome-download."""
     parser = argparse.ArgumentParser()
     parser.add_argument('groups',
