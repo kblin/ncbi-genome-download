@@ -460,6 +460,8 @@ def create_downloadjob(entry, domain, config):
         # if the MD5SUM file is missing or too old, redownload
         if not checksum_path.exists() or checksum_path.stat().st_mtime + (config.md5_cache_days * 24 * 60 * 60) < time.time():
             checksums = grab_checksums_file(entry)
+            if not checksums:
+                return []
             with checksum_path.open('w', encoding="utf-8") as handle:
                 handle.write(checksums)
         else:
@@ -467,6 +469,8 @@ def create_downloadjob(entry, domain, config):
                 checksums = handle.read()
     else:
         checksums = grab_checksums_file(entry)
+        if not checksums:
+            return []
     parsed_checksums = parse_checksums(checksums)
 
     download_jobs = []
@@ -529,7 +533,15 @@ def grab_checksums_file(entry):
     http_url = convert_ftp_url(entry['ftp_path'])
     full_url = '{}/md5checksums.txt'.format(http_url)
     req = requests.get(full_url)
-    return req.text
+    # download failed, just try again
+    if not req.ok:
+        req = requests.get(full_url)
+
+    if req.ok:
+        return req.text
+
+    logging.error("Failed to download %s: %s", full_url, req.status_code)
+    return None
 
 
 def convert_ftp_url(url):

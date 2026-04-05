@@ -411,7 +411,7 @@ def test_filter_entries():
 
 
 def prepare_create_downloadjob(req, tmpdir, format_map=NgdConfig._FORMATS, human_readable=False,
-                               create_local_file=False):
+                               create_local_file=False, responses=None):
     # Set up test env
     entry = {
         'assembly_accession': 'FAKE0.1',
@@ -449,7 +449,10 @@ def prepare_create_downloadjob(req, tmpdir, format_map=NgdConfig._FORMATS, human
         checksum_file_content += '{}\t./{}\n'.format(checksum, filename)
         req.get(full_url, text=seqfile.read())
 
-    req.get('https://fake/genomes/FAKE0.1/md5checksums.txt', text=checksum_file_content)
+    if not responses:
+        responses = [{"text": checksum_file_content}]
+
+    req.get('https://fake/genomes/FAKE0.1/md5checksums.txt', responses)
 
     return entry, config, download_jobs
 
@@ -490,6 +493,13 @@ def test_create_downloadjob_symlink_only(req, tmpdir):
     expected = [core.DownloadJob(None, j.local_file, None, j.symlink_path)
                 for j in joblist if j.local_file.endswith('_genomic.gbff.gz')]
     assert jobs == expected
+
+
+def test_create_downloadjob_checksum_failed(req, tmpdir):
+    name_map_empty = OrderedDict()
+    entry, config, _ = prepare_create_downloadjob(req, tmpdir, format_map=name_map_empty)
+    jobs = core.create_downloadjob(entry, 'bacteria', config)
+    assert jobs == []
 
 
 def test_create_dir(tmpdir):
@@ -592,6 +602,16 @@ def test_grab_checksums_file(req):
     entry = {'ftp_path': 'ftp://ftp.ncbi.nlm.nih.gov/genomes/all/FAKE0.1'}
     ret = core.grab_checksums_file(entry)
     assert ret == 'test'
+
+
+def test_grab_checksums_file_failed(req):
+    req.get('https://ftp.ncbi.nlm.nih.gov/genomes/all/FAKE0.1/md5checksums.txt', [
+        {"text": "failed", "status_code": 503},
+        {"text": "failed", "status_code": 503},
+    ])
+    entry = {'ftp_path': 'ftp://ftp.ncbi.nlm.nih.gov/genomes/all/FAKE0.1'}
+    ret = core.grab_checksums_file(entry)
+    assert ret is None
 
 
 def test_parse_checksums():
