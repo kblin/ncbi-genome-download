@@ -147,6 +147,14 @@ def test_metadata_fill(req, tmpdir):
 
 def test_metadata_fill_multi(req, tmpdir):
     entry, config, joblist = prepare_create_downloadjob(req, tmpdir)
+    # python 3.14 breaks requests-mock persisting across the process pool
+    # so just provide a fake md5sums file to avoid the network call at all
+    checksum_dir = tmpdir.join('output', 'refseq', 'bacteria', 'FAKE0.1')
+    checksum_dir.ensure(dir=True)
+    checksum_dir.join('MD5SUMS').write(''.join(
+        '{}\t./{}\n'.format(job.expected_checksum, path.basename(job.local_file))
+        for job in joblist
+    ))
     metadata.clear()  # clear it, otherwise operations realized in other tests might impact it
     mtable = metadata.get()
     jobs = []
