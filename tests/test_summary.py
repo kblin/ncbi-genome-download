@@ -1,11 +1,10 @@
-import codecs
 from os import path
 
 from ncbi_genome_download.summary import SummaryReader
 
 
 def open_testfile(fname):
-    return codecs.open(path.join(path.dirname(__file__), fname), 'r', 'utf-8')
+    return open(path.join(path.dirname(__file__), fname), 'r', encoding='utf-8')
 
 
 def test_bacteria_ascii():
