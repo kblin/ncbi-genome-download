@@ -526,6 +526,19 @@ def test_create_downloadjob_checksum_failed(req, tmpdir):
     assert jobs == []
 
 
+def test_create_downloadjob_checksum_cache_hit(req, tmpdir):
+    entry, config, joblist = prepare_create_downloadjob(req, tmpdir)
+    checksum_dir = tmpdir.join('output', 'refseq', 'bacteria', 'FAKE0.1')
+    checksum_dir.ensure(dir=True)
+    checksum_dir.join('MD5SUMS').write(''.join(
+        '{}\t./{}\n'.format(job.expected_checksum, path.basename(job.local_file))
+        for job in joblist
+    ))
+    config.file_formats = "all"
+    jobs = core.create_downloadjob(entry, 'bacteria', config)
+    assert jobs == joblist
+
+
 def test_create_dir(tmpdir):
     entry = {'assembly_accession': 'FAKE0.1'}
     output = tmpdir.mkdir('output')
