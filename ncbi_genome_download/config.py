@@ -1,5 +1,4 @@
 """Configuration for the downloader."""
-import codecs
 from collections import OrderedDict
 import os
 from typing import List
@@ -378,7 +377,7 @@ def _create_list(value, allow_filename=False):
         return value
     elif isinstance(value, str):
         if allow_filename and os.path.isfile(value):
-            with codecs.open(value, 'r', encoding="utf-8") as handle:
+            with open(value, 'r', encoding="utf-8") as handle:
                 return handle.read().splitlines()
         return value.split(',')
     else:
