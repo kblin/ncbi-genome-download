@@ -1,7 +1,6 @@
 """Core functionality of ncbi-genome-download."""
 from appdirs import user_cache_dir
 import argparse
-import codecs
 from datetime import datetime, timedelta, timezone
 import errno
 import hashlib
@@ -268,7 +267,7 @@ def config_download(config):
                     return 1
 
         if config.metadata_table:
-            with codecs.open(config.metadata_table, mode='w', encoding='utf-8') as handle:
+            with open(config.metadata_table, mode='w', encoding='utf-8') as handle:
                 table = metadata.get()
                 table.write(handle)
 
@@ -413,7 +412,7 @@ def get_summary(section, domain, uri, use_cache):
        datetime.now(timezone.utc) - datetime.fromtimestamp(
             os.path.getmtime(full_cachefile), tz=timezone.utc) < timedelta(days=1):
         logger.info('Using cached summary.')
-        with codecs.open(full_cachefile, 'r', encoding='utf-8') as fh:
+        with open(full_cachefile, 'r', encoding='utf-8') as fh:
             return StringIO(fh.read())
 
     logger.debug('Downloading summary for %r/%r uri: %r', section, domain, uri)
@@ -429,7 +428,7 @@ def get_summary(section, domain, uri, use_cache):
             if err.errno != 17:
                 raise
 
-        with codecs.open(full_cachefile, 'w', encoding='utf-8') as fh:
+        with open(full_cachefile, 'w', encoding='utf-8') as fh:
             fh.write(req.text)
 
     return StringIO(req.text)
