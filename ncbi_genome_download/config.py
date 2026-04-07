@@ -1,7 +1,7 @@
 """Configuration for the downloader."""
 from collections import OrderedDict
 import os
-from typing import List
+from typing import List, Sequence
 
 
 SUPPORTED_TAXONOMIC_GROUPS = [
@@ -42,7 +42,7 @@ class NgdConfig(object):
         ('translated-cds', '_translated_cds.faa.gz'),
     ])
 
-    _LEVELS = OrderedDict([
+    _LEVELS: dict[str, str] = OrderedDict([
         ('complete', 'Complete Genome'),
         ('chromosome', 'Chromosome'),
         ('scaffold', 'Scaffold'),
@@ -194,7 +194,7 @@ class NgdConfig(object):
         self._file_formats = formats
 
     @property
-    def assembly_levels(self):
+    def assembly_levels(self) -> Sequence[str]:
         """Get the assembly level."""
         return self._assembly_levels
 
