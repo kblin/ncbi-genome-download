@@ -539,6 +539,14 @@ def test_create_downloadjob_checksum_cache_hit(req, tmpdir):
     assert jobs == joblist
 
 
+def test_create_downloadjob_flat_checksum_failed(req, tmpdir):
+    name_map_empty = OrderedDict()
+    entry, config, _ = prepare_create_downloadjob(req, tmpdir, format_map=name_map_empty)
+    config.flat_output = True
+    jobs = core.create_downloadjob(entry, 'bacteria', config)
+    assert jobs == []
+
+
 def test_create_dir(tmpdir):
     entry = {'assembly_accession': 'FAKE0.1'}
     output = tmpdir.mkdir('output')
