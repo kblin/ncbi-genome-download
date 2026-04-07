@@ -425,6 +425,8 @@ def test_filter_entries():
     config = NgdConfig()
     with open(_get_file('assembly_status.txt'), 'r') as fh:
         entries = list(core.parse_summary(fh))
+        # the very last entry in the file is invalid and will be filtered
+        entries = entries[:-1]
 
     assert core.filter_entries(entries, config) == entries
 
