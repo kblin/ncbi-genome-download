@@ -11,7 +11,10 @@ class SummaryReader(object):
         self._lineno = 0
         line = ''
         while 'assembly_accession' not in line:
-            line = self._file.readline().rstrip('\n')
+            line = self._file.readline()
+            if line == '':
+                raise ValueError('No assembly_accession header found in summary file')
+            line = line.rstrip('\n')
             self._lineno += 1
 
         if line.startswith('#'):

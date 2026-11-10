@@ -1,4 +1,7 @@
+from io import StringIO
 from os import path
+
+import pytest
 
 from ncbi_genome_download.summary import SummaryReader
 
@@ -61,3 +64,10 @@ def test_new_format_truncated():
     reader = SummaryReader(utf8_file)
     entries = list(reader)
     assert not len(entries)
+
+
+def test_missing_header_raises():
+    with pytest.raises(ValueError):
+        SummaryReader(StringIO(''))
+    with pytest.raises(ValueError):
+        SummaryReader(StringIO('some\nlines\nwithout\na header\n'))
